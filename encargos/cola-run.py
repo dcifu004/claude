@@ -127,6 +127,7 @@ from __future__ import annotations
 
 import argparse
 import fcntl
+import fnmatch
 import glob
 import hashlib
 import importlib.util
@@ -190,6 +191,15 @@ LIMITE = re.compile(r"hit your (session|usage|weekly) limit|usage limit|rate.?li
                     r"|limit reached|try again (at|in)", re.I)
 FALLA = re.compile(r"^(FAIL|ERROR): (\S+) \(([^)]+)\)", re.M)
 VEREDICTO_OK = re.compile(r"^ *VEREDICTO: DESPLEGABLE *$", re.M)
+# Encargo 87: cierre barato de la rev2/rev3 (`cierre_barato = true` en la etapa). La decisión sale de las fotos
+# git del último arreglo; cualquier duda corre la revisión completa.
+PLANTILLA_CIERRE = E / "revision-cierre-plantilla.md"
+RUTAS_SENSIBLES = ("*.service", "*.path", "*.timer", "*sudoers*", "*nodo-desplegar*", "secretos/*", "*/secretos/*",
+                   "encargos/cola-run.py", "encargos/revision-plantilla*", "encargos/revision-*plantilla*",
+                   "encargos/modelos.toml", "botv3/cuentas.toml")
+CIERRE_MAX_LINEAS = 150         # agregadas + borradas del arreglo (git diff --numstat)
+CIERRE_MAX_MIN = 30             # un cierre que pasa de esto se corta y se escala (falla cerrada)
+VEREDICTO_CIERRE = re.compile(r"VEREDICTO: (DESPLEGABLE|NO DESPLEGABLE|ESCALAR)")   # con fullmatch, sin espacios
 
 
 class Pausa(Exception):
@@ -478,13 +488,14 @@ def modelo_de(et: dict, rol: str) -> dict:
     del CLI. Orden: lo fijado en la etapa, la naturaleza en modelos.toml, nada. Un `esfuerzo_<rol>`
     sin `modelo_<rol>` solo cambia el esfuerzo: el modelo y el nivel siguen siendo los de la
     naturaleza (encargo 48)."""
-    cid = et["revisor"] if rol == "rev" else et["autor"]
+    cid = et["revisor"] if rol in ("rev", "cierre") else et["autor"]
     motor = MOTORES[cid]["motor"]
     if et.get(f"modelo_{rol}"):
         return {"modelo": et[f"modelo_{rol}"], "esfuerzo": et.get(f"esfuerzo_{rol}", ""), "nivel": "fijado"}
     declarado = et.get(f"esfuerzo_{rol}")
     cfg = _cfg_modelos()
-    nivel =((cfg.get("naturaleza") or {}).get(et.get("naturaleza", "")) or {}).get(rol)
+    # El cierre (encargo 87) va siempre al nivel `agil` del revisor, no al de la naturaleza.
+    nivel = "agil" if rol == "cierre" else ((cfg.get("naturaleza") or {}).get(et.get("naturaleza", "")) or {}).get(rol)
     elegido = ((cfg.get("niveles") or {}).get(motor) or {}).get(nivel or "")
     if not elegido:
         return {"modelo": "", "esfuerzo": declarado or "", "nivel": "default del CLI"}
@@ -569,7 +580,7 @@ def esfuerzo_incompatible(et: dict, rol: str, mod: dict | None = None) -> str:
     mod = mod or modelo_de(et, rol)
     if not mod["modelo"]:
         return ""
-    motor = MOTORES[et["revisor"] if rol == "rev" else et["autor"]]["motor"]
+    motor = MOTORES[et["revisor"] if rol in ("rev", "cierre") else et["autor"]]["motor"]
     sin_verificar = (f"etapa {et.get('id', '?')}: `esfuerzo_{rol} = \"{declarado}\"` no se pudo verificar con "
                      f"{mod['modelo']} [{mod['nivel']}]: ")
     try:
@@ -590,7 +601,7 @@ def validar_esfuerzos(etapas: list[dict]) -> None:
     """Antes de correr nada: ningún `esfuerzo_<rol>` declarado con un modelo que no lo acepta, ni
     sin poder comprobarlo. ValueError con el motivo, como `validar_remotas`."""
     for et in etapas:
-        for rol in ("autor", "rev", "fix"):
+        for rol in ("autor", "rev", "fix", *(("cierre",) if cierre_aplica(et) else ())):
             motivo = esfuerzo_incompatible(et, rol)
             if motivo:
                 raise ValueError(motivo)
@@ -657,7 +668,7 @@ def fases_restantes(etapas: list[dict], et_actual: str, fase_actual: str, inicio
         avance += alcance * (max(0.5, f["min"] - transcurrido) if k == 0 else f["min"])
         if rol == "revplan":
             alcance = p if fase == "revplan" else (1 - p if segunda_vuelta_plan else 1 - p * p)
-        elif rol == "rev":
+        elif rol in ("rev", "cierre"):
             alcance *= p
     return out
 
@@ -1126,7 +1137,7 @@ def modelos_con_candado(etapas: list[dict]) -> dict[str, list[str]]:
     patrones = [str(x).lower() for x in aut.get("patrones") or []]
     usos: dict[str, list[str]] = {}
     for et in etapas:
-        for rol in ("autor", "rev", "fix"):
+        for rol in ("autor", "rev", "fix", *(("cierre",) if cierre_aplica(et) else ())):
             m = modelo_de(et, rol)["modelo"]
             if m and (m.lower() in candado or any(p in m.lower() for p in patrones)):
                 usos.setdefault(m, []).append(f"{et['id']} {rol}")
@@ -1143,7 +1154,7 @@ def exigir_candado(et: dict, rol: str, mod: dict, desde: str) -> None:
     m = mod.get("modelo") or ""
     if not m or m.lower() in AUTORIZADOS:
         return
-    nuevo = modelos_con_candado([dict(et, modelo_autor=m, modelo_rev=m, modelo_fix=m)]).get(m)
+    nuevo = modelos_con_candado([dict(et, modelo_autor=m, modelo_rev=m, modelo_fix=m, modelo_cierre=m)]).get(m)
     if not nuevo:
         return
     uso = [f"{et['id']} {rol}"]
@@ -1213,7 +1224,7 @@ def pronostico(cid: str, rol: str, modelo: str = "", donde: str = "", esfuerzo: 
     pedido); sin filas, BASE × factor. Los minutos no se escalan: el costo no mide el tiempo. Con
     factor el pronóstico es siempre `debil` y trae `por_factor`. Un modelo sin factor (los de Codex:
     no tienen medida) vale 1,0, sale como siempre y trae `sin_factor`. El esfuerzo no entra al factor."""
-    rol_base = {"plan": "autor", "revplan": "rev"}.get(rol, rol)
+    rol_base = {"plan": "autor", "revplan": "rev", "cierre": "rev"}.get(rol, rol)
     motor = MOTORES[cid]["motor"]
     candidatas = [h for h in historial() if h.get("cuenta") == cid and h.get("rol") == rol
                    and (h.get("donde") or "") == donde]
@@ -1232,7 +1243,7 @@ def pronostico(cid: str, rol: str, modelo: str = "", donde: str = "", esfuerzo: 
     # Si hubo pocas filas del esfuerzo pedido, la mediana baja al modelo; sus cortes no se pierden.
     cortes += [h for h in exactas if h.get("sin_cuota") and h not in cortes]
     base = BASE_PC2503 if donde else BASE[(motor, rol_base)]
-    if rol in ("plan", "revplan") and len(mismo) < 3:
+    if rol in ("plan", "revplan", "cierre") and len(mismo) < 3:
         referencia = pronostico(cid, rol_base, modelo, donde, esfuerzo)
         return dict(referencia, min=round(referencia["min"] * 0.3, 1),
                     pct_5h=round(referencia["pct_5h"] * 0.3, 2),
@@ -1563,7 +1574,7 @@ def git_diff_etapa(etapa_id: str, hasta: str | None) -> str:
 # ---------------------------------------------------------------- motores
 
 def correr(cid: str, prompt: str, nombre_log: str, mod: dict | None = None,
-           herramientas: str = HERRAMIENTAS) -> dict:
+           herramientas: str = HERRAMIENTAS, limite_s: float | None = None) -> dict:
     """Corre un motor con el prompt. Devuelve {rc, min, tokens, sin_cuota, modelo_real}."""
     m = MOTORES[cid]
     mod = mod or {}
@@ -1577,7 +1588,7 @@ def correr(cid: str, prompt: str, nombre_log: str, mod: dict | None = None,
     if buzon:
         env["ENCARGO_BUZON"] = str(buzon.carpeta)
     try:
-        return _correr(m, cid, prompt, nombre_log, mod, herramientas, env)
+        return _correr(m, cid, prompt, nombre_log, mod, herramientas, env, limite_s)
     finally:
         if buzon:
             buzon.cerrar()
@@ -1771,7 +1782,8 @@ def abrir_buzon_busquedas(mod: dict, nombre_log: str) -> BuzonBusquedas | None:
         return None
 
 
-def _correr(m: dict, cid: str, prompt: str, nombre_log: str, mod: dict, herramientas: str, env: dict) -> dict:
+def _correr(m: dict, cid: str, prompt: str, nombre_log: str, mod: dict, herramientas: str, env: dict,
+            limite_s: float | None = None) -> dict:
     t0 = time.monotonic()
     if m["motor"] == "codex":
         cmd = ["codex", "exec", "--cd", str(D), "-s", "workspace-write", "--skip-git-repo-check",
@@ -1793,7 +1805,17 @@ def _correr(m: dict, cid: str, prompt: str, nombre_log: str, mod: dict, herramie
             cmd += ["--model", mod["modelo"]]
         if mod.get("esfuerzo"):
             cmd += ["--effort", mod["esfuerzo"]]
-    p = subprocess.run(cmd, input=prompt, text=True, capture_output=True, cwd=D, env=env)
+    if limite_s is not None:
+        # Encargo 87: sólo el cierre pasa un límite. Un corte por tiempo no es un veredicto (escala).
+        try:
+            p = subprocess.run(cmd, input=prompt, text=True, capture_output=True, cwd=D, env=env, timeout=limite_s)
+        except subprocess.TimeoutExpired as e:
+            salida = (e.stdout or b"").decode("utf-8", "replace") if isinstance(e.stdout, bytes) else (e.stdout or "")
+            (L / f"{nombre_log}.log").write_text(salida + f"\n[cortado a los {limite_s:.0f} s]\n", encoding="utf-8")
+            return {"rc": 124, "min": round((time.monotonic() - t0) / 60, 1), "tokens": None, "sin_cuota": False,
+                    "modelo_real": None, "corte": "tiempo"}
+    else:
+        p = subprocess.run(cmd, input=prompt, text=True, capture_output=True, cwd=D, env=env)
     minutos = round((time.monotonic() - t0) / 60, 1)
     salida = (p.stdout or "") + (p.stderr or "")
     tokens, es_error, modelo_real = None, p.returncode != 0, None
@@ -2356,6 +2378,158 @@ def prompt_de(fase: str, et: dict, reanuda: bool, informe: str = "", diff: str =
                "secretos ni ampliar el alcance.\n" if (E / f"{i}-decisiones.md").is_file() else ""))
 
 
+# ---------------------------------------------------------------- cierre barato (encargo 87)
+
+def cierre_aplica(et: dict, fase: str | None = None) -> bool:
+    """La etapa pidió `cierre_barato = true` (sólo el booleano verdadero) y no es remota; con `fase`, además
+    es una revisión desde la segunda (rev2, rev3…). Sin el campo, nada del cierre corre ni se pronostica."""
+    if et.get("cierre_barato") is not True or remota(et):
+        return False
+    return fase is None or (fase.startswith("rev") and fase[3:].isdigit() and int(fase[3:]) >= 2)
+
+
+def _numstat(antes: str, despues: str) -> list[tuple[str, str, str]]:
+    """(agregadas, borradas, ruta) de cada archivo entre dos fotos; un binario trae «-». Sin renombres: un
+    archivo movido aparece con sus dos rutas."""
+    salida = _vers().abrir().git("diff", "--no-color", "--no-renames", "--numstat", "-z", antes, despues, "--").stdout
+    out = []
+    for x in salida.decode("utf-8", "replace").split("\0"):
+        if x:
+            mas, menos, ruta = x.split("\t", 2)
+            out.append((mas, menos, ruta))
+    return out
+
+
+def _sensible(ruta: str) -> bool:
+    return any(fnmatch.fnmatchcase(ruta, patron) for patron in RUTAS_SENSIBLES) or bool(RE_SECRETO.search(ruta))
+
+
+def decidir_cierre(et: dict, fase: str) -> tuple[bool, str, list[tuple[str, str]]]:
+    """(cierre, motivo, [(antes, despues)] del arreglo) para la `fase` (rev2, rev3…). Sólo mira las fotos git
+    propias de la etapa (GIT_BASE) y git: nunca un archivo que escriba el autor (trampa 32b). Ante cualquier
+    duda devuelve False y la revisión es la completa (E1–E4 del encargo 87)."""
+    i, fix = et["id"], f"fix{int(fase[3:]) - 1}"
+    try:
+        if MANIFIESTO.get("arboles_extra"):
+            return False, "E4: la cola tiene `arboles_extra` y el diff del arreglo no se verifica entero", []
+        if not (E / f"{i}r{int(fase[3:]) - 1}-RESULTADO.md").is_file():
+            return False, f"E4: falta encargos/{i}r{int(fase[3:]) - 1}-RESULTADO.md", []
+        fases = GIT_BASE.get(f"{i}:fases")
+        fases = [f for f in fases if isinstance(f, dict)] if isinstance(fases, list) else []
+        pos = [k for k, f in enumerate(fases) if f.get("fase") == fix]
+        if not pos:
+            return False, f"E4: no hay foto de {fix}", []
+        if not any(f.get("fase") == "autor" for f in fases[:pos[0]]):
+            return False, "E4: no hay foto del autor", []
+        for f in fases[:pos[-1] + 1]:
+            if not all(isinstance(f.get(k), str) and RE_HASH_GIT.fullmatch(f[k]) for k in ("antes", "despues")):
+                return False, f"E4: la fase {f.get('fase', '?')} no tiene foto antes y después", []
+        previos = {ruta for f in fases[:pos[0]] if f.get("fase") != fix
+                   for _, _, ruta in _numstat(f["antes"], f["despues"])}
+        pares = [(fases[k]["antes"], fases[k]["despues"]) for k in pos]
+        cambios = [c for a, d in pares for c in _numstat(a, d)]
+    except Exception as e:      # noqa: BLE001 — git que falla es duda: revisión completa
+        return False, f"E4: git falló ({type(e).__name__}: {e})", []
+    rutas = sorted({ruta for _, _, ruta in cambios})
+    if nuevos := [x for x in rutas if x not in previos]:
+        return False, f"E1: {fix} toca archivos que no estaban en el diff de la etapa: {', '.join(nuevos)}", []
+    if sensibles := [x for x in rutas if _sensible(x)]:
+        return False, f"E2: {fix} toca rutas sensibles: {', '.join(sensibles)}", []
+    if binarios := sorted({ruta for mas, menos, ruta in cambios if not (mas.isdigit() and menos.isdigit())}):
+        return False, f"E3: {fix} cambia binarios: {', '.join(binarios)}", []
+    lineas = sum(int(mas) + int(menos) for mas, menos, _ in cambios)
+    if lineas > CIERRE_MAX_LINEAS:
+        return False, f"E3: {fix} cambia {lineas} líneas (máximo {CIERRE_MAX_LINEAS})", []
+    return True, f"{fix} cambia {lineas} línea(s) en {len(rutas)} archivo(s) ya revisados", pares
+
+
+def veredicto_cierre(texto: str) -> str:
+    """DESPLEGABLE, NO DESPLEGABLE o ESCALAR si las últimas 3 líneas traen exactamente una línea de veredicto
+    y es una de las tres, escrita tal cual; '' en cualquier otro caso (que también escala)."""
+    ultimas = texto.splitlines()[-3:]
+    hallados = [m.group(1) for x in ultimas if (m := VEREDICTO_CIERRE.fullmatch(x))]
+    if len(hallados) != 1 or sum("veredicto" in x.lower() for x in ultimas) != 1:
+        return ""
+    return hallados[0]
+
+
+def _seccion_arreglos(i: str, vuelta: int) -> str:
+    """La sección «Arreglos vuelta N» de encargos/<id>-RESULTADO.md, hasta el próximo título de su nivel."""
+    try:
+        texto = (E / f"{i}-RESULTADO.md").read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        texto = ""
+    m = re.search(rf"^(#+)[ \t].*Arreglos vuelta {vuelta}\b.*$", texto, re.M)
+    if not m:
+        return f"(encargos/{i}-RESULTADO.md no trae la sección «Arreglos vuelta {vuelta}»)"
+    fin = re.compile(rf"^#{{1,{len(m.group(1))}}}[ \t]", re.M).search(texto, m.end())
+    return texto[m.start():fin.start() if fin else len(texto)].rstrip() + "\n"
+
+
+def prompt_cierre(et: dict, fase: str, diff_fix: str) -> str:
+    """La instrucción del cierre: la plantilla con la revisión anterior, sólo el diff del último arreglo, su
+    sección «Arreglos vuelta» y el plan aprobado. Un solo reemplazo: lo pegado no pasa por los demás."""
+    i, n = et["id"], int(fase[3:])
+    plan = E / f"{i}-PLAN.md"
+    valores = {"ID": i, "ENCARGO": et.get("encargo", ""), "AUTOR": nombre(et["autor"]), "REVISOR": nombre(et["revisor"]),
+               "N": str(n), "PREVIA": str(n - 1), "SUITES": ", ".join(MANIFIESTO["pruebas"]),
+               "REVISION_PREVIA": (E / f"{i}r{n - 1}-RESULTADO.md").read_text(encoding="utf-8"),
+               "ARREGLOS": _seccion_arreglos(i, n - 1),
+               "DIFF_FIX": diff_fix if diff_fix.strip() else "(el arreglo no cambió ningún archivo)\n",
+               "PLAN": plan.read_text(encoding="utf-8") if et.get("plan") and plan.is_file() else "(esta etapa no tiene plan)\n"}
+    return re.sub(r"\{(" + "|".join(valores) + r")\}", lambda m: valores[m.group(1)],
+                  PLANTILLA_CIERRE.read_text(encoding="utf-8"))
+
+
+def correr_cierre(et: dict, fase: str, desde: str, pares: list[tuple[str, str]]) -> tuple[str, str]:
+    """Corre el cierre en lugar de la `fase` y devuelve (veredicto, motivo). Sólo DESPLEGABLE y NO DESPLEGABLE
+    valen; todo lo demás es ESCALAR y la cola corre la revisión completa en la misma vuelta. Sin cuota: Pausa."""
+    i, cid = et["id"], et["revisor"]
+    mod = dict(modelo_de(et, "cierre"), naturaleza=et.get("naturaleza"), encargo_id=i)
+    if not mod["modelo"]:
+        return "ESCALAR", "modelos.toml no trae el nivel agil del revisor"
+    exigir_candado(et, "cierre", mod, desde)
+    if motivo := esfuerzo_incompatible(et, "cierre", mod):
+        raise Pausa(motivo, desde)
+    try:
+        diff = "".join(f"## {a[:7]}..{d[:7]}\n\n{_vers().diff(a, d)}" for a, d in pares)
+    except Exception as e:      # noqa: BLE001
+        return "ESCALAR", f"no se pudo leer el diff del arreglo ({type(e).__name__}: {e})"
+    f, antes = chequear_cuota(cid, "cierre", desde, mod["modelo"], mod["esfuerzo"])
+    atender_pausa(desde)
+    res = E / f"{i}r-RESULTADO.md"
+    res.unlink(missing_ok=True)     # lo que haya dejado el arreglo no es el veredicto del cierre
+    quien = mod["modelo"] + (f" {mod['esfuerzo']}" if mod["esfuerzo"] else "")
+    inicio = ahora().isoformat(timespec="seconds")
+    VIVO.setdefault("inicio_trabajo", inicio)
+    vivo(estado="corriendo", etapa=i, fase=fase, rol="cierre", cuenta=nombre(cid), modelo=quien,
+         inicio_fase=inicio, pronostico_fase_min=f["min"], remoto=None)
+    log(f"{i}: {fase} como cierre con {nombre(cid)} · {quien} (pronóstico {f['min']} min"
+        f"{', ' + etiqueta_pronostico(f) if etiqueta_pronostico(f) else ''})")
+    git_foto(f"{MANIFIESTO['nombre']} · {i} · {fase} cierre (antes)")
+    r = correr(cid, prompt_cierre(et, fase, diff), f"{i}-{fase}-cierre", mod, HERRAMIENTAS, limite_s=CIERRE_MAX_MIN * 60)
+    r["inicio"] = inicio
+    git_foto(f"{MANIFIESTO['nombre']} · {i} · {fase} cierre")
+    VIVO.pop("rol", None)
+    VIVO.setdefault("fases_hechas", []).append({"etapa": i, "fase": fase, "rol": "cierre", "cuenta": nombre(cid),
+                                                "min": r["min"], "pronostico_min": f["min"]})
+    if r["sin_cuota"]:
+        anotar(i, fase, cid, "cierre", f, antes, r, mod)
+        raise Pausa(f"{nombre(cid)} se quedó sin cuota a mitad del cierre de {fase} ({r['min']} min)", desde)
+    try:
+        texto = res.read_text(encoding="utf-8") if res.is_file() else None
+    except (OSError, UnicodeDecodeError):
+        texto = None
+    v = veredicto_cierre(texto) if texto is not None and r["rc"] == 0 and not r.get("corte") else ""
+    motivo = ("corte por tiempo" if r.get("corte") else f"rc {r['rc']}" if r["rc"] != 0
+              else f"no escribió encargos/{i}r-RESULTADO.md" if texto is None
+              else "sin una línea de veredicto exacta en las últimas 3" if not v
+              else "el cierre pidió escalar" if v == "ESCALAR" else v)
+    v = v if v in ("DESPLEGABLE", "NO DESPLEGABLE") else "ESCALAR"
+    anotar(i, fase, cid, "cierre", f, antes, r, mod, v)
+    return v, motivo
+
+
 # ---------------------------------------------------------------- estado en vivo y ETA
 
 VIVO: dict = {}
@@ -2386,8 +2560,8 @@ def restante(etapas: list[dict], et_actual: str, fase_actual: str, transcurrido_
         segunda_vuelta_plan = fase_actual in ("plan2", "revplan2")
         salta_segunda_vuelta_en_min = False
         for k, fase in enumerate(fases[ini:]):
-            rol = "plan" if fase.startswith("plan") else "revplan" if fase.startswith("revplan") else "autor" if fase == "autor" else fase[:3]
-            cid = et["revisor"] if rol in ("rev", "revplan") else et["autor"]
+            rol = rol_de_fase(et, fase)
+            cid = et["revisor"] if rol in ("rev", "revplan", "cierre") else et["autor"]
             modelo_rol = "autor" if rol == "plan" else "rev" if rol == "revplan" else rol
             mod = modelo_de(et, modelo_rol)
             dur = pronostico(cid, rol, mod["modelo"], donde_fase(et, rol), mod["esfuerzo"])["min"]
@@ -2395,6 +2569,10 @@ def restante(etapas: list[dict], et_actual: str, fase_actual: str, transcurrido_
                 dur = max(0.5, dur - transcurrido_fase)
             esp += alcance * dur
             mx += dur
+            if rol == "cierre":
+                # Encargo 87: el máximo supone que el cierre escala y corre además la revisión completa.
+                completa = modelo_de(et, "rev")
+                mx += pronostico(cid, "rev", completa["modelo"], "", completa["esfuerzo"])["min"]
             if sigue_min and not salta_segunda_vuelta_en_min:
                 mn += dur
             if rol == "revplan":
@@ -2406,11 +2584,18 @@ def restante(etapas: list[dict], et_actual: str, fase_actual: str, transcurrido_
                 else:
                     salta_segunda_vuelta_en_min = False
                     alcance = 1 - p if segunda_vuelta_plan else 1 - p * p
-            elif rol == "rev":
+            elif rol in ("rev", "cierre"):
                 sigue_min = False
                 alcance *= p
         empezado = True
     return {"esperado": round(esp, 1), "min": round(mn, 1), "max": round(mx, 1)}
+
+
+def rol_de_fase(et: dict, fase: str) -> str:
+    """El rol con que se pronostica y publica una fase. La rev2+ de una etapa con `cierre_barato` se
+    pronostica como `cierre` (encargo 87): lo que corre de verdad lo decide `decidir_cierre()` al llegar."""
+    rol = "plan" if fase.startswith("plan") else "revplan" if fase.startswith("revplan") else "autor" if fase == "autor" else fase[:3]
+    return "cierre" if rol == "rev" and cierre_aplica(et, fase) else rol
 
 
 def fases_pendientes(etapas: list[dict], et_actual: str, fase_actual: str):
@@ -2422,8 +2607,8 @@ def fases_pendientes(etapas: list[dict], et_actual: str, fase_actual: str):
             continue
         fases = [*(FASES_PLAN if et.get("plan") else ()), *FASES[: 1 + 2 * int(et.get("vueltas", 2)) + 1]]
         for fase in fases[fases.index(fase_actual) if not empezado else 0:]:
-            rol = "plan" if fase.startswith("plan") else "revplan" if fase.startswith("revplan") else "autor" if fase == "autor" else fase[:3]
-            yield et, fase, rol, et["revisor"] if rol in ("rev", "revplan") else et["autor"]
+            rol = rol_de_fase(et, fase)
+            yield et, fase, rol, et["revisor"] if rol in ("rev", "revplan", "cierre") else et["autor"]
         empezado = True
 
 
@@ -2543,6 +2728,28 @@ def etapa(et: dict, desde_fase: str = "autor", reanuda: bool = False) -> bool:
                 vivo(motivo_pausa=motivo)
                 log(f"{i}: ⛔ {motivo}")
                 return False
+        if rol == "rev" and cierre_aplica(et, fase):
+            # Encargo 87: la decisión se recalcula cada vez que se llega a esta fase, también tras --desde.
+            usar, motivo_cierre, pares = decidir_cierre(et, fase)
+            veredicto = "ESCALAR"
+            if usar:
+                log(f"{i}: {fase} va como cierre: {motivo_cierre}")
+                veredicto, motivo_cierre = correr_cierre(et, fase, desde, pares)
+            if veredicto == "DESPLEGABLE":
+                log(f"{i}: ✅ DESPLEGABLE ({fase}, cierre)")
+                return True
+            if veredicto == "NO DESPLEGABLE":
+                res = E / f"{i}r-RESULTADO.md"
+                (E / f"{i}r{fase[-1]}-RESULTADO.md").write_bytes(res.read_bytes())
+                log(f"{i}: ❌ no desplegable ({fase}, cierre)")
+                if int(fase[3:]) <= vueltas:
+                    try:
+                        texto_rev = res.read_text(encoding="utf-8")
+                    except (OSError, UnicodeDecodeError):
+                        texto_rev = ""
+                    consultar_o_seguir(et, fase, texto_rev)
+                continue
+            log(f"{i}: {fase} con la revisión completa: {motivo_cierre}")
         et_modelo = dict(et, esfuerzo_rev="medium") if rol == "revplan" else et
         mod = dict(modelo_de(et_modelo, modelo_rol), naturaleza=et.get("naturaleza"), encargo_id=i)
         exigir_candado(et, rol, mod, desde)
@@ -4433,6 +4640,8 @@ def main() -> int:
                 print(f"  en PC-2503 por el buzón · arnés {et['arnes']} · prompt {et['prompt']} · sin arreglos "
                       "automáticos; la revisión corre en la Pi sobre el RESULTADO")
             roles = ([('plan', 'autor', et['autor']), ('revplan', 'rev', et['revisor'])] if et.get('plan') else []) + [("autor", "autor", et["autor"]), ("rev", "rev", et["revisor"]), ("fix", "fix", et["autor"])]
+            if cierre_aplica(et):       # encargo 87: la rev2+ se pronostica como cierre
+                roles.append(("cierre", "cierre", et["revisor"]))
             for etiqueta, rol_modelo, cid in roles:
                 mod = modelo_de(dict(et, esfuerzo_rev="medium") if etiqueta == "revplan" else et, rol_modelo)
                 if remota(et) and rol_modelo != "rev":
@@ -4450,11 +4659,13 @@ def main() -> int:
                 ts, t5 = topes(cid, u)
                 q = quema(cid, u)
                 quien = f"{mod['modelo'] or '-'} {mod['esfuerzo']}".strip()
-                print(f"  {etiqueta if etiqueta in ('plan', 'revplan') else rol_modelo:5} {nombre(cid):15} {quien:24} [{mod['nivel']}]  {f['min']:>5} min  "
+                print(f"  {etiqueta if etiqueta in ('plan', 'revplan', 'cierre') else rol_modelo:5} {nombre(cid):15} {quien:24} [{mod['nivel']}]  {f['min']:>5} min  "
                       f"+{f['pct_5h']} % 5 h (p75 {f['pct_5h_p75']} %; ahora {u['5h']}, tope {t5})  +{f['pct_sem']} % sem "
                       f"(ahora {u['sem']}, tope {ts})  {u['fuente']}"
                       f"{'  [quemando hasta ' + q['hasta'].astimezone().strftime('%H:%M') + ']' if q['activa'] else ''}"
                       f"{'  [' + etiqueta_pronostico(f) + ']' if etiqueta_pronostico(f) else ''}")
+            if cierre_aplica(et):
+                print("  cierre: rev2+ si el arreglo pasa E1–E4 (si no, rev completa); el máximo de la ETA supone ambas")
         for m, r in modelos_con_candado(etapas).items():
             print(f"🔒 {m} pide autorización por Telegram al lanzar ({', '.join(r)})")
         r = restante(etapas, etapas[0]["id"], "plan" if etapas[0].get("plan") else "autor", 0)
