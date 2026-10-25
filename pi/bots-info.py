@@ -550,6 +550,259 @@ def margen_de(registro, limites, ahora, resumen=None, mod=None):
             "con_margen": con_margen}
 
 
+# --- «¿Quien tiene margen?» ya resuelto, para la imagen de /uso (encargo 90) ----------
+# La pagina 💳 Cuentas pinta `margen` y le suma, con `cargaDe` de cuentas.js, la carga
+# comprometida de las colas (`reglas` de `cola-run.py --panel`). `panel_margen` deja
+# TODO eso calculado, con los mismos textos, para que el bot solo dibuje: si el bot
+# recalculara, el bot y el panel terminarian discrepando. `capacidad_de` es el port
+# linea a linea de `cargaDe`; test_margen_panel.py lo compara con el de verdad, corrido
+# con node (ver pi/fixtures/cuentas/cargaDe-js.json).
+#
+# Ni root ni el bot ejecutan cola-run.py (el vault lo escriben los agentes): las `reglas`
+# llegan por PANEL_CACHE, que escribe pi/panel-cache.py como dcifu004.
+PANEL_CACHE = "/opt/nodo/datos/encargos-panel.json"
+PANEL_CACHE_MAX_MIN = 15
+_DIAS_CORTOS = ("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
+
+
+def _finito(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+
+
+def _redondeo(x, dec=0):
+    """Math.round de JS (mitad hacia arriba), no el redondeo bancario de Python."""
+    k = 10 ** dec
+    return math.floor(x * k + 0.5) / k
+
+
+def _num_js(x):
+    return str(int(x)) if float(x).is_integer() else repr(float(x))
+
+
+def n1_texto(x):
+    """`n1` de cuentas.js: un decimal, coma y signo menos tipografico."""
+    return _num_js(_redondeo(x, 1)).replace(".", ",").replace("-", "−")
+
+
+def pct_texto(x):
+    """`pct` de comun.js."""
+    return "sin dato" if x is None else f"{_num_js(_redondeo(x))} %"
+
+
+def _fecha(iso):
+    try:
+        d = datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return d.astimezone(TZ) if d.tzinfo else None
+
+
+def cuando_texto(iso):
+    """`cuando` de comun.js: «vie 03-10 03:59», en hora de Chile."""
+    d = _fecha(iso)
+    return "" if d is None else f"{_DIAS_CORTOS[d.weekday()]} {d:%d-%m %H:%M}"
+
+
+def faltan_texto(iso, ahora):
+    """`faltan` de comun.js: «en 5 h 20 min»; vacio si ya paso."""
+    d = _fecha(iso)
+    s = None if d is None else (d - ahora).total_seconds()
+    if s is None or s <= 0:
+        return ""
+    m = math.floor(s / 60)
+    if m < 60:
+        return f"en {max(1, m)} min"
+    h = m // 60
+    return f"en {h} h {m % 60} min" if h < 48 else f"en {h // 24} días"
+
+
+def hace_texto(iso, ahora):
+    """`hace` de comun.js."""
+    d = _fecha(iso)
+    s = max(0.0, (ahora - d).total_seconds()) if d else 0.0
+    if s < 60:
+        return "recién"
+    m = math.floor(s / 60)
+    if m < 60:
+        return f"hace {m} min"
+    h = m // 60
+    return f"hace {h} h {m % 60} min" if h < 48 else f"hace {h // 24} días"
+
+
+def colas_activas(reglas):
+    """`colasActivas` de cuentas.js: las colas de todas las celdas, en orden de aparicion."""
+    vistas = []
+    for r in reglas or []:
+        celdas = r.get("celdas") if isinstance(r, dict) else None
+        for cola in (celdas if isinstance(celdas, dict) else {}):
+            if cola not in vistas:
+                vistas.append(cola)
+    return vistas
+
+
+def capacidad_de(reglas, cid):
+    """`cargaDe(cid)` de cuentas.js: {h5, sem, colas} o None. Cada ventana trae el uso y el
+    tope que publica el panel, la carga y un tramo por cola; la de 5 h, ademas, lo que cae
+    tras la renovacion. Una ventana sin carga es None."""
+    reglas = [x for x in (reglas or []) if isinstance(x, dict)]
+    r = next((x for x in reglas if x.get("cuenta") == cid), None)
+    if not r or not isinstance(r.get("celdas"), dict):
+        return None
+    colas = colas_activas(reglas)
+
+    def ventana(vid, k, proxima):
+        w = next((x for x in (r.get("ventanas") if isinstance(r.get("ventanas"), list) else [])
+                  if isinstance(x, dict) and x.get("ventana") == vid), None)
+        if not w or not all(_finito(w.get(c)) for c in ("actual", "tope", "pronostico")):
+            return None
+        partes = []
+        for i, cola in enumerate(colas):
+            celda = r["celdas"].get(cola) if cola in r["celdas"] else None
+            valor = (celda or {}).get(k) if isinstance(celda, dict) or celda is None else None
+            if _finito(valor) and valor > 0:
+                partes.append({"cola": cola, "i": i, "pct": valor})
+        despues = r["proxima_5h"] if proxima and _finito(r.get("proxima_5h")) and r["proxima_5h"] > 0 else 0
+        if not partes and not despues:
+            return None
+        return {"uso": w["actual"], "tope": w["tope"], "carga": w["pronostico"], "partes": partes,
+                "despues": despues, "renueva": r.get("renueva_5h")}
+
+    h5, sem = ventana("5h", "pct_5h", True), ventana("semanal", "pct_sem", False)
+    usadas = {x["cola"] for w in (h5, sem) if w for x in w["partes"]}
+    if not h5 and not sem:
+        return None
+    return {"h5": h5, "sem": sem, "colas": [{"cola": c, "i": i} for i, c in enumerate(colas) if c in usadas]}
+
+
+_RE_COLA = re.compile(r"^[a-z]{1,12}[0-9]{0,4}[a-z]{0,2}$")
+_RE_PERSONA = re.compile(r"(?:diego)|(?:cami)")
+
+
+def cola_segura(x):
+    """`colaSegura` de cuentas.js: el nombre de una cola solo si tiene esa forma y no nombra a nadie."""
+    return x if isinstance(x, str) and _RE_COLA.match(x) and not _RE_PERSONA.search(x) else "«oculto»"
+
+
+def _hora_corta(iso):
+    d = _fecha(iso)
+    return None if d is None else f"{d:%H:%M}"
+
+
+def _barra(usado, w):
+    """Lo que dibuja `barraVentana`: anchos en % de la barra, con la carga y la marca del tope."""
+    if not w:
+        u = max(0.0, min(100.0, float(usado or 0)))
+        return {"usado": u, "tramos": [], "ocioso": 100 - u, "tope": None,
+                "clase": "lleno" if u >= 90 else "justo" if u >= 75 else ""}, None, None
+    u = max(0.0, min(100.0, float(w["uso"])))
+    x, tramos = u, []
+    for p in w["partes"]:
+        ancho = max(0.0, min(p["pct"], 100 - x))
+        x += p["pct"]
+        if ancho > 0:
+            tramos.append({"cola": cola_segura(p["cola"]), "i": p["i"], "ancho": ancho, "pct": p["pct"]})
+    suma = _redondeo(w["uso"] + w["carga"], 1)
+    capacidad = {"uso": w["uso"], "carga": w["carga"], "suma": suma, "tope": w["tope"],
+                 "sobre_tope": suma > w["tope"],
+                 "texto": [f"uso {n1_texto(w['uso'])} % + carga comprometida {n1_texto(w['carga'])} % = ",
+                           f"{n1_texto(suma)} %", f" · tope {n1_texto(w['tope'])} %"]}
+    despues = None
+    if w["despues"]:
+        hora = _hora_corta(w["renueva"])
+        despues = {"pct": w["despues"], "ancho": min(100, w["despues"]), "tope": max(0, min(100, w["tope"])),
+                   "texto": f"↻ {('desde las ' + hora) if hora else 'en la próxima ventana'}: "
+                            f"carga comprometida {n1_texto(w['despues'])} %"}
+    return {"usado": u, "tramos": tramos, "ocioso": max(0.0, 100 - max(u, x)), "tope": max(0, min(100, w["tope"])),
+            "clase": "lleno" if u >= 90 else "justo" if u >= 75 else ""}, capacidad, despues
+
+
+def panel_margen(margen, reglas, ahora):
+    """Lo que pinta `pintarMargen` de cuentas.js, resuelto: textos, numeros y anchos. None sin margen."""
+    if not margen:
+        return None
+
+    def ventana(etiqueta, v, umbral, w):
+        if not v:
+            return {"etiqueta": etiqueta, "estado": "sin_dato", "texto": f"{etiqueta}: sin dato",
+                    "barra": None, "capacidad": None, "despues": None, "renueva": None}
+        renueva = cuando_texto(v["renueva"]) if v.get("renueva") else ""
+        if v.get("renovada"):
+            barra, capacidad, despues = _barra(0, w)
+            return {"etiqueta": etiqueta, "estado": "renovada", "usado_pct": None, "libre_pct": None,
+                    "texto": f"{etiqueta}: ya se renovó",
+                    "nota": f" ({renueva}) y no se midió desde entonces" if renueva else "",
+                    "barra": barra, "capacidad": capacidad, "despues": despues, "renueva": None}
+        en = faltan_texto(v["renueva"], ahora) if v.get("renueva") else ""
+        barra, capacidad, despues = _barra(v["usado_pct"], w)
+        return {"etiqueta": etiqueta, "estado": "medida", "usado_pct": v["usado_pct"], "libre_pct": v["libre_pct"],
+                "usado": pct_texto(v["usado_pct"]), "libre": pct_texto(v["libre_pct"]),
+                "sobre_umbral": umbral if umbral is not None and v["usado_pct"] >= umbral else None,
+                "barra": barra, "capacidad": capacidad, "despues": despues,
+                "renueva": (f"se renueva {renueva}{f' ({en})' if en else ''}" if renueva
+                            else "sin ventana abierta: empieza con el próximo uso")}
+
+    gratis, tarjetas = [], []
+    for cid in margen["orden"]:
+        c = margen["cuentas"][cid]
+        if not c["pagada"]:
+            gratis.append(c["nombre"])
+            continue
+        carga = capacidad_de(reglas, cid)
+        rs = c.get("renueva_semana")
+        tarjetas.append({
+            "cuenta": cid, "nombre": c["nombre"], "con_margen": cid == margen.get("con_margen"), "sobre": bool(c["sobre"]),
+            "ventanas": [ventana("5 h", c["ventana_5h"], c.get("umbral_5h"), carga and carga["h5"]),
+                         ventana("Semana", c["semanal"], c.get("umbral_semanal"), carga and carga["sem"])],
+            "leyenda": [{"cola": cola_segura(x["cola"]), "i": x["i"]} for x in (carga["colas"] if carga else [])],
+            "renueva_semana": (f"semana: próxima renovación {cuando_texto(rs['cuando'])} "
+                               f"({'del registro' if rs['origen'] == 'registro' else 'supuesta'})"
+                               if rs and rs.get("origen") != "medido" else None),
+            "medido": (f"medido {hace_texto(c['momento'], ahora)}" if c.get("momento") else "sin medición")
+                      + (" · dato viejo" if c.get("viejo") else ""),
+        })
+    mejor = margen["cuentas"].get(margen.get("con_margen")) if margen.get("con_margen") else None
+    return {
+        "titulo": "⏳ ¿Quién tiene margen?",
+        "resumen": ({"nombre": mejor["nombre"],
+                     "texto": f" es la que tiene más margen: {pct_texto(mejor['libre_pct'])} libre en su ventana más apretada."}
+                    if mejor else {"nombre": "", "texto": "Ninguna cuenta pagada tiene margen medido bajo el umbral."}),
+        "tarjetas": tarjetas,
+        "gratis": gratis,
+        "con_carga": reglas is not None,
+    }
+
+
+def leer_panel_cache(ruta=None, ahora=None):
+    """(reglas, motivo) del caché que escribe pi/panel-cache.py. Sin archivo, roto o de mas de
+    PANEL_CACHE_MAX_MIN: (None, motivo) y la imagen sale sin carga, como la pagina si --panel falla."""
+    ahora = ahora or datetime.now(TZ)
+    try:
+        with open(ruta or PANEL_CACHE, encoding="utf-8") as fh:
+            d = json.load(fh)
+        escrito = _fecha(d.get("escrito"))
+        if escrito is None:
+            return None, "el caché del panel no dice cuándo se escribió"
+        if (ahora - escrito).total_seconds() > PANEL_CACHE_MAX_MIN * 60:
+            return None, f"el caché del panel tiene {hace_texto(d['escrito'], ahora)}"
+        reglas = d.get("reglas")
+        if not isinstance(reglas, list):
+            return None, "el caché del panel no trae reglas"
+        return [x for x in reglas if isinstance(x, dict)], ""
+    except (OSError, ValueError, AttributeError, TypeError) as e:
+        return None, f"no pude leer el caché del panel ({type(e).__name__})"
+
+
+def margen_json(ahora=None, panel_cache=None):
+    """Lo que imprime `bots-info --margen` (encargo 90): el margen y el panel ya resuelto. Sin
+    root: solo lee cuentas.toml, uso.json, recetas.py y el caché del panel."""
+    ahora = ahora or datetime.now(TZ)
+    uso = leer_uso_json()
+    limites, registro = limites_de(uso), registro_cuentas()
+    margen = margen_de(registro, limites, ahora, resumen_cuentas(registro, [], ahora, dict(limites)))
+    reglas, motivo = leer_panel_cache(panel_cache, ahora)
+    return {"momento": ahora.isoformat(timespec="seconds"), "margen": margen,
+            "panel": panel_margen(margen, reglas, ahora), "carga_motivo": motivo}
+
 # --- Historial y costo por ciclo semanal (30-09-2026) -------------------------------
 # Cada cuenta se renueva por semana (su limite semanal). El precio mensual se prorratea
 # por semana (× 12 / 52) y se reparte entre quienes la usaron EN ESE CICLO, en
@@ -1174,6 +1427,10 @@ def main():
 
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--margen"]:
+        # Encargo 90: lo que manda /uso como imagen. No necesita root ni lo pide.
+        json.dump(margen_json(), sys.stdout, ensure_ascii=False)
+        sys.exit(0)
     if os.geteuid() != 0:
         sys.exit("bots-info necesita root: sudo /usr/local/bin/bots-info")
     main()

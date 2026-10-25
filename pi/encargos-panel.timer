@@ -1,0 +1,12 @@
+[Unit]
+Description=Actualiza cada 5 min la carga comprometida que muestra /uso (encargo 90)
+
+[Timer]
+# Cinco minutos, como el recolector de estado: el caché vale 15 min, así que aguanta dos
+# corridas fallidas seguidas antes de que la imagen salga sin carga.
+OnBootSec=2min
+OnUnitActiveSec=5min
+# Sin Persistent=true: sólo importa la carga de AHORA.
+
+[Install]
+WantedBy=timers.target

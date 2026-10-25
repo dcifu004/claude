@@ -1,0 +1,189 @@
+{
+ "_nota": "Encargo 90. `uso` = los limites de pi/fixtures/avisos/uso-real.json (forma real de uso.json). `reglas` tiene la forma real de `cola-run.py --panel` (copiada de pi/fixtures/encargos/panel-46a-56b.json), con `actual` igual al uso medido para que la imagen sea coherente. `ahora` es 30 min despues de la medicion.",
+ "ahora": "2026-10-04T17:49:30-03:00",
+ "uso": {
+  "cuentas_interactivo": {
+   "claude_diego": {
+    "limites": {
+     "momento": "2026-10-04T17:19:20-03:00",
+     "plan": null,
+     "ventana_5h": {
+      "usado_pct": 14,
+      "renueva": "2026-10-05T00:30:00.072793+00:00"
+     },
+     "semanal": {
+      "usado_pct": 25,
+      "renueva": "2026-10-10T07:00:00.072814+00:00"
+     }
+    }
+   },
+   "claude_cami": {
+    "limites": {
+     "momento": "2026-10-04T17:19:22-03:00",
+     "plan": null,
+     "ventana_5h": {
+      "usado_pct": 35,
+      "renueva": "2026-10-04T23:30:00.453436+00:00"
+     },
+     "semanal": {
+      "usado_pct": 65,
+      "renueva": "2026-10-05T01:00:00.453460+00:00"
+     }
+    }
+   },
+   "codex": {
+    "limites": {
+     "momento": "2026-10-04T17:19:13-03:00",
+     "plan": "plus",
+     "ventana_5h": {
+      "usado_pct": 41.0,
+      "renueva": "2026-10-04T20:31:44-03:00"
+     },
+     "semanal": {
+      "usado_pct": 22.0,
+      "renueva": "2026-10-09T20:17:08-03:00"
+     }
+    }
+   }
+  }
+ },
+ "reglas": [
+  {
+   "cuenta": "codex",
+   "nombre": "Codex",
+   "colas": [
+    "cola87"
+   ],
+   "fuente": "uso.json",
+   "debil": false,
+   "ventanas": [
+    {
+     "ventana": "semanal",
+     "actual": 22.0,
+     "pronostico": 6.0,
+     "tope": 75,
+     "alcanza": true
+    },
+    {
+     "ventana": "5h",
+     "actual": 41.0,
+     "pronostico": 30.2,
+     "tope": 90,
+     "alcanza": true
+    }
+   ],
+   "alcanza": true,
+   "texto": "",
+   "celdas": {
+    "cola87": {
+     "pct_5h": 30.2,
+     "pct_5h_min": 18.1,
+     "pct_5h_max": 39.3,
+     "pct_sem": 6.0,
+     "pct_sem_min": 3.6,
+     "pct_sem_max": 7.8,
+     "proxima_5h": 0.0,
+     "debil": false
+    }
+   },
+   "proxima_5h": 0.0,
+   "renueva_5h": "2026-10-04T20:31:44-03:00",
+   "renueva_sem": "2026-10-09T20:17:08-03:00"
+  },
+  {
+   "cuenta": "claude_cami",
+   "nombre": "Claude (Cami)",
+   "colas": [
+    "cola87"
+   ],
+   "fuente": "uso.json",
+   "debil": false,
+   "ventanas": [
+    {
+     "ventana": "semanal",
+     "actual": 65.0,
+     "pronostico": 0.0,
+     "tope": 75,
+     "alcanza": true
+    },
+    {
+     "ventana": "5h",
+     "actual": 35.0,
+     "pronostico": 0.0,
+     "tope": 90,
+     "alcanza": true
+    }
+   ],
+   "alcanza": true,
+   "texto": "",
+   "celdas": {
+    "cola87": {
+     "pct_5h": 0.0,
+     "pct_5h_min": 0.0,
+     "pct_5h_max": 0.0,
+     "pct_sem": 0.0,
+     "pct_sem_min": 0.0,
+     "pct_sem_max": 0.0,
+     "proxima_5h": 0.0,
+     "debil": false
+    }
+   },
+   "proxima_5h": 0.0,
+   "renueva_5h": "2026-10-04T23:30:00.453436+00:00",
+   "renueva_sem": "2026-10-05T01:00:00.453460+00:00"
+  },
+  {
+   "cuenta": "claude_diego",
+   "nombre": "Claude (Diego)",
+   "colas": [
+    "cola87",
+    "cola88"
+   ],
+   "fuente": "uso.json",
+   "debil": false,
+   "ventanas": [
+    {
+     "ventana": "semanal",
+     "actual": 25.0,
+     "pronostico": 7.0,
+     "tope": 75,
+     "alcanza": true
+    },
+    {
+     "ventana": "5h",
+     "actual": 14.0,
+     "pronostico": 20.0,
+     "tope": 90,
+     "alcanza": true
+    }
+   ],
+   "alcanza": true,
+   "texto": "",
+   "celdas": {
+    "cola87": {
+     "pct_5h": 12.5,
+     "pct_5h_min": 7.5,
+     "pct_5h_max": 16.2,
+     "pct_sem": 4.0,
+     "pct_sem_min": 2.4,
+     "pct_sem_max": 5.2,
+     "proxima_5h": 0.0,
+     "debil": false
+    },
+    "cola88": {
+     "pct_5h": 7.5,
+     "pct_5h_min": 4.5,
+     "pct_5h_max": 9.8,
+     "pct_sem": 3.0,
+     "pct_sem_min": 1.8,
+     "pct_sem_max": 3.9,
+     "proxima_5h": 12.5,
+     "debil": false
+    }
+   },
+   "proxima_5h": 12.5,
+   "renueva_5h": "2026-10-05T00:30:00.072793+00:00",
+   "renueva_sem": "2026-10-10T07:00:00.072814+00:00"
+  }
+ ]
+}

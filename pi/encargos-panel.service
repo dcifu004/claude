@@ -1,0 +1,14 @@
+[Unit]
+Description=Deja la carga comprometida de las colas para /uso de los bots (encargo 90)
+# Unidad de USUARIO de dcifu004 (~/.config/systemd/user/), como los timers de las colas: corre
+# cola-run.py --panel con el mismo usuario con que lo corre la página 💳 Cuentas. Ni root ni el
+# bot ejecutan código del vault. Queda como archivo: se instala en la Pi, no en este encargo.
+# El vault y /opt/nodo/datos están dentro del volumen cifrado: con el volumen cerrado falla
+# y el caché envejece (bots-info --margen lo da por vencido a los 15 min).
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/pi/panel-cache.py
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0022
