@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Cockpit · Projects (maqueta 98)</title>
+  <link rel="stylesheet" href="comun/tokens.css">
+  <link rel="stylesheet" href="comun/app.css">
+  <link rel="stylesheet" href="projects.css">
+</head>
+<body data-alt="98">
+  <aside id="cockpit-rail" class="cockpit-rail" aria-label="Menú de Cockpit">
+    <div class="rail-brand"><span aria-hidden="true">◈</span><strong>Cockpit</strong></div>
+    <nav id="tool-nav" class="rail-nav"></nav>
+    <div class="rail-divider" aria-hidden="true"></div>
+    <nav id="native-nav" class="rail-nav rail-native" aria-label="Herramientas nativas"></nav>
+  </aside>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="tool-identity">
+        <span id="node-pulse" class="node-pulse" aria-label="Nodo conectado"></span>
+        <div><strong id="tool-title">AI Ops</strong><small>Pi5Diego · maqueta 98</small></div>
+      </div>
+      <nav id="tabs" class="tabs" aria-label="Secciones"></nav>
+      <label class="tab-select-wrap" for="tab-select">Sección<select id="tab-select" class="tab-select"></select></label>
+      <div class="top-actions">
+        <button id="command-button" class="command-button" type="button" aria-haspopup="dialog"><span>Ir a</span><kbd>Ctrl K</kbd></button>
+        <button id="account-chip" class="account-chip" type="button" data-term="Usage & Limits">Claude (Diego) · Claude (Cami) · Codex</button>
+        <button id="glossary-button" class="icon-button" type="button" data-term="Glossary" aria-label="Abrir glosario">Aa</button>
+        <button id="theme-button" class="icon-button" type="button" aria-label="Cambiar tema">☾</button>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1"></main>
+  </div>
+
+  <dialog id="command-dialog" class="command-dialog">
+    <form method="dialog" class="dialog-head"><strong>Ir a</strong><button class="icon-button" aria-label="Cerrar">×</button></form>
+    <input id="command-search" type="search" placeholder="Herramienta o sección…" autocomplete="off">
+    <div id="command-results" class="command-results"></div>
+  </dialog>
+
+  <dialog id="glossary-dialog" class="glossary-dialog">
+    <form method="dialog" class="dialog-head"><div><strong>Glosario AgentOps</strong><small>Nombres de industria y equivalencias del nodo</small></div><button class="icon-button" aria-label="Cerrar">×</button></form>
+    <div id="glossary-content"></div>
+  </dialog>
+
+  <dialog id="card-dialog" class="card-dialog" aria-labelledby="card-dialog-title">
+    <form method="dialog" class="dialog-head"><div><strong id="card-dialog-title">Encargo</strong><small id="card-dialog-sub"></small></div><button class="icon-button" aria-label="Cerrar">×</button></form>
+    <div id="card-dialog-body"></div>
+  </dialog>
+
+  <div id="term-tooltip" class="term-tooltip" role="tooltip" hidden></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="comun/glosario.js"></script>
+  <script src="comun/glosario-98.js"></script>
+  <script src="datos/datos-98.js"></script>
+  <script src="modelo.js"></script>
+  <script src="projects.js"></script>
+</body>
+</html>
