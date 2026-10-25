@@ -97,6 +97,11 @@ try:
 except ImportError:  # pragma: no cover - despliegue parcial
     clima_imagen = None
 
+try:
+    import spotify as spotify_mod
+except ImportError:  # pragma: no cover - despliegue parcial
+    spotify_mod = None
+
 # Nombre nuevo → interno (`archivos` → `claude`…). Se normaliza AL ENTRAR —lo que
 # llega de n8n, de los comandos y del perfil— y adentro todo sigue con el nombre de hoy.
 ALIAS_RUTA = recetas.ALIAS_RUTA if recetas else {}
@@ -173,6 +178,23 @@ def cargar_perfil(nombre: str) -> dict[str, Any]:
     # "true" entre comillas no puede quedar en un sí ni en un no silencioso.
     if not isinstance(datos.get("recibe_de_ia", False), bool):
         raise RuntimeError(f"recibe_de_ia en {ruta} tiene que ser true o false")
+    spotify = datos.get("spotify")
+    if spotify is not None:
+        if not isinstance(spotify, dict):
+            raise RuntimeError(f"spotify en {ruta} tiene que ser una tabla")
+
+        def api_local(valor: Any) -> str:
+            if not isinstance(valor, str) or not re.fullmatch(r"http://127\.0\.0\.1:[1-9][0-9]{0,4}", valor):
+                raise RuntimeError(f"spotify.api inválida en {ruta}: sólo http://127.0.0.1:<puerto>")
+            if int(valor.rsplit(":", 1)[1]) > 65535:
+                raise RuntimeError(f"spotify.api inválida en {ruta}: puerto fuera de rango")
+            return valor
+
+        spotify["api"] = api_local(spotify.get("api"))
+        otros = spotify.get("otros", [])
+        if not isinstance(otros, list):
+            raise RuntimeError(f"spotify.otros en {ruta} tiene que ser una lista")
+        spotify["otros"] = [api_local(x) for x in otros]
     return datos
 
 
@@ -6704,6 +6726,112 @@ def atender_temporizador(chat_id: int, texto: str, origen: str, en_voz: bool) ->
     return True
 
 
+# ── Música Spotify por perfil (88b) ───────────────────────────────────────────
+
+def _spotify_suena(estado: dict[str, Any] | None) -> bool:
+    return bool(estado) and not bool(estado.get("stopped")) and not bool(estado.get("paused"))
+
+
+def _spotify_artistas(item: dict[str, Any]) -> str:
+    artistas = item.get("artists", [])
+    return ", ".join(str(a.get("name", "")) for a in artistas
+                     if isinstance(a, dict) and a.get("name"))
+
+
+def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
+    """Atiende Spotify localmente; las órdenes multimedia no se dicen por voz."""
+    if spotify_mod is None:
+        return False
+    cfg = PERFIL_CFG.get("spotify")
+    # Sólo el vocativo del perfil que atiende se elimina. Uno dirigido al otro
+    # asistente queda intacto y debe continuar por su flujo normal.
+    if spotify_mod.vocativo_ajeno(texto, NOMBRE):
+        return False
+    limpio = sin_vocativo(texto)
+    inicial = spotify_mod.interpretar(limpio, sonando=False)
+    if not cfg:
+        if inicial:
+            send_text(chat_id, f"Spotify no está configurado para {NOMBRE}")
+            return True
+        return False
+    # La gran mayoría de las frases no son música. No consultar receptores para
+    # ellas: evita hasta dos timeouts de 3 s antes de compras/temporizadores.
+    # «pausa» sola es el único caso ambiguo y se resuelve después con /status.
+    pausa_sola = spotify_mod._limpiar(limpio) == "pausa"
+    if not inicial and not pausa_sola:
+        return False
+    bases = [cfg["api"], *cfg["otros"]]
+    try:
+        estados = {base: spotify_mod.estado(base) for base in bases}
+    except spotify_mod.SpotifyError:
+        if inicial:
+            send_text(chat_id, "No pude usar Spotify ahora.")
+            return True
+        return False
+    intencion = spotify_mod.interpretar(limpio, sonando=any(_spotify_suena(x) for x in estados.values()))
+    if not intencion:
+        return False
+    propio = estados[cfg["api"]]
+    try:
+        if intencion["accion"] == "pausa":
+            for base, estado_actual in estados.items():
+                if _spotify_suena(estado_actual):
+                    spotify_mod.pausar(base)
+            send_text(chat_id, "⏸️ Spotify en pausa.")
+            return True
+        if propio is None:
+            send_text(chat_id, "Falta vincular tu Spotify: /spotify")
+            return True
+        if intencion["accion"] == "sigue":
+            spotify_mod.reanudar(cfg["api"])
+            send_text(chat_id, f"▶️ Spotify de {PERSONA} sigue.")
+            return True
+        elegido = spotify_mod.elegir(
+            spotify_mod.buscar(intencion, requests.Session()),
+            intencion.get("titulo", ""), intencion.get("artista", ""),
+        )
+        if not elegido or not elegido.get("uri"):
+            send_text(chat_id, "No encontré esa música en Spotify.")
+            return True
+        # El otro receptor se pausa ANTES del play propio, siempre en ese orden.
+        for base in cfg["otros"]:
+            if _spotify_suena(estados.get(base)):
+                spotify_mod.pausar(base)
+        spotify_mod.reproducir(cfg["api"], str(elegido["uri"]))
+        titulo = str(elegido.get("name", intencion.get("artista", "Spotify")))
+        artistas = _spotify_artistas(elegido)
+        send_text(chat_id, f"▶️ {titulo}" + (f" — {artistas}" if artistas else "") +
+                  f" · Spotify de {PERSONA}")
+        return True
+    except spotify_mod.SpotifyError:
+        send_text(chat_id, "No pude usar Spotify ahora.")
+        return True
+
+
+def comando_spotify(chat_id: int) -> None:
+    """Muestra vínculo y canción actual, o el código device_auth pendiente."""
+    if spotify_mod is None or not PERFIL_CFG.get("spotify"):
+        send_text(chat_id, f"Spotify no está configurado para {NOMBRE}")
+        return
+    try:
+        datos = spotify_mod.estado(PERFIL_CFG["spotify"]["api"])
+        if datos is None:
+            pendiente = spotify_mod.codigo(PERFIL_CFG["spotify"]["api"])
+            if pendiente and pendiente.get("url") and pendiente.get("code"):
+                send_text(chat_id, f"Spotify de {PERSONA}: falta vincular.\nAbre {pendiente['url']}\nCódigo: {pendiente['code']}")
+            else:
+                send_text(chat_id, f"Spotify de {PERSONA}: falta vincular. Espera un momento y prueba /spotify.")
+            return
+        track = datos.get("track") if isinstance(datos.get("track"), dict) else {}
+        titulo = str(track.get("name", ""))
+        artistas = ", ".join(str(x) for x in track.get("artist_names", []) if x)
+        detalle = f" · {titulo}" + (f" — {artistas}" if artistas else "") if titulo else ""
+        estado_actual = "en pausa" if datos.get("paused") else "sonando" if not datos.get("stopped") else "sin música"
+        send_text(chat_id, f"Spotify de {PERSONA}: vinculado, {estado_actual}{detalle}.")
+    except spotify_mod.SpotifyError:
+        send_text(chat_id, "No pude ver Spotify ahora.")
+
+
 # --- Órdenes permanentes (encargo 35, D43) ----------------------------------
 # Nivel 1 de D10: todo esto escribe DATOS en casa/temporizadores.json. Ninguna
 # orden crea unidades ni ejecuta nada; quien las hace sonar es el mismo hilo de
@@ -8009,6 +8137,8 @@ def handle_message(message: dict[str, Any]) -> None:
             return
         if atender_temporizador(chat_id, dicho, "voz", en_voz=True):
             return
+        if atender_spotify(chat_id, dicho, en_voz=True):
+            return
         # 69: hora y clima sin modelo, después de temporizadores («mañana a las 7» es
         # de ellos) y antes de gasto, agenda, nodo y compras.
         if atender_hora_o_clima(chat_id, dicho, en_voz=True):
@@ -8085,6 +8215,8 @@ def handle_message(message: dict[str, Any]) -> None:
             return
         if atender_temporizador(chat_id, text, "telegram", en_voz=False):
             return
+        if atender_spotify(chat_id, text, en_voz=False):
+            return
         if atender_hora_o_clima(chat_id, text, en_voz=False):
             return
         gasto = intencion_gasto(text) if _gastos_activos() else None
@@ -8127,6 +8259,8 @@ def handle_message(message: dict[str, Any]) -> None:
         comando_buscar(chat_id, argument)
     elif command in {"/temporizadores", "/timer", "/alarmas"}:
         comando_temporizadores(chat_id, command, argument)
+    elif command == "/spotify":
+        comando_spotify(chat_id)
     elif command in {"/ordenes", "/recurrentes"}:
         comando_ordenes(chat_id, argument)
     elif command == "/estado":
@@ -8313,7 +8447,7 @@ def sincronizar_menu() -> None:
     """
     try:
         from update_telegram_commands import comandos
-        deseado = comandos(ALLOWED_AUTO_ROUTES, PERFIL)
+        deseado = comandos(ALLOWED_AUTO_ROUTES, PERFIL, bool(PERFIL_CFG.get("spotify")))
         actual = telegram("getMyCommands") or []
         if [(c.get("command"), c.get("description")) for c in actual] != \
                 [(c["command"], c["description"]) for c in deseado]:
