@@ -8495,6 +8495,11 @@ def catalogo_usos() -> set[str]:
         base.add("comuna")
     if not ml_falta():
         base.add("mercadolibre")
+    # 92b: lo mismo que los deja contestar (la ruta `boleta` del perfil; `comando_spotify`).
+    if "boleta" in ALLOWED_AUTO_ROUTES:
+        base.add("boleta")
+    if spotify_mod is not None and PERFIL_CFG.get("spotify"):
+        base.add("spotify")
     return base | {f"consulta:{r}" for r in ALLOWED_AUTO_ROUTES | {"auto"}}
 
 

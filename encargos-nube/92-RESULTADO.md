@@ -119,3 +119,73 @@ pi/test_cuentas_uso Ran 74 tests · FAILED (failures=1, errors=9, skipped=4)    
   suyo; en Jaime, los dos bots.
 - Decir que el bot anota qué función se usó, por dónde (texto, voz o botón) y si salió bien, **nunca** lo que se
   escribió o se dijo, y que se guarda 180 días.
+
+## Arreglos vuelta 1 (92b, 25-10-2026)
+
+Rama `claude/encargo-92b-arreglos`, creada desde `base-92b`. Cierra las dos medias de la revisión de Codex
+(`9092nr-RESULTADO.md`). Archivos tocados: `botv3/test_contador.py` y el bloque de `catalogo_usos()` en
+`botv3/botv3.py` (+5 líneas, nada más).
+
+### 1. [Media] `test_contador.py` salía a la red → cerrado
+
+- **Guarda que hace fallar la suite.** Al importar, la suite reemplaza `socket.socket.connect` (solo para
+  AF_INET/AF_INET6: los sockets Unix del temporal siguen funcionando), `socket.create_connection`,
+  `socket.getaddrinfo` y `urllib.request.urlopen`. Cada intento se anota, y todas las clases heredan de
+  `SinRed`, que en su `addCleanup` **falla** la prueba si quedó algún intento, aunque el bot haya atrapado el
+  error y seguido.
+- **En el `setUp`** se reemplazan `datos_clima` (con la respuesta real guardada de open-meteo, con las fechas
+  corridas a hoy), `send_voice`, `sintetizar` (sin Piper esta copia nunca llegaba a la voz; en la Pi sí),
+  `buscar_searxng`, `send_photo` y `send_document`. Además, `SES_TELEGRAM`, `SES_GROQ`, `SES_SEARXNG`,
+  `SES_CLIMA` y `SES_PROVEEDOR` pasan a ser sesiones que fallan y anotan el intento.
+- **Se afirman las llamadas simuladas**: el botón `menu:clima` pide el clima una vez y manda la foto, el caso de
+  voz contesta con una nota de voz simulada (`voces == [7]`) y `/buscar` usa el buscador simulado una vez.
+- **Reproducción antes del arreglo** (solo con la guarda puesta, salida real):
+
+  ```
+  FAIL: test_cada_boton_del_menu_y_los_prefijos  → socket.getaddrinfo ('127.0.0.1', 39965)  [proxy]
+        traza: callback_menu → comando_clima → enviar_clima → datos_clima → _consultar_open_meteo
+  FAIL: test_el_texto_del_mensaje_no_queda       → socket.getaddrinfo ('127.0.0.1', 8888)
+        traza: handle_message → comando_buscar → buscar_searxng
+  Ran 17 tests — FAILED (failures=2)
+  ```
+
+  Con `datos_clima` simulado apareció **una tercera fuga que la revisión no nombraba**: la imagen del clima sale
+  por `send_photo` → `SES_TELEGRAM.post(.../sendPhoto)`, no por `telegram()`. La guarda la cazó y también quedó
+  simulada.
+
+### 2. [Media] `/usos` dejaba fuera `spotify` y `boleta` → cerrado
+
+`catalogo_usos()` suma `boleta` cuando la ruta `boleta` está en las rutas del perfil (`ALLOWED_AUTO_ROUTES`), y
+`spotify` cuando `spotify.py` está desplegado y el perfil tiene `spotify` configurado. Es la misma condición
+con la que `comando_spotify` deja de contestar «Spotify no está configurado». Pruebas nuevas
+(`CatalogoSinUsar`): con y sin la ruta `boleta`; sin `spotify`, con `spotify` y con `spotify` configurado pero
+sin el módulo; y una de punta a punta por `/usos`, donde los dos aparecen en «Sin usar nunca» y dejan de
+aparecer en cuanto se usan.
+
+### Pruebas (salida real, como la cola, desde la raíz)
+
+```
+$ python3 botv3/test_contador.py
+Ran 20 tests in 0.628s
+OK
+
+$ python3 botv3/test_botv3.py
+antes:   Ran 490 tests — FAILED (failures=9, errors=36)
+después: Ran 490 tests — FAILED (failures=9, errors=36)
+diff de la lista de fallas antes/después: vacío (las mismas 45, del entorno de esta copia)
+
+$ python3 botv3/test_spotify.py
+python3: can't open file '/home/user/claude/botv3/test_spotify.py': [Errno 2] No such file or directory
+```
+
+**`test_spotify.py` no existe en esta copia** (tampoco `botv3/spotify.py`: la 88b no trajo esos dos archivos a
+`base-92b`). No se pudo correr. Hay que correrlo en la Pi antes de desplegar. Por lo mismo, la prueba «con
+spotify» reemplaza `spotify_mod` por un objeto vacío: `catalogo_usos()` solo mira que exista.
+
+### Riesgos abiertos
+
+- La guarda de red reemplaza funciones de `socket` y `urllib` para todo el proceso de la suite. Si un día se
+  corre `test_contador.py` junto con otras suites en el mismo proceso (`-m unittest discover`), esas suites
+  también quedan sin red. Es lo deseable, pero podría sorprender.
+- `boleta` entra al catálogo por la ruta, aunque `boleta.py` falte. En ese caso `correccion_boleta` no toma nada
+  y la función figuraría «sin usar» sin poder usarse. Hoy `boleta.py` está desplegado.
