@@ -998,10 +998,165 @@ def orden_de_cuentas(ruta: str, forzada: str | None = None,
     con_sesion = {cid for cid, (_, motor, carpeta) in por_id.items()
                   if sesion_en(ruta, motor, carpeta)}
     limites, umbrales = _limites_y_umbrales()
+    if ruta == RUTA_TECNICA and hasattr(recetas, "orden_por_margen"):
+        return _orden_tecnica(cadena, por_id, con_sesion, limites, umbrales, receta)
     eleccion = recetas.elegir_orden(
         [c for c, _, _ in cadena], list(por_id), con_sesion, limites,
         umbrales, receta, datetime.now(timezone.utc))
     return [por_id[c] for c in eleccion["orden"]], eleccion
+
+
+# --- Cuenta de la ruta técnica (encargo 96) ---------------------------------------
+# La ruta `codex` (la «técnica») elige su cuenta con el criterio de «¿Quién tiene margen?» de 💳 Cuentas: gana la
+# con más libre en su ventana más apretada (recetas.orden_por_margen, la misma función que usa bots-info). Vale
+# entre por el selector «pregunta técnica», por /tecnica o por el clasificador. Elegibles: la cadena del perfil y,
+# con receta automática, cuentas_del_automatico (Jaime llega así a las 3; Pilar se queda con sus 2).
+# Modo fijo: la cuenta de /cuenta_tecnica o la cadena de una sola cuenta sin receta automática (💳 Cuentas → Fija);
+# va primero y, si está sobre el umbral o falla, cae a la siguiente y se avisa. La cuenta forzada 06b no pasa por acá.
+# Entre Telegram y 💳 Cuentas gana el último cambio: el estado de Telegram guarda la huella del perfil con que se
+# tocó el botón, y si al arrancar el perfil es otro (una propuesta aplicada reinicia el bot), se descarta.
+RUTA_TECNICA = "codex"
+CUENTA_TECNICA = STATE_DIR / "cuenta-tecnica.json"
+MAX_CUENTA_TECNICA = 4096
+_TECNICA_RARO: set[str] = set()
+
+
+def huella_tecnica() -> str:
+    """sha256 corto de la receta y la cadena de la ruta técnica del perfil cargado."""
+    crudo = PERFIL_CFG.get("cuentas")
+    cadena = crudo.get(RUTA_TECNICA) if isinstance(crudo, dict) else None
+    dato = json.dumps({"receta": RECETAS.get(RUTA_TECNICA), "cadena": cadena}, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(dato.encode("utf-8")).hexdigest()[:16]
+
+
+def _tecnica_rara(motivo: str) -> None:
+    """Lo raro de cuenta-tecnica.json se dice UNA vez por motivo (en el log) y se ignora."""
+    if motivo not in _TECNICA_RARO:
+        _TECNICA_RARO.add(motivo)
+        LOG.warning("cuenta-tecnica.json %s; se ignora y rige el perfil", motivo)
+
+
+def leer_cuenta_tecnica(con_huella: bool = True) -> dict[str, Any] | None:
+    """El estado de /cuenta_tecnica, o None. Sin seguir enlaces, regular, propio, acotado y con forma conocida.
+    `con_huella`: sólo si el perfil es el mismo que cuando se tocó el botón."""
+    try:
+        fd = os.open(CUENTA_TECNICA, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except FileNotFoundError:
+        return None
+    except OSError:
+        _tecnica_rara("no se puede abrir sin seguir enlaces")
+        return None
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_uid != os.geteuid() or st.st_size > MAX_CUENTA_TECNICA:
+            _tecnica_rara("no es un archivo regular propio y chico")
+            return None
+        with os.fdopen(fd, "rb", closefd=False) as fh:
+            dato = json.loads(fh.read(MAX_CUENTA_TECNICA + 1).decode("utf-8"))
+    except (OSError, ValueError, UnicodeDecodeError):
+        _tecnica_rara("está roto")
+        return None
+    finally:
+        os.close(fd)
+    if not (isinstance(dato, dict) and dato.get("modo") in ("auto", "fija") and isinstance(dato.get("perfil_visto"), str)
+            and (dato["modo"] == "auto" or dato.get("cuenta") in CUENTAS_CONOCIDAS)):
+        _tecnica_rara("no tiene la forma esperada")
+        return None
+    if con_huella and dato["perfil_visto"] != huella_tecnica():
+        return None
+    return dato
+
+
+def guardar_cuenta_tecnica(modo: str, cuenta: str | None) -> None:
+    """Escritura atómica: flock, un .tmp único por proceso, fsync y os.replace; 0600."""
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    dato = {"modo": modo, "cuenta": cuenta, "ts": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "desde": "telegram", "perfil_visto": huella_tecnica()}
+    candado = os.open(CUENTA_TECNICA.with_name(".cuenta-tecnica.lock"), os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    try:
+        fcntl.flock(candado, fcntl.LOCK_EX)
+        tmp = CUENTA_TECNICA.with_name(f".cuenta-tecnica.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp")
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        try:
+            os.write(fd, json.dumps(dato, ensure_ascii=False).encode("utf-8"))
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        try:
+            os.replace(tmp, CUENTA_TECNICA)
+        except OSError:
+            tmp.unlink(missing_ok=True)
+            raise
+    finally:
+        os.close(candado)
+
+
+def revisar_cuenta_tecnica_al_arrancar() -> None:
+    """Gana el último cambio: si el perfil cambió desde que se tocó el botón (💳 Cuentas aplicó una propuesta, que
+    reinicia el bot), el estado de Telegram queda sin efecto. Se borra, así el aviso sale una sola vez."""
+    dato = leer_cuenta_tecnica(con_huella=False)
+    if dato is None or dato["perfil_visto"] == huella_tecnica():
+        return
+    try:
+        CUENTA_TECNICA.unlink()
+    except OSError as exc:
+        LOG.warning("no pude descartar cuenta-tecnica.json: %s", type(exc).__name__)
+        return
+    LOG.info("cuenta técnica: el perfil cambió después del botón de Telegram; rige el perfil")
+    send_text(CHAT_ID, "La cuenta técnica la cambiaste desde 💳 Cuentas; dejé sin efecto la de Telegram.")
+
+
+def elegibles_tecnica() -> list[str]:
+    """La cadena del perfil para la técnica y, con receta automática, las pagadas que el muro permite."""
+    ids = [c for c, _, _ in CUENTAS_POR_RUTA.get(RUTA_TECNICA, []) if cuenta_permitida(RUTA_TECNICA, c)[0]]
+    receta = RECETAS.get(RUTA_TECNICA) or {}
+    if receta.get("automatico") and recetas is not None:
+        ids += [c for c in (recetas.cuentas_del_automatico(RUTA_TECNICA) if MUROS else CUENTAS_CONOCIDAS)
+                if c in CUENTAS_CONOCIDAS and c not in ids and cuenta_permitida(RUTA_TECNICA, c)[0]]
+    return ids
+
+
+def modo_tecnica(elegibles: list[str]) -> tuple[str, str | None, str]:
+    """(modo, cuenta fija o None, origen): Telegram si su estado sigue vigente; si no, lo que diga el perfil."""
+    dato = leer_cuenta_tecnica()
+    if dato and dato["modo"] == "fija" and dato.get("cuenta") in elegibles:
+        return "fija", dato["cuenta"], "telegram"
+    if dato and dato["modo"] == "auto":
+        return "auto", None, "telegram"
+    cadena = [c for c, _, _ in CUENTAS_POR_RUTA.get(RUTA_TECNICA, [])]
+    if not (RECETAS.get(RUTA_TECNICA) or {}).get("automatico") and len(cadena) == 1:
+        return "fija", cadena[0], "perfil"
+    return "auto", None, "perfil"
+
+
+def _orden_tecnica(cadena: list[tuple[str, str, Path]], por_id: dict[str, tuple[str, str, Path]], con_sesion: set[str],
+                   limites: dict[str, Any], umbrales: dict[str, Any], receta: dict[str, Any] | None
+                   ) -> tuple[list[tuple[str, str, Path]], dict[str, Any]]:
+    base = [c for c, _, _ in cadena] + [c for c in por_id if c not in {x for x, _, _ in cadena}]
+    # elegir_orden mide (sesión, % y umbral) de TODAS las elegibles; el orden lo pone orden_por_margen.
+    eleccion = recetas.elegir_orden(base, list(por_id), con_sesion, limites, umbrales,
+                                    {**(receta or {}), "automatico": True}, datetime.now(timezone.utc))
+    modo, fija, origen = modo_tecnica(list(por_id))
+    orden = recetas.orden_por_margen(eleccion["orden"], eleccion["detalle"], base, fija)
+    # La primera «ideal»: la fija, o la de más margen sin mirar el umbral. Si contesta otra, se avisa por qué.
+    sin_umbral = {c: {**d, "sobre": False} for c, d in eleccion["detalle"].items()}
+    ideal = fija if modo == "fija" else next(iter(recetas.orden_por_margen(list(eleccion["detalle"]), sin_umbral, base)), None)
+    eleccion = {**eleccion, "orden": orden, "tecnica": {"modo": modo, "origen": origen, "ideal": ideal}}
+    return [por_id[c] for c in orden], eleccion
+
+
+def aviso_tecnica(eleccion: dict[str, Any], contesto: str) -> str | None:
+    """«🔁 …» si en la técnica contestó otra cuenta que la primera elegida."""
+    t = eleccion.get("tecnica") or {}
+    ideal = t.get("ideal")
+    if not ideal or ideal == contesto or eleccion.get("todas_sobre"):
+        return None
+    d = (eleccion.get("detalle") or {}).get(ideal)
+    motivo = "no tiene sesión en este bot" if d is None else "sobre el umbral" if d.get("sobre") else "falló"
+    quien, otra = CUENTAS_NOMBRE.get(ideal, ideal), CUENTAS_NOMBRE.get(contesto, contesto)
+    if t.get("modo") == "fija":
+        return f"🔁 {quien} {'está ' if motivo == 'sobre el umbral' else ''}{motivo}; contestó {otra}"
+    return f"🔁 Contestó {otra}: {quien} {'estaba ' if motivo == 'sobre el umbral' else ''}{motivo}"
 
 PIPER_BIN = os.environ.get("BOTV3_PIPER_BIN", "/usr/local/bin/piper")
 # La voz es parte del perfil: dos identidades no pueden sonar igual cuando llegue
@@ -1800,6 +1955,10 @@ Para elegir quién contesta una sola pregunta, dilo al principio: «pregúntale 
 Claude (Cami) …», «que conteste Codex …» o «con Claude (Diego) …». Si esa cuenta
 no tiene sesión en este bot, contesta la de siempre y te dice por qué.
 
+Para elegir la ruta, empieza (hablando o escrito) con «pregunta técnica: …», «pregunta
+rápida: …» o «busca en internet …». La técnica la contesta la cuenta con más margen
+(/cuenta_tecnica para fijar una); también vale «pregunta técnica con Codex: …».
+
 Di o escribe «guardar en memoria ...» para enseñarle algo de la casa o una
 preferencia tuya. Nada se guarda al decirlo: llega acá con botones y se escribe
 sólo cuando tú tocas uno.
@@ -2056,7 +2215,7 @@ def _url_buscar(valor: Any) -> tuple[str, str] | None:
     return bruto, _texto_buscar(dominio, 120)
 
 
-def registrar_busqueda(resultados: int, fallo: bool) -> None:
+def registrar_busqueda(resultados: int, fallo: bool, selector: str | None = None, canal: str | None = None) -> None:
     """Anexa una medición sin guardar la consulta ni depender del contador diario.
 
     El mismo archivo lo lee 78a. Cada línea siempre representa una consulta:
@@ -2077,6 +2236,8 @@ def registrar_busqueda(resultados: int, fallo: bool) -> None:
             dato = {"fecha": datetime.now(ZoneInfo("America/Santiago")).date().isoformat(),
                     "perfil": PERFIL, "busquedas": 1,
                     "resultados": max(0, int(resultados)), "fallo": bool(fallo)}
+            if selector:            # 96: «busca en internet …», dicho o escrito. Nunca la consulta.
+                dato["selector"], dato["canal"] = selector, canal
             os.write(fd, (json.dumps(dato, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8"))
             os.fsync(fd)
         finally:
@@ -2088,7 +2249,7 @@ def registrar_busqueda(resultados: int, fallo: bool) -> None:
         LOG.warning("no pude registrar uso de /buscar: %s", type(exc).__name__)
 
 
-def buscar_searxng(consulta: str) -> str:
+def buscar_searxng(consulta: str, selector: str | None = None, canal: str | None = None) -> str:
     """Consulta el SearXNG local y prepara, como máximo, cinco líneas seguras."""
     try:
         respuesta = SES_SEARXNG.get(SEARXNG_URL, params={"q": consulta, "format": "json"},
@@ -2100,7 +2261,7 @@ def buscar_searxng(consulta: str) -> str:
             raise ValueError("respuesta SearXNG inválida")
     except (requests.RequestException, OSError, ValueError, TypeError, AttributeError) as exc:
         LOG.warning("/buscar no disponible: %s", type(exc).__name__)
-        registrar_busqueda(0, True)
+        registrar_busqueda(0, True, selector, canal)
         return "🔎 El buscador está apagado ahora"
 
     lineas = []
@@ -2119,7 +2280,7 @@ def buscar_searxng(consulta: str) -> str:
             fecha = fecha[:10]
         detalle = f" · {fecha}" if fecha else ""
         lineas.append(f"{titulo} — {dominio}{detalle} · {enlace}")
-    registrar_busqueda(len(lineas), False)
+    registrar_busqueda(len(lineas), False, selector, canal)
     return "🔎 No encontré resultados." if not lineas else "\n".join(lineas)
 
 
@@ -2340,6 +2501,8 @@ def _correr_cadena(ruta: str, motores: dict[str, Any]) -> dict[str, Any]:
         if eleccion.get("todas_sobre"):
             nombre = CUENTAS_NOMBRE.get(cuenta, cuenta)
             resultado["aviso_cuentas"] = recetas.aviso_todas_sobre(cuenta, nombre, eleccion["detalle"])
+        elif not es_forzada and (aviso := aviso_tecnica(eleccion, cuenta)):
+            resultado["aviso_cuentas"] = aviso
         if es_forzada:
             resultado["aviso_forzada"] = f"🎯 Contestó {CUENTAS_NOMBRE.get(cuenta, cuenta)}, como pediste."
         elif eleccion.get("aviso_forzada"):
@@ -2438,6 +2601,9 @@ def anotar_uso_cuenta(ruta: str, cuenta: str, motor: str, ok: bool, segundos: fl
              "ok": ok, "s": round(segundos, 1), "tokens": getattr(_CONSUMO, "tokens", None)}
     if forzada:
         linea["forzada"] = True
+    # 96: por dónde llegó la pregunta, sólo si vino por un selector («pregunta técnica: …»). Nunca el texto.
+    if getattr(_PEDIDO, "selector", None):
+        linea["selector"], linea["canal"] = _PEDIDO.selector, _PEDIDO.canal
     try:
         with _LIBRO_LOCK, open(USO_CUENTAS, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(linea, ensure_ascii=False) + "\n")
@@ -4913,10 +5079,12 @@ def auto_query(prompt: str) -> dict[str, Any]:
 
 def process_query(adapter: str, prompt: str, en_voz: bool = False,
                   whisper_s: float = 0.0, adjunto: dict[str, Any] | None = None,
-                  cuenta: str | None = None) -> None:
+                  cuenta: str | None = None, selector: str | None = None) -> None:
     inicio = time.monotonic()
     _ETAPAS.d = {"whisper": whisper_s}
     _PEDIDO.cuenta = cuenta
+    _PEDIDO.selector = selector
+    _PEDIDO.canal = ("voz" if en_voz else "texto") if selector else None
     _PEDIDO.cuenta_preferida = None
     try:
         if adapter == "auto":
@@ -5000,13 +5168,13 @@ def process_query(adapter: str, prompt: str, en_voz: bool = False,
 
 def submit_query(adapter: str, prompt: str, en_voz: bool = False,
                  whisper_s: float = 0.0, adjunto: dict[str, Any] | None = None,
-                 cuenta: str | None = None) -> None:
+                 cuenta: str | None = None, selector: str | None = None) -> None:
     if not QUEUE_SLOTS.acquire(blocking=False):
         send_text(CHAT_ID, "Hay demasiadas consultas en espera. Intenta nuevamente en un momento.")
         return
     con = f" con {CUENTAS_NOMBRE.get(cuenta, cuenta)}" if cuenta else ""
     send_text(CHAT_ID, f"⏳ Consultando {adapter}{con} en modo de sólo lectura…")
-    WORKERS.submit(process_query, adapter, prompt, en_voz, whisper_s, adjunto, cuenta)
+    WORKERS.submit(process_query, adapter, prompt, en_voz, whisper_s, adjunto, cuenta, selector)
 
 
 def safe_command(argv: list[str], timeout: int = 45) -> str:
@@ -5479,6 +5647,57 @@ def cuenta_pedida(texto: str, permite_comando: bool) -> tuple[str | None, str]:
         # se reinterpreta a medias.
         return None, texto
     return extraer_cuenta(texto)
+
+
+# --- Selectores dichos (encargo 96) ---------------------------------------------
+# «pregunta técnica: …», «pregunta rápida: …» y «busca en internet …», al inicio del mensaje, por voz o escritos:
+# quien dice el selector eligió la ruta, así que va ANTES de las intenciones locales (nota 25, «Frase con selector»).
+# Lista cerrada y anclada al inicio, sobre el texto en plano (mismo largo que el original: se corta el de verdad).
+_TRAS_SELECTOR = r"(?![a-z0-9])[\s,:;.!?\"'»”-]*"        # sin «¿»: el que abre la pregunta se queda con ella
+SELECTORES_RE = (
+    ("tecnica", re.compile(rf"{_ANTES_DE_LA_FRASE}(?:una\s+)?pregunta\s+tecnica{_TRAS_SELECTOR}")),
+    ("rapida", re.compile(rf"{_ANTES_DE_LA_FRASE}(?:una\s+)?pregunta\s+rapida{_TRAS_SELECTOR}")),
+    ("buscar", re.compile(rf"{_ANTES_DE_LA_FRASE}busca(?:me)?\s+en\s+(?:internet|la\s+web){_TRAS_SELECTOR}")),
+)
+SELECTOR_RUTA = {"tecnica": "codex", "rapida": "gpt"}
+SELECTOR_NOMBRE = {"tecnica": "técnica", "rapida": "rápida"}
+MAX_SELECTOR = 4000
+
+
+def selector_dicho(texto: str) -> tuple[str | None, str]:
+    """(selector, resto) si el mensaje EMPIEZA con un selector; si no, (None, texto) intacto."""
+    if not isinstance(texto, str):
+        return None, texto
+    plano = _plano(texto)
+    for nombre, regex in SELECTORES_RE:
+        m = regex.match(plano)
+        if m:
+            return nombre, texto[m.end():].strip()
+    return None, texto
+
+
+def atender_selector(chat_id: int, texto: str, en_voz: bool, whisper_s: float = 0.0) -> bool:
+    """El selector manda: la ruta queda elegida. La cuenta dicha en el resto sigue la regla 06b (sola, sin
+    respaldo). Sin pregunta, se pide; sin la ruta en el perfil, se dice lo mismo que el comando."""
+    selector, resto = selector_dicho(texto)
+    if not selector:
+        return False
+    resto = resto[:MAX_SELECTOR]
+    canal = "voz" if en_voz else "texto"
+    if selector == "buscar":
+        send_text(chat_id, buscar_searxng(resto, selector, canal) if resto else "¿Qué quieres que busque?")
+        return True
+    ruta = SELECTOR_RUTA[selector]
+    if ruta not in ALLOWED_AUTO_ROUTES:
+        send_text(chat_id, f"La ruta {SELECTOR_NOMBRE[selector]} no corresponde a este bot.")
+        return True
+    cuenta, pregunta = cuenta_pedida(resto, False)
+    if not pregunta.strip():
+        send_text(chat_id, f"¿Qué le pregunto a {CUENTAS_NOMBRE.get(cuenta, cuenta)}?" if cuenta
+                  else f"¿Cuál es la pregunta {SELECTOR_NOMBRE[selector]}?")
+        return True
+    submit_query(ruta, pregunta.strip(), en_voz=en_voz, whisper_s=whisper_s, cuenta=cuenta, selector=selector)
+    return True
 
 
 def intencion_compras(texto: str) -> tuple[str, str] | None:
@@ -7981,6 +8200,45 @@ def callback_menu(chat_id: int, query_id: str, area: str) -> None:
     abrir(chat_id)
 
 
+def _teclado_tecnica(elegibles: list[str]) -> dict[str, Any]:
+    return {"inline_keyboard": [[{"text": "🤖 Automático", "callback_data": "ct:auto"}]] +
+            [[{"text": CUENTAS_NOMBRE.get(c, c), "callback_data": f"ct:{c}"}] for c in elegibles]}
+
+
+def comando_cuenta_tecnica(chat_id: int) -> None:
+    """/cuenta_tecnica (96): el modo vigente de la ruta técnica y un botón por cuenta elegible de ESTE perfil."""
+    if RUTA_TECNICA not in ALLOWED_AUTO_ROUTES:
+        send_text(chat_id, "La ruta técnica no corresponde a este bot.")
+        return
+    elegibles = elegibles_tecnica()
+    modo, fija, origen = modo_tecnica(elegibles)
+    vigente = "automática: la que tenga más margen" if modo == "auto" else f"fija: {CUENTAS_NOMBRE.get(fija, fija)}"
+    desde = "desde Telegram" if origen == "telegram" else "según 💳 Cuentas (el perfil)"
+    telegram("sendMessage", {"chat_id": chat_id, "reply_markup": _teclado_tecnica(elegibles), "text":
+             f"🛠️ Cuenta de la ruta técnica: {vigente}, {desde}.\n"
+             f"Puede contestar: {', '.join(CUENTAS_NOMBRE.get(c, c) for c in elegibles) or 'ninguna'}.\n"
+             "Si la elegida está sobre el umbral o falla, contesta la siguiente y te digo cuál."})
+
+
+def callback_cuenta_tecnica(chat_id: int, query_id: str, eleccion: str) -> None:
+    elegibles = elegibles_tecnica()
+    if RUTA_TECNICA not in ALLOWED_AUTO_ROUTES:
+        respuesta = "La ruta técnica no corresponde a este bot."
+    elif eleccion != "auto" and eleccion not in elegibles:
+        nombre = CUENTAS_NOMBRE.get(eleccion, "esa cuenta")
+        respuesta = f"{nombre} no puede contestar la ruta técnica en este bot."
+    else:
+        try:
+            guardar_cuenta_tecnica("auto" if eleccion == "auto" else "fija", None if eleccion == "auto" else eleccion)
+            respuesta = ("🤖 Ruta técnica en automático: contesta la que tenga más margen." if eleccion == "auto"
+                         else f"🛠️ La ruta técnica parte por {CUENTAS_NOMBRE.get(eleccion, eleccion)}.")
+        except OSError as exc:
+            LOG.warning("no pude guardar cuenta-tecnica.json: %s", type(exc).__name__)
+            respuesta = "❌ No pude guardar la cuenta técnica."
+    telegram("answerCallbackQuery", {"callback_query_id": query_id, "text": respuesta[:190]})
+    send_text(chat_id, respuesta)
+
+
 def handle_callback(query: dict[str, Any]) -> None:
     data = str(query.get("data", ""))
     message = query.get("message") or {}
@@ -8003,6 +8261,9 @@ def handle_callback(query: dict[str, Any]) -> None:
         return
     if data.startswith("ggm:"):
         callback_google_menu(chat_id, query_id, data[4:])
+        return
+    if data.startswith("ct:"):
+        callback_cuenta_tecnica(chat_id, query_id, data[3:])
         return
     partes = data.split(":")
     if len(partes) != 3 or partes[0] not in {"mem", "cmp", "ggl", "cal", "ord", "mlv", "bol", "clm", "cmn"}:
@@ -8160,6 +8421,9 @@ def handle_message(message: dict[str, Any]) -> None:
         # equivoca con nombres propios y hay que poder ver de qué texto partió la
         # respuesta sin tener que volver a escuchar el audio.
         send_text(chat_id, f"🎤 Entendí: {dicho}")
+        # 96: «pregunta técnica: …» elige la ruta, antes de la cuenta 06b y de toda intención local.
+        if atender_selector(chat_id, dicho, True, time.monotonic() - t_whisper):
+            return
         # «Jaime, pregúntale a Codex…» (06b): es una consulta, así que no pasa por
         # memoria ni por compras. La frase se quita antes de clasificar.
         cuenta, pregunta = extraer_cuenta(dicho)
@@ -8243,6 +8507,9 @@ def handle_message(message: dict[str, Any]) -> None:
     if str(respuesta_a.get("text", "")).startswith("🛒 Una cosa por línea"):
         atender_compras(chat_id, "agregar", text, "telegram", en_voz=False)
         return
+    # 96: el selector escrito, igual que dicho; un /comando nunca es un selector.
+    if not text.lstrip().startswith("/") and atender_selector(chat_id, text, False):
+        return
     cuenta, pregunta = cuenta_pedida(text, True)
     if cuenta:
         if not pregunta:
@@ -8303,6 +8570,8 @@ def handle_message(message: dict[str, Any]) -> None:
         comando_temporizadores(chat_id, command, argument)
     elif command == "/spotify":
         comando_spotify(chat_id)
+    elif command == "/cuenta_tecnica":
+        comando_cuenta_tecnica(chat_id)
     elif command in {"/ordenes", "/recurrentes"}:
         comando_ordenes(chat_id, argument)
     elif command == "/estado":
@@ -8376,11 +8645,11 @@ ALIAS_COMANDOS = {
     "/nuevo": "olvidar", "/compras": "compras", "/gastos": "gastos", "/buscar": "buscar",
     "/temporizadores": "temporizadores", "/timer": "temporizadores", "/alarmas": "temporizadores",
     "/ordenes": "ordenes", "/recurrentes": "ordenes", "/estado": "estado", "/uso": "uso", "/usos": "usos",
-    "/remoto": "remoto", "/spotify": "spotify", **{c: "mercadolibre" for c in COMANDOS_ML},
+    "/remoto": "remoto", "/spotify": "spotify", "/cuenta_tecnica": "cuenta_tecnica", **{c: "mercadolibre" for c in COMANDOS_ML},
 }
 PREFIJOS_BOTON = {"gas": "gastos", "remoto": "remoto", "ggm": "google", "mem": "memoria", "cmp": "compras",
                   "ggl": "google", "cal": "calificar", "ord": "ordenes", "mlv": "mercadolibre", "bol": "boleta",
-                  "clm": "clima", "cmn": "comuna"}
+                  "clm": "clima", "cmn": "comuna", "ct": "cuenta_tecnica"}
 
 
 def funcion_de_update(update: dict[str, Any]) -> tuple[str, str | None]:
@@ -8466,6 +8735,7 @@ MARCAS = {
     "atender_nodo": (lambda chat_id, intencion, *_: intencion if intencion in ("estado", "uso") else "desconocido", False),
     "atender_compras": ("compras", False), "submit_query": (_ruta_de_consulta, False),
     "atender_spotify": ("spotify", True),
+    "atender_selector": (lambda chat_id, texto, *_: f"selector:{selector_dicho(texto)[0]}", True),
 }
 for _nombre, (_funcion, _condicional) in MARCAS.items():
     globals()[_nombre] = _marcador(globals()[_nombre], _funcion, _condicional)
@@ -8500,6 +8770,11 @@ def catalogo_usos() -> set[str]:
         base.add("boleta")
     if spotify_mod is not None and PERFIL_CFG.get("spotify"):
         base.add("spotify")
+    # 96: los selectores dichos, cada uno con su ruta; «busca en internet» es el buscador, que todos tienen.
+    base.add("selector:buscar")
+    base |= {f"selector:{s}" for s, r in SELECTOR_RUTA.items() if r in ALLOWED_AUTO_ROUTES}
+    if RUTA_TECNICA in ALLOWED_AUTO_ROUTES:
+        base.add("cuenta_tecnica")
     return base | {f"consulta:{r}" for r in ALLOWED_AUTO_ROUTES | {"auto"}}
 
 
@@ -8708,6 +8983,7 @@ def main() -> int:
              ",".join(sorted(p for p in CLAVES if _clave(p))) or "ninguno",
              " → ".join(GENERAL_GRATIS))
     sincronizar_menu()
+    revisar_cuenta_tecnica_al_arrancar()        # 96: gana el último cambio entre 💳 Cuentas y Telegram
     if REGISTRO_USOS is not None:       # encargo 92: lo que este bot tiene, para «sin usar nunca»
         REGISTRO_USOS.publicar_catalogo(catalogo_usos())
     poll_forever()

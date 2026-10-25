@@ -5947,8 +5947,9 @@ class MenuCentralYGoogleTests(unittest.TestCase):
                          ["menu", "compras", "gastos", "google", "temporizadores", "buscar", "remoto", "ayuda"])
         self.assertEqual([c["command"] for c in comandos([], "pilar")],
                          ["menu", "compras", "temporizadores", "buscar", "ayuda"])
+        # 96: /cuenta_tecnica sólo donde existe la ruta técnica (jaime la tiene; las dos de arriba, no).
         self.assertEqual([c["command"] for c in comandos(botv3.ALLOWED_AUTO_ROUTES, "jaime")],
-                         ["menu", "compras", "gastos", "google", "temporizadores", "buscar", "remoto", "ayuda"])
+                         ["menu", "compras", "gastos", "google", "temporizadores", "buscar", "cuenta_tecnica", "remoto", "ayuda"])
 
     def test_reply_de_evento_en_un_perfil_sin_google(self):
         modulo, limpiar = _perfil_temporal('nombre = "P"\nvaults = []\nrutas = ["web"]\n')

@@ -23,6 +23,7 @@ import json
 import math
 import os
 import re
+import stat
 import subprocess
 import sys
 import tomllib
@@ -101,6 +102,32 @@ def leer_texto(ruta):
 def estado_dir(perfil):
     # Jaime conserva el directorio historico sin sufijo (ver 10-perfil.conf).
     return "/opt/nodo/datos/botv3" if perfil == "jaime" else f"/opt/nodo/datos/botv3-{perfil}"
+
+
+def cuenta_tecnica_de(perfil, carpeta=None):
+    """Encargo 96: el modo de la ruta tecnica que se eligio desde Telegram (/cuenta_tecnica), para que 💳 Cuentas
+    muestre quien la cambio. Solo lectura y sin seguir enlaces (bots-info corre como root): regular, chico y con la
+    forma conocida. None si no hay; {"error": "ilegible"} si hay algo raro."""
+    ruta = os.path.join(carpeta or estado_dir(perfil), "cuenta-tecnica.json")
+    try:
+        fd = os.open(ruta, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except FileNotFoundError:
+        return None
+    except OSError:
+        return {"error": "ilegible"}
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_size > 4096:
+            return {"error": "ilegible"}
+        with os.fdopen(fd, "rb", closefd=False) as fh:
+            dato = json.loads(fh.read(4097).decode("utf-8"))
+    except (OSError, ValueError, UnicodeDecodeError):
+        return {"error": "ilegible"}
+    finally:
+        os.close(fd)
+    if not isinstance(dato, dict) or dato.get("modo") not in ("auto", "fija"):
+        return {"error": "ilegible"}
+    return {k: (dato.get(k) if isinstance(dato.get(k), str) else None) for k in ("modo", "cuenta", "ts", "desde")}
 
 
 def sh(args):
@@ -527,7 +554,7 @@ def margen_de(registro, limites, ahora, resumen=None, mod=None):
                 # Medido antes de una renovacion que ya paso: desde entonces no hay dato.
                 "renovada": usado is None}
 
-    cuentas = {}
+    cuentas, detalles = {}, {}
     gratis = sin_cuenta_pagada(mod)
     for cid, r in registro.items():
         pagada = cid not in gratis
@@ -540,10 +567,9 @@ def margen_de(registro, limites, ahora, resumen=None, mod=None):
             item["semanal"] = ventana(cid, "semanal", d["semanal"])
             item["umbral_semanal"], item["umbral_5h"] = d["umbral_semanal"], d["umbral_5h"]
             item["sobre"] = bool(d["sobre"])
-            libres = [v["libre_pct"] for v in (item["ventana_5h"], item["semanal"])
-                      if v and v["libre_pct"] is not None]
-            # El margen real es el de la ventana mas apretada.
-            item["libre_pct"] = min(libres) if libres else None
+            # El margen real es el de la ventana mas apretada: recetas.libre_de, la misma que usa el bot (96).
+            item["libre_pct"] = mod.libre_de(d)
+            detalles[cid] = d
             momento = (limites.get(cid) or {}).get("momento")
             try:
                 medido = datetime.fromisoformat(momento)
@@ -563,9 +589,9 @@ def margen_de(registro, limites, ahora, resumen=None, mod=None):
                                               "origen": c.get("renueva_origen") or "supuesto"}
         cuentas[cid] = item
     pagadas = [c for c, v in cuentas.items() if v["pagada"]]
-    # Primero las que el bot no esta saltando, con mas margen arriba; sin dato, al final.
-    orden = sorted(pagadas, key=lambda c: (cuentas[c]["sobre"], cuentas[c]["libre_pct"] is None,
-                                           -(cuentas[c]["libre_pct"] or 0), pagadas.index(c)))
+    # Primero las que el bot no esta saltando, con mas margen arriba; sin dato, al final. Es el mismo orden con
+    # que el bot elige la cuenta de la ruta tecnica (96): recetas.orden_por_margen, una sola implementacion.
+    orden = mod.orden_por_margen(pagadas, detalles, pagadas)
     con_margen = next((c for c in orden if not cuentas[c]["sobre"]
                        and cuentas[c]["libre_pct"] is not None), None)
     return {"cuentas": cuentas, "orden": orden + [c for c in cuentas if c not in pagadas],
@@ -1415,6 +1441,8 @@ def reunir(ahora=None):
             },
             "por_cuenta": cuentas_de(p, ENTORNO_DE_PRUEBA.get(p, entorno_del_bot(pid))),
             "lee_cyd": sorted(LEE_CYD.get(p, set())),
+            # Encargo 96: la cuenta de la ruta tecnica elegida desde Telegram (modo, cuenta, hora y desde donde).
+            "cuenta_tecnica": cuenta_tecnica_de(p),
         }
         perfiles[p]["recetas"] = recetas_de(p, cfg, perfiles[p]["por_cuenta"], limites,
                                             registro, ahora)

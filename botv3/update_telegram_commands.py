@@ -49,6 +49,9 @@ def comandos(rutas, perfil: str | None = None, spotify_activo: bool = False) -> 
         *([{"command": "spotify", "description": "Vincular y ver Spotify de este perfil"}]
           if spotify_activo else []),
         {"command": "buscar", "description": "Buscar en internet (sin IA)"},
+        # 96: qué cuenta contesta la ruta técnica; sólo donde existe esa ruta.
+        *([{"command": "cuenta_tecnica", "description": "Qué cuenta contesta la ruta técnica"}]
+          if "codex" in rutas else []),
         # Remote Control abre una sesión de la cuenta de Diego: Pilar no debe verla
         # ni aunque sus rutas de agente sean parecidas.
         *([{"command": "remoto", "description": "Abrir o cerrar Remote Control (8 h)"}]

@@ -1,0 +1,67 @@
+# 96: fallas antes y después (como la cola, desde la raíz, NODO_PRUEBAS=1 y estado en mktemp)
+
+## Antes (base-96)
+botv3/test_botv3.py FAILED (failures=7, errors=34) Ran 490 tests in 42.557s
+botv3/test_contador.py OK Ran 20 tests in 1.887s
+pi/test_cuentas_uso.py FAILED (failures=1, errors=9, skipped=4) Ran 74 tests in 0.706s
+pi/test_auditor_rutas.py OK Ran 22 tests in 0.196s
+
+## Después
+botv3/test_botv3.py FAILED (failures=7, errors=34) Ran 490 tests in 33.326s
+botv3/test_contador.py OK Ran 20 tests in 0.628s
+pi/test_cuentas_uso.py FAILED (failures=1, errors=9, skipped=4) Ran 74 tests in 0.792s
+pi/test_auditor_rutas.py OK Ran 23 tests in 0.257s
+botv3/test_selectores.py OK Ran 31 tests in 0.672s
+
+## Lista de fallas (idéntica: diff vacío)
+botv3_test_botv3.py: ERROR: test_66r1_proximo_por_boton_con_el_puente_real (__main__.MenuCentralYGoogleTests.test_66r1_proximo_por_boton_con_el_puente_real) [18 en curso y 5 después]
+botv3_test_botv3.py: ERROR: test_66r1_proximo_por_boton_con_el_puente_real (__main__.MenuCentralYGoogleTests.test_66r1_proximo_por_boton_con_el_puente_real) [19 en curso: entra justo]
+botv3_test_botv3.py: ERROR: test_66r1_proximo_por_boton_con_el_puente_real (__main__.MenuCentralYGoogleTests.test_66r1_proximo_por_boton_con_el_puente_real) [20 en curso]
+botv3_test_botv3.py: ERROR: test_66r1_proximo_por_boton_con_el_puente_real (__main__.MenuCentralYGoogleTests.test_66r1_proximo_por_boton_con_el_puente_real) [25 en curso]
+botv3_test_botv3.py: ERROR: test_66r1_proximo_por_boton_con_el_puente_real (__main__.MenuCentralYGoogleTests.test_66r1_proximo_por_boton_con_el_puente_real) [en curso y nada después]
+botv3_test_botv3.py: ERROR: test_66r1_proximo_por_boton_con_el_puente_real (__main__.MenuCentralYGoogleTests.test_66r1_proximo_por_boton_con_el_puente_real) [la reproducción de 66r1]
+botv3_test_botv3.py: ERROR: test_68r1_por_voz_el_tope_del_puente_no_dice_que_no_hay (__main__.AgendaCorreoLocalTests.test_68r1_por_voz_el_tope_del_puente_no_dice_que_no_hay) (frase='Jaime, ¿a qué hora es la reunión con Pedro?', dicho='Es el domingo 1 a las 11, Reunión con Pedro.')
+botv3_test_botv3.py: ERROR: test_68r1_por_voz_el_tope_del_puente_no_dice_que_no_hay (__main__.AgendaCorreoLocalTests.test_68r1_por_voz_el_tope_del_puente_no_dice_que_no_hay) (frase='cuál es mi próxima reunión', dicho='Tienes 20 o más eventos en curso y no alcanzo a ver el próximo.')
+botv3_test_botv3.py: ERROR: test_68r1_por_voz_el_tope_del_puente_no_dice_que_no_hay (__main__.AgendaCorreoLocalTests.test_68r1_por_voz_el_tope_del_puente_no_dice_que_no_hay) (frase='cuál es mi próxima reunión', dicho='Tu próxima es hoy a las 16, Dentista.')
+botv3_test_botv3.py: ERROR: test_73_remoto_solo_jaime_y_el_callback_es_un_pedido_atomico (__main__.MenuCentralYGoogleTests.test_73_remoto_solo_jaime_y_el_callback_es_un_pedido_atomico)
+botv3_test_botv3.py: ERROR: test_claude_corre_aislado_en_el_temporal (__main__.VisionTests.test_claude_corre_aislado_en_el_temporal)
+botv3_test_botv3.py: ERROR: test_codex_fuera_de_vision_si_el_bot_alcanza_un_vault (__main__.VisionTests.test_codex_fuera_de_vision_si_el_bot_alcanza_un_vault)
+botv3_test_botv3.py: ERROR: test_codex_nunca_corre_en_vision_con_el_estado_real (__main__.VisionTests.test_codex_nunca_corre_en_vision_con_el_estado_real)
+botv3_test_botv3.py: ERROR: test_codex_nunca_corre_en_vision_con_el_estado_real (__main__.VisionTests.test_codex_nunca_corre_en_vision_con_el_estado_real) [automático declarado]
+botv3_test_botv3.py: ERROR: test_codex_nunca_corre_en_vision_con_el_estado_real (__main__.VisionTests.test_codex_nunca_corre_en_vision_con_el_estado_real) [codex en cuentas.vision]
+botv3_test_botv3.py: ERROR: test_codex_nunca_corre_en_vision_con_el_estado_real (__main__.VisionTests.test_codex_nunca_corre_en_vision_con_el_estado_real) [receta no automática]
+botv3_test_botv3.py: ERROR: test_codex_nunca_corre_en_vision_con_el_estado_real (__main__.VisionTests.test_codex_nunca_corre_en_vision_con_el_estado_real) [receta por defecto]
+botv3_test_botv3.py: ERROR: test_codex_nunca_corre_en_vision_con_el_estado_real (__main__.VisionTests.test_codex_nunca_corre_en_vision_con_el_estado_real) [sólo codex en cuentas.vision]
+botv3_test_botv3.py: ERROR: test_codex_sin_sesion_cae_a_claude_cami (__main__.NoticiasTests.test_codex_sin_sesion_cae_a_claude_cami)
+botv3_test_botv3.py: ERROR: test_cuenta_forzada (__main__.NoticiasTests.test_cuenta_forzada)
+botv3_test_botv3.py: ERROR: test_el_temporal_se_borra_siempre (__main__.VisionTests.test_el_temporal_se_borra_siempre)
+botv3_test_botv3.py: ERROR: test_entrega_fechada_en_el_futuro_no_llega_al_prompt (__main__.NoticiasTests.test_entrega_fechada_en_el_futuro_no_llega_al_prompt)
+botv3_test_botv3.py: ERROR: test_falla_de_claude_sin_model_usage_anota_falla_sin_modelo (__main__.CadenaDeCuentasTests.test_falla_de_claude_sin_model_usage_anota_falla_sin_modelo)
+botv3_test_botv3.py: ERROR: test_gemini_lee_fotos_y_un_pdf_pasa_a_claude (__main__.ProveedoresGratisTests.test_gemini_lee_fotos_y_un_pdf_pasa_a_claude)
+botv3_test_botv3.py: ERROR: test_hash_de_entrega_ausente_en_la_base_nunca_llega_al_prompt (__main__.NoticiasTests.test_hash_de_entrega_ausente_en_la_base_nunca_llega_al_prompt)
+botv3_test_botv3.py: ERROR: test_hay_notas_cita_medio_y_fecha_y_solo_lo_seleccionado (__main__.NoticiasTests.test_hay_notas_cita_medio_y_fecha_y_solo_lo_seleccionado)
+botv3_test_botv3.py: ERROR: test_noticias_no_ejecuta_codex_y_usa_claude_restricted (__main__.NoticiasTests.test_noticias_no_ejecuta_codex_y_usa_claude_restricted)
+botv3_test_botv3.py: ERROR: test_nunca_se_leen_credenciales (__main__.NoticiasTests.test_nunca_se_leen_credenciales) [automático]
+botv3_test_botv3.py: ERROR: test_nunca_se_leen_credenciales (__main__.NoticiasTests.test_nunca_se_leen_credenciales) [forzado a Codex]
+botv3_test_botv3.py: ERROR: test_nunca_se_leen_credenciales (__main__.NoticiasTests.test_nunca_se_leen_credenciales) [receta por defecto]
+botv3_test_botv3.py: ERROR: test_nunca_se_leen_credenciales (__main__.NoticiasTests.test_nunca_se_leen_credenciales) [sólo codex en cuentas.noticias]
+botv3_test_botv3.py: ERROR: test_pasa_por_el_tope_y_el_libro (__main__.VisionTests.test_pasa_por_el_tope_y_el_libro)
+botv3_test_botv3.py: ERROR: test_un_pdf_no_va_a_codex (__main__.VisionTests.test_un_pdf_no_va_a_codex)
+botv3_test_botv3.py: ERROR: test_voz_contexto_tope_y_n8n (__main__.NoticiasTests.test_voz_contexto_tope_y_n8n)
+botv3_test_botv3.py: FAIL: test_c4_dos_horas_juntas_si_la_primera_falla_no_espera_la_segunda (__main__.ClimaAvisoTests.test_c4_dos_horas_juntas_si_la_primera_falla_no_espera_la_segunda)
+botv3_test_botv3.py: FAIL: test_c4_nodo_apagado_tres_dias_no_manda_tarde (__main__.ClimaAvisoTests.test_c4_nodo_apagado_tres_dias_no_manda_tarde)
+botv3_test_botv3.py: FAIL: test_c4_reinicio_que_junta_dos_horas_distintas_manda_las_dos (__main__.ClimaAvisoTests.test_c4_reinicio_que_junta_dos_horas_distintas_manda_las_dos)
+botv3_test_botv3.py: FAIL: test_c4_si_el_envio_falla_no_se_reintenta_en_bucle_ni_tumba_el_hilo (__main__.ClimaAvisoTests.test_c4_si_el_envio_falla_no_se_reintenta_en_bucle_ni_tumba_el_hilo)
+botv3_test_botv3.py: FAIL: test_c4_un_resultado_de_otro_dueno_no_entrega (__main__.ParaPilarTests.test_c4_un_resultado_de_otro_dueno_no_entrega)
+botv3_test_botv3.py: FAIL: test_codex_no_entra_ni_con_los_vaults_tapados (__main__.VisionTests.test_codex_no_entra_ni_con_los_vaults_tapados)
+botv3_test_botv3.py: FAIL: test_pilar_sin_permiso_contesta_no_disponible (__main__.NoticiasTests.test_pilar_sin_permiso_contesta_no_disponible)
+pi_test_cuentas_uso.py: ERROR: test_asistentes_ya_no_tiene_la_matriz_pero_si_el_enlace (__main__.PaginaCuentasTests.test_asistentes_ya_no_tiene_la_matriz_pero_si_el_enlace)
+pi_test_cuentas_uso.py: ERROR: test_cargar_clave_no_muestra_la_key_y_acepta_guiones (__main__.ProveedoresGratisTests.test_cargar_clave_no_muestra_la_key_y_acepta_guiones)
+pi_test_cuentas_uso.py: ERROR: test_js_balanceado_con_el_tokenizador (__main__.PaginasSinDuplicarTests.test_js_balanceado_con_el_tokenizador) [bots]
+pi_test_cuentas_uso.py: ERROR: test_js_balanceado_con_el_tokenizador (__main__.PaginasSinDuplicarTests.test_js_balanceado_con_el_tokenizador) [nodo]
+pi_test_cuentas_uso.py: ERROR: test_la_pagina_propone_el_aviso_con_registro_cuentas_y_la_misma_validacion (__main__.MatrizYPropuestaTests.test_la_pagina_propone_el_aviso_con_registro_cuentas_y_la_misma_validacion)
+pi_test_cuentas_uso.py: ERROR: test_la_pagina_usa_solo_campos_que_bots_info_entrega (__main__.PaginaCuentasTests.test_la_pagina_usa_solo_campos_que_bots_info_entrega)
+pi_test_cuentas_uso.py: ERROR: test_lo_comun_vive_en_un_solo_archivo_que_cargan_las_tres (__main__.PaginasSinDuplicarTests.test_lo_comun_vive_en_un_solo_archivo_que_cargan_las_tres)
+pi_test_cuentas_uso.py: ERROR: test_ninguna_pagina_vuelve_a_escribir_las_cuentas_ni_los_muros (__main__.PaginasSinDuplicarTests.test_ninguna_pagina_vuelve_a_escribir_las_cuentas_ni_los_muros)
+pi_test_cuentas_uso.py: ERROR: test_no_hay_style_en_linea (__main__.PaginasSinDuplicarTests.test_no_hay_style_en_linea)
+pi_test_cuentas_uso.py: FAIL: test_vuelta1_claude_cami_conserva_tope_real_90_y_se_salta_al_92 (__main__.FormaRealTests.test_vuelta1_claude_cami_conserva_tope_real_90_y_se_salta_al_92)

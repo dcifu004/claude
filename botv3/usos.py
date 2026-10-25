@@ -48,6 +48,9 @@ FUNCIONES = {
     "clima": "🌦️ clima", "hora": "🕐 hora", "comuna": "📍 comuna del clima", "estado": "🩺 estado",
     "uso": "💳 uso de cuotas", "usos": "📊 /usos", "remoto": "📱 Remote Control", "memoria": "🧠 memoria",
     "calificar": "⭐ calificar", "mercadolibre": "🛍️ Mercado Libre", "spotify": "🎵 Spotify",
+    # 96: los selectores dichos («pregunta técnica: …») y /cuenta_tecnica.
+    "selector:tecnica": "🛠️ pregunta técnica", "selector:rapida": "⚡ pregunta rápida",
+    "selector:buscar": "🔎 busca en internet", "cuenta_tecnica": "🛠️ /cuenta_tecnica",
     "desconocido": "otro",
 }
 RE_CONSULTA = re.compile(r"consulta:[a-z_]{1,24}")

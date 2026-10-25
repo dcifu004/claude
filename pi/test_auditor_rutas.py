@@ -78,6 +78,21 @@ class AuditorRutas(unittest.TestCase):
         self.autorizado()
         self.assertEqual(self.correr(), {})
 
+    def test_96_lineas_con_selector_y_canal_no_dan_avisos_falsos(self):
+        # Encargo 96: el libro suma `selector` y `canal` cuando la pregunta vino por «pregunta técnica: …». Son claves
+        # nuevas: el auditor las ignora. Con la receta automática de la técnica (la propuesta de Diego), Jaime puede
+        # contestar con las tres cuentas, y la lista blanca lo sigue.
+        toml = self.bot / "perfiles" / "jaime.toml"
+        toml.write_text(toml.read_text(encoding="utf-8") + "\nrecetas = { tecnica = { automatico = true } }\n", encoding="utf-8")
+        self.escribir("jaime", [linea("jaime", "codex", c, selector="tecnica", canal=canal)
+                                for c, canal in (("codex", "voz"), ("claude_diego", "texto"), ("claude_cami", "texto"))])
+        self.escribir("pilar", [linea("pilar", "codex", "codex", selector="tecnica", canal="voz"),
+                                linea("pilar", "gpt", "groq", selector="rapida", canal="texto")])
+        self.assertEqual(self.correr(), {})
+        # Sin la receta, Claude (Diego) en la técnica de Jaime sí es un aviso (la lista blanca no se ensancha sola).
+        toml.write_text(toml.read_text(encoding="utf-8").replace("recetas = { tecnica = { automatico = true } }", ""), encoding="utf-8")
+        self.assertIn("rutas:cuenta:jaime:codex:claude_diego", self.correr())
+
     def test_pilar_web_por_codex_avisa(self):
         self.autorizado()
         with open(self.registros["pilar"]["registro"], "a", encoding="utf-8") as fh:
