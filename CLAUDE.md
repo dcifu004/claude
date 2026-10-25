@@ -17,6 +17,8 @@ El usuario dice cuál. Cada uno tiene su archivo:
 | 92, contador de uso de los bots | `encargos-nube/92-contador-uso-bots.md` |
 | 93, guía de Jaime y Pilar al día | `encargos-nube/93-guia-jaime-pilar.md` |
 | 94, 🔎 auditor de rutas (rama base `base-94`) | `encargos-nube/94-auditor-de-rutas.md` |
+| 96, selectores dichos en voz y cuenta de la ruta técnica | `encargos-nube/96-selectores-voz.md` (rama base `base-96`) |
+| 97, una sola salida con canal (M2) y «qué puedes hacer» (M4) | `encargos-nube/97-salida-sala-m4.md` (parte de la rama del 96, cuando esté) |
 
 ## Reglas comunes
 
@@ -30,7 +32,7 @@ El usuario dice cuál. Cada uno tiene su archivo:
 - No se despliega nada: no hay `sudo`, ni `nodo-desplegar`, ni unidades activas. Las unidades systemd nuevas
   quedan como archivos para que se revisen después.
 - **No toques** `encargos/cola-run.py` ni `encargos/test_*.py` salvo en el encargo 87.
-  `botv3/botv3.py` lo tocan el 90 y el 92: cambia solo lo necesario, en bloques chicos, para que se pueda
+  `botv3/botv3.py` lo tocan varios encargos (90, 92, 94, 96 y 97): cambia solo lo necesario, en bloques chicos, para que se pueda
   mezclar después.
 - Los bots se llaman Jaime (Diego) y Pilar (Camila). Las cuentas se escriben «Claude (Diego)»,
   «Claude (Cami)» y «Codex».
