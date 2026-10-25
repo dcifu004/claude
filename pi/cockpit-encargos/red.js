@@ -342,16 +342,17 @@ const redEncargos = (() => {
     function pintarFranja() {
         const vivas = colasActivas(), corriendo = new Set((S.red ? S.red.filas : []).filter(x => x._activo).map(x => x._activo));
         const pastillas = vivas.map(v => {
-            const cola = typeof v.nombre === "string" && COLA_VALIDA.test(v.nombre) ? v.nombre : delPanel(v.nombre);
             const r = v.restante_min && typeof v.restante_min === "object" ? v.restante_min.esperado : null;
             const fase = `${delPanel(v.etapa)} · ${delPanel(v.fase)} · ${delPanel(String(v.estado ?? "").replace(/_/g, " "))}`;
-            const texto = `${cola} · ${fase}${typeof r === "number" && Number.isFinite(r) && r >= 0 ? ` · ~${es(r, 0)} min` : ""}`;
+            const texto = ` · ${fase}${typeof r === "number" && Number.isFinite(r) && r >= 0 ? ` · ~${es(r, 0)} min` : ""}`;
             const activa = !!S.foco && S.foco.tipo === "cola" && S.foco.cola === v.nombre;
-            return el("button", { class: `red-pastilla${activa ? " activa" : ""}`, "aria-pressed": String(activa), title: "Elegir este encargo",
-                onclick: () => elegirEncargo(v.etapa, v.nombre) }, el("i", { class: "red-punto", "aria-hidden": "true" }), texto);
+            // 95: la cola va con mencionCola(); su tarjeta es el tooltip del botón (sin `title`, que pondría un segundo tooltip encima).
+            return el("button", { class: `red-pastilla${activa ? " activa" : ""}`, "aria-pressed": String(activa),
+                onclick: () => elegirEncargo(v.etapa, v.nombre) }, el("i", { class: "red-punto", "aria-hidden": "true" }), mencionCola(v.nombre), texto);
         });
         S.franja.replaceChildren(el("strong", {}, "Ahora"), ...(pastillas.length ? pastillas : [el("span", { class: "tenue" }, "sin colas en curso")]),
             el("span", { class: "red-franja-nota tenue" }, pastillas.length ? "Toca una cola para ver su camino." : "La red muestra el pasado."));
+        activarGlosario(S.franja);
     }
     function etiquetaFase(fase) {
         const f = textoId(fase); if (/^autor$/i.test(f)) return "Author";

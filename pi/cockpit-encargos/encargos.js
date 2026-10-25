@@ -90,6 +90,44 @@ function etapaDe(id) {
 }
 function resumenEtapa(e) { const t = e && (e.resumen || titulos.get(e.encargo)); return t ? unaLinea(t) : "sin resumen"; }
 function lineaResumen(texto, antes) { return el("p", { class: `resumen${texto === "sin resumen" ? " tenue" : ""}`, title: texto }, antes ? el("span", { class: "tenue" }, antes) : null, texto); }
+// Encargo 95: cada mención de una cola lleva el tooltip del glosario con su tarjeta: qué hace, su última etapa y fase, y su
+// última revisión. Sólo con lo que cargar() ya dejó en `d`: manifiestos (d.resumenes), vivo/<cola>.json (d.vivos) e
+// historial (d.h). Las etapas de una cola salen de su manifiesto y de vivo.etapas, nunca del número del nombre (cola88 tiene
+// 88a, 88b y 88c; cola9092n, 9092n), y «la última» es por `inicio`: la 88c corrió antes que la 88b.
+const COLA_SIN_DATOS = "sin datos de esta cola", MAX_LINEA_COLA = 180;
+function mencionCola(nombre) {
+    const texto = typeof nombre === "string" && COLA_VALIDA.test(nombre) ? nombre : delPanel(nombre);
+    return el("span", { class: "mencion-cola", "data-cola": typeof nombre === "string" ? nombre.slice(0, 64) : "" }, texto);
+}
+const corteCola = t => (t.length > MAX_LINEA_COLA ? `${t.slice(0, MAX_LINEA_COLA - 1).trimEnd()}…` : t);
+const PARTES_CHILE = new Intl.DateTimeFormat("es-CL", { timeZone: "America/Santiago", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+function fechaChile(iso) {
+    const t = typeof iso === "string" ? new Date(iso) : null;
+    if (!t || Number.isNaN(t.getTime())) return null;
+    const p = Object.fromEntries(PARTES_CHILE.formatToParts(t).map(x => [x.type, x.value]));
+    return `${p.day}-${p.month} ${p.hour}:${p.minute}`;
+}
+const minCola = x => (Number.isFinite(x) ? `${String(Math.round(x * 10) / 10).replace(".", ",")} min` : "minutos sin datos");
+const cuentaCola = id => { const n = propio(d.nombres, id); return typeof n === "string" ? delPanel(n) : id ? delPanel(id) : "sin datos"; };
+function etapasDeCola(c, v) {
+    return new Set([...(c ? c.etapas.map(e => e.id) : []), ...(v && Array.isArray(v.etapas) ? v.etapas : [])].filter(x => typeof x === "string" || typeof x === "number").map(String));
+}
+// [[etiqueta, texto]]. `extra` deja lista una línea más (la ampliación prevista: el primer hallazgo grave).
+function lineasCola(nombre, extra = []) {
+    const c = (d.resumenes || []).find(x => x && x.cola === nombre), v = (Array.isArray(d.vivos) ? d.vivos : []).find(x => x && x.nombre === nombre);
+    if (typeof nombre !== "string" || (!c && !v)) return [["Cola", COLA_SIN_DATOS]];
+    const ids = etapasDeCola(c, v), filas = porInicio((Array.isArray(d.h) ? d.h : []).filter(x => x && ids.has(String(x.encargo))));
+    const ultima = filas.at(-1), actual = v && v.etapa != null && v.etapa !== "" ? String(v.etapa) : ultima ? String(ultima.encargo) : null;
+    const etapa = c && actual ? c.etapas.find(e => e.id === actual) : null, deEtapa = etapa ? resumenEtapa(etapa) : "sin resumen";
+    const que = resumenCola(nombre) + (deEtapa !== "sin resumen" ? ` · etapa ${delPanel(actual)}: ${deEtapa}` : "");
+    const fase = v ? [v.etapa, v.fase].filter(x => x != null && x !== "").map(x => delPanel(x)).concat([v.cuenta ? delPanel(v.cuenta) : null,
+        ESTADOS_FUERA.get(v.estado) || delPanel(String(v.estado ?? "").replace(/_/g, " ")), fechaChile(v.fin) || fechaChile(v.escrito)].filter(Boolean)).join(" · ")
+        : ultima ? [delPanel(ultima.encargo), delPanel(ultima.fase), cuentaCola(ultima.cuenta), fechaChile(ultima.inicio)].filter(Boolean).join(" · ") : "sin fases todavía";
+    const rev = filas.filter(x => x.rol === "rev" && typeof x.veredicto === "string" && x.veredicto).at(-1);
+    const revision = rev ? [delPanel(rev.encargo), delPanel(rev.fase), cuentaCola(rev.cuenta), minCola(rev.min),
+        rev.veredicto === "DESPLEGABLE" || rev.veredicto === "NO DESPLEGABLE" ? rev.veredicto : delPanel(rev.veredicto)].join(" · ") : "sin revisión todavía";
+    return [["Qué hace", que], ["Última fase", fase || "sin datos"], ["Última revisión", revision], ...extra].map(([e, t]) => [e, corteCola(String(t))]);
+}
 function cuentaFase(etapa, fase) { const x = (d.etapas || []).find(x => x.id === String(etapa)); return x ? (/^rev/i.test(fase) ? x.revisor : x.autor) : null; }
 function cuenta(id) { return d.nombres && d.nombres[id] ? d.nombres[id] : "sin datos"; }
 function uso(id) { try { const x = d.uso.cuentas_interactivo[id].limites; return `5 h ${x.ventana_5h.usado_pct} % · semanal ${x.semanal.usado_pct} %`; } catch (e) { return "sin datos"; } }
@@ -109,12 +147,12 @@ async function leer() { const [h, estado, vivos, u, c, tmux, paths, panelColas] 
     const rs = tomls.map(resumenes).filter(Boolean); await leerTitulos(rs);
     d = { h: historia(h), estado, vivos, uso: u, nombres: nombres(c), sesiones: tmux.split("\n").filter(x => /^cola[\w-]+$/.test(x)), colas: espera(tomls), etapas: tomls.flatMap(manifiesto), reglas: panelColas.reglas, fuera: panelColas.fuera, capacidad: panelColas.capacidad, cuentasPanel: panelColas.cuentas, colasPanel: panelColas.colas, despacho: panelColas.despacho, pasado: panelColas.pasado, resumenes: rs, paleta: panelColas.paleta }; barraNodo.leido(); pintar();
 }
-function ahoraDeducida(v, hayColas) { const e = d.colas ? d.colas.filter(x => x.a.length).map(x => `${x.n}: espera ${x.a.join(", ")}`).join(" · ") : "sin datos"; if (!v) { return hayColas ? [] : [el("section", { class: "tarjeta" }, el("h2", {}, "Ahora"), el("p", {}, "nada corriendo"), el("p", { class: "tenue" }, d.h && d.h.length ? `Última fase: ${d.h.at(-1).encargo} · ${d.h.at(-1).fase}` : "El historial aún no tiene datos; los encargos anteriores al 19 se ven sólo en la Bitácora."), el("p", {}, e || "sin datos"))]; }
+function ahoraDeducida(v, hayColas) { const e = d.colas ? d.colas.filter(x => x.a.length).flatMap((x, i) => [i ? " · " : null, mencionCola(x.n), ": espera ", ...x.a.flatMap((a, j) => [j ? ", " : null, mencionCola(a)])]).filter(Boolean) : "sin datos"; if (!v) { return hayColas ? [] : [el("section", { class: "tarjeta" }, el("h2", {}, "Ahora"), el("p", {}, "nada corriendo"), el("p", { class: "tenue" }, d.h && d.h.length ? `Última fase: ${d.h.at(-1).encargo} · ${d.h.at(-1).fase}` : "El historial aún no tiene datos; los encargos anteriores al 19 se ven sólo en la Bitácora."), el("p", {}, e.length ? e : "sin datos"))]; }
     const h = (d.h || []).filter(x => String(x.encargo) === String(v.etapa) && x.fase === v.fase).at(-1), pr = v.pronostico || (h || {}).pronostico, cid = v.cuenta || cuentaFase(v.etapa, v.fase) || (h || {}).cuenta;
-    return [el("section", { class: "tarjeta" }, el("h2", {}, `Cola viva: ${v.cola}`), lineaResumen(resumenCola(v.cola)), el("div", { class: "encargo-resumen" },
+    return [el("section", { class: "tarjeta" }, el("h2", {}, "Cola viva: ", mencionCola(v.cola)), lineaResumen(resumenCola(v.cola)), el("div", { class: "encargo-resumen" },
         el("div", {}, el("strong", {}, "Etapa y fase"), el("div", {}, v.etapa && v.fase ? `${v.etapa} · ${v.fase}` : "sin datos"), v.deducido ? el("span", { class: "insignia" }, "deducido") : null),
         el("div", {}, el("strong", {}, "Corridos / pronóstico"), el("div", {}, v.inicio ? `${min(v.inicio)} min / ${pr && pr.min != null ? pr.min + " min" : "sin datos"}` : `sin datos / ${pr && pr.min != null ? pr.min + " min" : "sin datos"}`)),
-        el("div", {}, el("strong", {}, "Cuenta"), el("div", {}, cuenta(cid)), el("div", { class: "tenue" }, uso(cid))), el("div", {}, el("strong", {}, "Colas en espera"), el("div", {}, e || "sin datos"))))];
+        el("div", {}, el("strong", {}, "Cuenta"), el("div", {}, cuenta(cid)), el("div", { class: "tenue" }, uso(cid))), el("div", {}, el("strong", {}, "Colas en espera"), el("div", {}, e.length ? e : "sin datos"))))];
 }
 
 // Encargo 22, parte B: una tarjeta por cola con vivo/<cola>.json. El modelo (barraNodo.modeloCola)
@@ -165,7 +203,7 @@ function tarjetaCola(m) {
     } else {
         cuerpo.push(el("p", {}, m.detalle || m.estado), m.fin ? el("p", { class: "tenue" }, `Desde las ${m.fin}.`) : null);
     }
-    return el("section", { class: "tarjeta cola-tarjeta" }, el("h2", {}, `${m.cola} · ${titulo}`), lineaResumen(resumenCola(m.cola)),
+    return el("section", { class: "tarjeta cola-tarjeta" }, el("h2", {}, mencionCola(m.cola), ` · ${titulo}`), lineaResumen(resumenCola(m.cola)),
         el("p", { class: "tenue" }, [m.etapa ? `etapa ${m.etapa}` : null, m.tipo === "espera_cuota" ? m.fase : null, m.cuenta, m.modelo].filter(Boolean).join(" · ") || "sin datos"),
         ...cuerpo, botonesCola(m.cola, ["pausar", "detener"]), m.segmentos.length ? segmentos(m) : null);
 }
@@ -255,7 +293,7 @@ function matrizCarga(reglas, fuera) {
     const columnas = [...activas.map(cola => ({ cola })), ...proy];
     const ids = [...new Set([...Object.keys(cuentas), ...reglas.map(r => r.cuenta)])].filter(cid => reglas.some(r => r.cuenta === cid) || proy.some(p => propio(p.porCuenta, cid)));
     const cabeza = el("tr", {}, el("th", { class: "fila", scope: "col" }, "Cuenta"),
-        columnas.map((c, i) => el("th", { class: `col-cola ${colorCola(i)}${c.porCuenta ? " proyectada" : ""}`, scope: "col" }, delPanel(c.cola), el("span", { class: "carga-nota" }, c.porCuenta ? "carga proyectada" : "carga comprometida"))),
+        columnas.map((c, i) => el("th", { class: `col-cola ${colorCola(i)}${c.porCuenta ? " proyectada" : ""}`, scope: "col" }, mencionCola(c.cola), el("span", { class: "carga-nota" }, c.porCuenta ? "carga proyectada" : "carga comprometida"))),
         el("th", { class: "holgura", scope: "col" }, "Holgura", el("span", { class: "carga-nota" }, "tope − uso − carga comprometida")));
     const filas = ids.map(cid => {
         const r = reglas.find(x => x.cuenta === cid), renueva = (r || propio(cuentas, cid) || {}).renueva_5h;
@@ -271,7 +309,7 @@ function matrizCarga(reglas, fuera) {
             celdaHolgura(r, extra, renueva));
     });
     return [el("div", { class: "carga-envoltura" }, el("table", { class: "carga-matriz" }, el("thead", {}, cabeza), el("tbody", {}, filas))),
-        proy.length ? el("p", { class: "tenue carga-leyenda" }, el("span", { class: "carga-muestra proyectada" }), `incluye carga proyectada: ${proy.map(p => delPanel(p.cola)).join(", ")}. Es un cálculo de esta pestaña; no se guarda.`) : null];
+        proy.length ? el("p", { class: "tenue carga-leyenda" }, el("span", { class: "carga-muestra proyectada" }), "incluye carga proyectada: ", proy.flatMap((p, i) => [i ? ", " : null, mencionCola(p.cola)]), ". Es un cálculo de esta pestaña; no se guarda.") : null];
 }
 function bloqueFuera(fuera) {
     const cuentas = d.cuentasPanel && typeof d.cuentasPanel === "object" ? d.cuentasPanel : {};
@@ -280,7 +318,7 @@ function bloqueFuera(fuera) {
         el("ul", {}, fuera.map(x => {
             const id = String(x.cola), n = Object.keys(proyectar(x, cuentas)).length;
             const casilla = el("input", { type: "checkbox", checked: n > 0 && marcadas.has(id), disabled: !n, onchange: ev => { if (ev.target.checked) marcadas.add(id); else marcadas.delete(id); ahora(); } });
-            return el("li", {}, el("strong", {}, delPanel(x.cola)), " ", el("span", { class: "chip dato" }, ESTADOS_FUERA.get(x.estado) || delPanel(String(x.estado ?? "").replace(/_/g, " "))),
+            return el("li", {}, el("strong", {}, mencionCola(x.cola)), " ", el("span", { class: "chip dato" }, ESTADOS_FUERA.get(x.estado) || delPanel(String(x.estado ?? "").replace(/_/g, " "))),
                 x.debil ? el("span", { class: "chip ojo" }, "débil") : null,
                 el("span", { class: "carga-nota" }, `fase ${fasePanel(x.fase)} · ${x.motivo ? delPanel(x.motivo) : "sin motivo"}`),
                 el("label", { class: "carga-casilla" }, casilla, n ? " ¿y si la reanudo?" : " ¿y si la reanudo? (no hay fases que proyectar)"),
@@ -291,7 +329,7 @@ function capacidadPorVencer() {
     const filas = Object.values(d.capacidad || {}).filter(x => x && Number.isFinite(x.capacidad));
     return filas.map(x => el("p", { class: x.debil ? "tenue" : "" }, `Capacidad por vencer: ${n1(x.capacidad)} % de `,
         delPanel(x.nombre), ` antes de las ${horaCorta(x.renueva) || "sin datos"}`,
-        Array.isArray(x.colas_que_caben) && x.colas_que_caben.length ? ` · caben: ${x.colas_que_caben.map(delPanel).join(", ")}` : ""));
+        ...(Array.isArray(x.colas_que_caben) && x.colas_que_caben.length ? [" · caben: ", ...x.colas_que_caben.flatMap((c, i) => [i ? ", " : null, mencionCola(c)])] : [])));
 }
 function tarjetaCarga(ms) {
     const reglas = d.reglas, fuera = (d.fuera || []).filter(x => x && typeof x === "object");
@@ -307,6 +345,7 @@ function tarjetaCarga(ms) {
 function ahora() {
     const p = $("[data-panel=ahora]"), ms = barraNodo.modelosColas(d.vivos, d.sesiones, Date.now(), d.h);
     p.replaceChildren(...avisoAccion(), tarjetaDespacho(), ...ms.map(tarjetaCola), ...tarjetaCarga(ms), ...ahoraDeducida(vivo(), ms.length > 0));
+    activarGlosario(p);      // 95: también cuando la casilla de «¿y si la reanudo?» redibuja sin pasar por pintar()
 }
 // Encargo 50a: el estado del despacho y la mirada de pasado de «Capacidad». Los dos salen de `cola-run.py --panel`:
 // `despacho` es vivo/despacho.json ya leído ({estado, desde, motivo, autorizadas, por} y `aviso` si el archivo no se pudo leer)
@@ -356,9 +395,9 @@ function tarjetaDespacho() {
     const pausa = x.estado === "pausa", orden = pausa ? "abrir" : "pausar";
     const autorizadas = (Array.isArray(x.autorizadas) ? x.autorizadas : []).filter(c => typeof c === "string" && COLA_VALIDA.test(c));
     const notas = [x.desde && !pausa ? `desde ${desdeDespacho(x.desde)}` : null, x.por ? `lo dejó así ${delPanel(x.por)}` : null,
-        pausa ? (autorizadas.length ? `autorizadas: ${autorizadas.join(", ")}` : "ninguna cola autorizada") : null].filter(Boolean).join(" · ");
+        pausa ? (autorizadas.length ? "autorizadas: " : "ninguna cola autorizada") : null].filter(Boolean).join(" · ");
     return el("div", { class: `aviso ${pausa ? "ojo" : "ok"} despacho` },
-        el("div", {}, el("strong", {}, textoDespacho(x)), notas ? el("span", { class: "carga-nota" }, notas) : null,
+        el("div", {}, el("strong", {}, textoDespacho(x)), notas ? el("span", { class: "carga-nota" }, notas, pausa && autorizadas.length ? autorizadas.flatMap((c, i) => [i ? ", " : null, mencionCola(c)]) : null) : null,
             x.aviso ? el("span", { class: "chip ojo" }, delPanel(x.aviso)) : null),
         el("button", { class: "mini", disabled: accionEnCurso, onclick: () => ordenarDespacho(orden) }, ORDENES_DESPACHO.get(orden)));
 }
@@ -463,7 +502,7 @@ function botonesCola(cola, cuales) {
     return partes.length ? el("div", { class: "cola-acciones" }, partes) : null;
 }
 // El resultado de la última acción, arriba de «Ahora», hasta la próxima: lo que contestó cola-run.py después de actuar.
-function avisoAccion() { const r = resultadoAccion; return r ? [el("div", { class: `aviso ${r.mal ? "rojo" : "ok"} accion-resultado` }, el("strong", {}, `${delPanel(r.cola)}: `), r.texto)] : []; }
+function avisoAccion() { const r = resultadoAccion; return r ? [el("div", { class: `aviso ${r.mal ? "rojo" : "ok"} accion-resultado` }, el("strong", {}, r.cola === "Despacho" ? "Despacho" : mencionCola(r.cola), ": "), r.texto)] : []; }
 // Encargo 34: la barra de uso. Un tramo por fila del historial, en orden de inicio. Largo = uso medido (minutos o
 // Δ % de la ventana de 5 h de su cuenta); color = modelo; intensidad = esfuerzo. El color de cada modelo sale del
 // orden en que aparece en [niveles.*] de modelos.toml, leído en vivo con `cola-run.py --panel`: los tonos .uso-m1…m8 de encargos.css.
@@ -981,6 +1020,28 @@ function activarGlosario(raiz = document) {
         let espera = null;
         n.addEventListener("pointerdown", ev => { const origen = ev.currentTarget; if (ev.pointerType !== "mouse") espera = setTimeout(() => mostrarTooltip({ currentTarget: origen }), 450); });
         for (const evento of ["pointerup", "pointercancel", "pointerleave"]) n.addEventListener(evento, () => { clearTimeout(espera); });
+    });
+    activarMenciones(raiz);
+}
+// Encargo 95: el mismo tooltip, con la tarjeta de una cola (lineasCola). Dentro de un botón el foco y el tooltip son del
+// botón, para no anidar un enfocable en otro. Todo va por el() (textContent); nada se arma como HTML.
+function mostrarCola(nombre) {
+    const t = $("#term-tooltip"), titulo = typeof nombre === "string" && COLA_VALIDA.test(nombre) ? nombre : delPanel(nombre);
+    t.replaceChildren(el("strong", {}, titulo), ...lineasCola(nombre).map(([e, x]) => el("span", { class: "linea-cola" }, el("b", {}, `${e}: `), x)));
+    t.hidden = false;
+}
+function activarMenciones(raiz = document) {
+    raiz.querySelectorAll("[data-cola]").forEach(n => {
+        const blanco = n.closest("button, a") || n;
+        if (blanco.dataset.tooltip) return;
+        blanco.dataset.tooltip = "si"; blanco.setAttribute("aria-describedby", "term-tooltip");
+        if (!blanco.matches("button, a, input, select, textarea, [tabindex]")) blanco.setAttribute("tabindex", "0");
+        const ver = () => mostrarCola(n.dataset.cola);
+        blanco.addEventListener("pointerenter", ver); blanco.addEventListener("pointerleave", ocultarTooltip);
+        blanco.addEventListener("focus", ver); blanco.addEventListener("blur", ocultarTooltip);
+        let espera = null;
+        blanco.addEventListener("pointerdown", ev => { if (ev.pointerType !== "mouse") espera = setTimeout(ver, 450); });
+        for (const evento of ["pointerup", "pointercancel", "pointerleave"]) blanco.addEventListener(evento, () => { clearTimeout(espera); });
     });
 }
 // Arranque: el marco, la ruta del hash y la primera lectura.

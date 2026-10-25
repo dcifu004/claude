@@ -174,6 +174,10 @@ button.mini.peligro { color: var(--mal); border-color: var(--mal); }
 .consola-trabajo { max-width: none; min-width: 0; min-height: 0; margin: 0; overflow: auto; overscroll-behavior: contain; padding: 16px 22px 40px; }
 .term-tooltip { position: fixed; z-index: 100; right: 12px; bottom: 12px; width: min(320px, calc(100vw - 24px)); padding: 9px 11px; border: 1px solid var(--borde); border-radius: 8px; background: var(--texto); color: var(--tarjeta); box-shadow: 0 12px 34px rgba(0, 0, 0, .28); font-size: 12px; pointer-events: none; }
 .term-tooltip strong { display: block; margin-bottom: 2px; }
+/* Encargo 95: la tarjeta de una cola en el mismo tooltip, una línea por renglón, y la mención que lo abre. */
+.term-tooltip .linea-cola { display: block; margin-top: 3px; overflow-wrap: anywhere; }
+.term-tooltip .linea-cola b { font-weight: 600; }
+.mencion-cola { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
 .glosario { margin-top: 16px; }.glosario table { width: 100%; border-collapse: collapse; }.glosario th, .glosario td { padding: 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--borde); }
 @media (max-width: 1099px) { .consola-barra { gap: 8px; padding: 0 10px; }.consola-pestanas { overflow-x: auto; }.consola-cuentas { flex: 0 0 auto; } }
 @media (max-width: 719px) {

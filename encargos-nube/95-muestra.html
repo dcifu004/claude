@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><title>95 · muestra del tooltip de colas</title><style>/*
+ * Paleta clara y oscura de las páginas propias de Cockpit (encargo 18, documento 26).
+ * ÚNICA fuente: antes estaba copiada en sistema.css, nodo.css, luces.css, noticias.css y
+ * bots/comun.css, con estos mismos valores. Ninguna página vuelve a definir estos
+ * nombres (hay una prueba: pi/test_cockpit_paginas.py). Lo que es de una sola página
+ * (la tira de LEDs, la paleta de los gráficos de noticias, el fondo de la terminal de
+ * 👾) sigue en su hoja, con otros nombres.
+ * El tema lo elige ../comun/tema.js, que pone data-theme en <html>.
+ */
+:root {
+    --fondo: #f5f5f4;
+    --tarjeta: #ffffff;
+    --borde: #e2e2df;
+    --texto: #1c1c1a;
+    --tenue: #6b6b66;
+    --acento: #2f6fdb;
+    --acento-texto: #ffffff;
+    --ok: #2e9b5a;
+    --ok-fondo: #e6f4ec;
+    --mal: #c93b3b;
+    --mal-fondo: #fbe9e9;
+    --ojo: #a86a00;
+    --ojo-fondo: #fdf3df;
+    --chip: #efefec;
+    --terminal: #1b1b1a;
+    --terminal-texto: #e8e6df;
+}
+:root[data-theme="dark"] {
+    --fondo: #151514;
+    --tarjeta: #1f1f1e;
+    --borde: #33332f;
+    --texto: #ecebe6;
+    --tenue: #9d9c95;
+    --acento: #5b8ff0;
+    --acento-texto: #0d0d0c;
+    --ok: #4cc27c;
+    --ok-fondo: #173123;
+    --mal: #ec6a6a;
+    --mal-fondo: #3a1c1c;
+    --ojo: #e5a93a;
+    --ojo-fondo: #3a2c12;
+    --chip: #2a2a28;
+    --terminal: #0d0d0c;
+    --terminal-texto: #e8e6df;
+}
+
+/*
+ * Base de página de las seis herramientas propias de Cockpit (encargo 18, documento 26):
+ * cuerpo, `main` con UN ancho máximo, barra compartida, cabecera, pestañas, tarjetas,
+ * botones, avisos, chips, insignias, barras de uso, punto de estado, tablas, campos y el
+ * diálogo de propuestas. Los colores vienen de tokens.css, que se carga antes.
+ *
+ * Cada página carga después su propia hoja, que sólo trae lo suyo y, cuando hace falta,
+ * un ajuste sobre algo de acá (va marcado como tal en esa hoja).
+ */
+:root { --ancho-pagina: 1100px; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+    background: var(--fondo);
+    color: var(--texto);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main {
+    max-width: var(--ancho-pagina);
+    margin: 0 auto;
+    padding: 20px 16px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 0 0 8px; }
+h3 { font-size: 14px; margin: 12px 0 6px; color: var(--tenue); font-weight: 600; }
+p { margin: 0 0 8px; }
+a { color: var(--acento); }
+code { font: 13px ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+       background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+.sub, .tenue { color: var(--tenue); font-size: 13.5px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* --- Barra compartida (la arma ../comun/barra.js en <nav id="barra">). Envuelve: en el
+   teléfono baja de línea, no corre la página hacia el lado. --- */
+.barra-nodo {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 6px 12px; padding-bottom: 10px; border-bottom: 1px solid var(--borde);
+}
+.barra-enlaces { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; min-width: 0; }
+.barra-nodo .barra-enlace {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px;
+    background: transparent; color: var(--texto); border-color: transparent; font-weight: 500;
+}
+.barra-nodo .barra-enlace.actual { background: var(--chip); border-color: var(--borde); font-weight: 600; }
+.barra-punto { color: var(--tenue); padding: 0 2px; }
+.barra-contador {
+    background: var(--ojo-fondo); color: var(--ojo); border-radius: 999px;
+    padding: 0 7px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.barra-contador[hidden] { display: none; }
+.barra-lado { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-left: auto; }
+
+/* --- Cabecera estándar: título y subtítulo corto. «leído hace X» y Actualizar van en la barra. --- */
+.cabeza { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cabeza .sub { margin: 0; }
+
+/* --- Pestañas --- */
+.pestanas { display: flex; gap: 6px; flex-wrap: wrap; }
+.pestanas button { background: transparent; color: var(--texto); border-color: var(--borde); font-weight: 500; }
+.pestanas button.activa { background: var(--acento); color: var(--acento-texto); border-color: transparent; font-weight: 600; }
+section[data-panel] { display: flex; flex-direction: column; gap: 12px; }
+section[data-panel][hidden] { display: none; }
+
+/* --- Botones --- */
+button {
+    font: inherit;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 7px 13px;
+    cursor: pointer;
+    background: var(--acento);
+    color: var(--acento-texto);
+    font-weight: 600;
+}
+button.secundario, button.mini {
+    background: transparent;
+    color: var(--texto);
+    border-color: var(--borde);
+    font-weight: 500;
+}
+button.mini { padding: 3px 9px; font-size: 13px; }
+button:disabled { opacity: .5; cursor: default; }
+
+/* --- Tarjetas y rejilla --- */
+.tarjeta {
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+}
+
+/* --- Avisos --- */
+.aviso { border-radius: 8px; padding: 10px 14px; font-size: 14px; }
+.aviso.rojo { background: var(--mal-fondo); color: var(--mal); }
+.aviso.ojo { background: var(--ojo-fondo); color: var(--ojo); }
+.aviso.ok { background: var(--ok-fondo); color: var(--ok); }
+.aviso.neutro { background: var(--chip); color: var(--tenue); }
+.aviso ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* --- Chips e insignias --- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--borde); border-radius: 999px;
+    padding: 4px 6px 4px 12px; font-size: 14px;
+}
+.chip.activa { background: var(--ok-fondo); border-color: transparent; }
+/* Chip de dato (sin botón adentro): relleno parejo. Con .ojo o .mal avisa. */
+.chip.dato { padding: 3px 10px; font-size: 13px; }
+.chip.ojo { background: var(--ojo-fondo); color: var(--ojo); border-color: transparent; }
+.chip.mal { background: var(--mal-fondo); color: var(--mal); border-color: transparent; }
+
+.insignia {
+    margin-left: auto; font-size: 11.5px; font-weight: 600; color: var(--ojo);
+    background: var(--ojo-fondo); border-radius: 999px; padding: 2px 8px;
+}
+
+/* --- Barra de uso: los anchos llegan por data-ancho y CSSOM (el CSP bloquea style=). --- */
+.barra-ciclo { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--chip); }
+.barra-ciclo .usado { background: var(--ok); }
+.barra-ciclo .ocioso { background: var(--chip); }
+.barra-ciclo.justo .usado { background: var(--ojo); }
+.barra-ciclo.lleno .usado { background: var(--mal); }
+
+/* --- Punto de estado: verde por defecto; ámbar, rojo o gris con su clase. --- */
+.punto { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--ok); margin-right: 7px; }
+.punto.ojo { background: var(--ojo); }
+.punto.mal { background: var(--mal); }
+.punto.gris { background: var(--tenue); }
+
+.estado { font-weight: 600; white-space: nowrap; }
+.estado.ok { color: var(--ok); }
+.estado.mal { color: var(--mal); }
+.estado.tenue { color: var(--tenue); font-weight: 500; }
+
+/* --- Tablas y listas «dato → valor» --- */
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+th { color: var(--tenue); font-weight: 600; font-size: 12.5px; }
+td.num { font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+
+.dato { display: grid; grid-template-columns: 150px 1fr; gap: 4px 10px; font-size: 14px; }
+.dato dt { color: var(--tenue); }
+.dato dd { margin: 0; word-break: break-word; }
+
+details summary { cursor: pointer; }
+
+/* --- Campos --- */
+input[type=text], select, input.numero {
+    font: inherit; border-radius: 7px;
+    border: 1px solid var(--borde); background: var(--fondo); color: var(--texto);
+}
+input[type=text] { padding: 6px 9px; }
+select { padding: 5px 8px; }
+input.numero { width: 80px; padding: 4px 8px; }
+.controles-voz { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+.controles-voz input[type=text] { flex: 1; min-width: 200px; }
+.controles-voz.separado { margin-top: 8px; }
+
+/* --- Diálogo de propuestas (lo arma ../comun/comun.js con id="dialogo") --- */
+#dialogo {
+    border: 1px solid var(--borde); border-radius: 12px; padding: 18px;
+    background: var(--tarjeta); color: var(--texto); max-width: 520px; width: calc(100% - 32px);
+}
+#dialogo::backdrop { background: rgba(0, 0, 0, .45); }
+#dialogo label { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--tenue); margin-top: 10px; }
+.fila-botones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.antes-despues { font-size: 14px; }
+.antes-despues div { margin: 4px 0; }
+
+.encargo-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.encargo-fases { display: grid; gap: 8px; }
+.encargo-fase { display: grid; grid-template-columns: 105px 1fr auto; gap: 8px; align-items: center; }
+.encargo-barra { height: 18px; background: var(--chip); border-radius: 4px; overflow: hidden; }
+.encargo-barra > i { display: block; height: 100%; width: var(--ancho); margin-left: var(--inicio); background: var(--acento); }
+.encargo-barra > .pronostico { position: absolute; opacity: .35; background: var(--tenue); }.encargo-barra { position: relative; }.encargo-barra > .cuenta-claude_cami, .encargo-barra > .cuenta-claude_diego { position: relative; }
+.cuenta-claude_cami { background: var(--ok) !important; }.cuenta-claude_diego { background: var(--ojo) !important; }
+.encargo-filtros { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }.encargo-bitacora { white-space: pre-wrap; max-height: 62vh; overflow: auto; }.encargo-total { font-size: 13px; }
+@media (max-width: 560px) { .encargo-fase { grid-template-columns: 80px 1fr; }.encargo-fase > :last-child { grid-column: 2; } }
+/* Encargo 22, parte B: barra de progreso de las colas. Anchos y marcas van por CSSOM (--fill, --pos, --ancho). */
+.cola-barra { position: relative; height: 16px; background: var(--chip); border-radius: 999px; overflow: visible; margin: 10px 0 6px; }
+.cola-barra::before { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--fill, 0%); background: var(--acento); border-radius: 999px; }
+.cola-barra.ok::before { background: var(--ok); }
+.cola-barra.mal::before { background: var(--mal); }
+.cola-barra > .marca { position: absolute; top: -3px; bottom: -3px; left: var(--pos, 0%); width: 2px; background: var(--tenue); }
+.cola-barra > .marca.esperada { background: var(--texto); }
+.cola-seg-caja { position: relative; }
+.cola-seg { display: block; position: absolute; inset: 0 auto 0 0; width: var(--ancho, 0%); background: var(--acento); }
+.cola-seg.mal { background: var(--mal); }
+.cola-seg.pronostico { background: var(--tenue); opacity: .35; }
+.cola-tarjeta { margin-bottom: 12px; }
+/* Encargo 23a: «⚙️ Reparto y modelos». */
+.config-ancho { overflow-x: auto; }
+.config-tabla select { max-width: 100%; }
+.config-par { display: flex; flex-wrap: wrap; gap: 6px; }
+.config-cambiado { background: var(--ojo-fondo); }
+.config-roto td { background: var(--mal-fondo); }
+.config-simulacion { max-height: 48vh; margin-top: 10px; }
+.config-mal { color: var(--mal); }
+/* Encargo 23b: «🔔 Avisos». */
+.avisos-tabla td { vertical-align: top; }
+.avisos-tabla td:first-child { white-space: nowrap; }
+.avisos-grupo th { text-align: left; background: var(--chip); }
+.aviso-texto { white-space: pre-wrap; overflow-wrap: anywhere; }
+.aviso-linea { display: block; margin-top: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.aviso-nota { color: var(--ojo); }
+.avisos-pendientes { display: grid; gap: 12px; padding-left: 18px; }
+/* Encargo 24: la espera de cuota y el aviso previo. */
+.aviso-copiable { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; margin-top: 6px; }
+.aviso-copiable .aviso-linea { margin-top: 0; flex: 1 1 260px; }
+.aviso-previo { margin-top: 6px; }
+.ordenable { cursor: pointer; user-select: none; white-space: nowrap; }
+.ordenable:hover, .ordenable:focus-visible { color: var(--texto, inherit); }
+/* Encargo 34: resumen de cola y etapa (una línea, con elipsis; el texto completo va en title). */
+.resumen { margin: 0 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.uso-medida { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* Barra de uso: el largo va por CSSOM (--peso). Color = modelo: .uso-mN es el N-ésimo modelo de [niveles.*] de
+   modelos.toml. Intensidad = esfuerzo, del más claro (low) al más oscuro (xhigh) dentro del mismo tono. */
+.uso-m1 { --tono: #2a78d6; }.uso-m2 { --tono: #eb6834; }.uso-m3 { --tono: #1baf7a; }.uso-m4 { --tono: #eda100; }
+.uso-m5 { --tono: #e87ba4; }.uso-m6 { --tono: #008300; }.uso-m7 { --tono: #4a3aa7; }.uso-m8 { --tono: #e34948; }
+.uso-gris { --tono: #7d7d77; }
+:root[data-theme="dark"] .uso-m1 { --tono: #3987e5; }:root[data-theme="dark"] .uso-m2 { --tono: #d95926; }
+:root[data-theme="dark"] .uso-m3 { --tono: #199e70; }:root[data-theme="dark"] .uso-m4 { --tono: #c98500; }
+:root[data-theme="dark"] .uso-m5 { --tono: #d55181; }:root[data-theme="dark"] .uso-m7 { --tono: #9085e9; }
+:root[data-theme="dark"] .uso-m8 { --tono: #e66767; }:root[data-theme="dark"] .uso-gris { --tono: #8f8e87; }
+.uso-e-low { --relleno: color-mix(in oklab, var(--tono) 38%, white); }
+.uso-e-medium, .uso-e-vacio { --relleno: color-mix(in oklab, var(--tono) 68%, white); }
+.uso-e-high { --relleno: var(--tono); }
+.uso-e-xhigh { --relleno: color-mix(in oklab, var(--tono) 58%, black); }
+.uso-barra { display: flex; gap: 2px; height: 18px; margin-top: 10px; }
+.uso-tramo, .uso-muestra { background-color: var(--relleno, var(--tono)); border-radius: 3px; }
+.uso-tramo { flex: var(--peso, 1) 1 0; min-width: 10px; }
+.uso-e-vacio { border: 2px dotted var(--texto); }
+.uso-sin-medida { flex: 0 0 14px; background-image: repeating-linear-gradient(45deg, transparent 0 3px, var(--tarjeta) 3px 5px); }
+.uso-leyenda { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 6px; font-size: 12.5px; }
+.uso-clave { display: inline-flex; align-items: center; gap: 5px; }
+.uso-muestra { display: inline-block; flex: 0 0 14px; width: 14px; height: 12px; }
+/* Encargo 46b: «Carga vs. capacidad». En el celular la matriz se desplaza hacia el lado con la columna de cuentas fija.
+   El color de cada cola (.cola-c1 a .cola-c4, los de la maqueta del 45) es el mismo de los tramos de 💳 Cuentas. */
+.cola-c1 { --c: #2f6fdb; }.cola-c2 { --c: #8a4fd8; }.cola-c3 { --c: #138a8a; }.cola-c4 { --c: #c2417d; }
+:root[data-theme="dark"] .cola-c1 { --c: #5b8ff0; }:root[data-theme="dark"] .cola-c2 { --c: #a77cf0; }
+:root[data-theme="dark"] .cola-c3 { --c: #3cb8b0; }:root[data-theme="dark"] .cola-c4 { --c: #e06a9f; }
+.carga-envoltura { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.carga-matriz { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 560px; font-size: 13.5px; }
+.carga-matriz th, .carga-matriz td { border-bottom: 1px solid var(--borde); padding: 8px 10px; vertical-align: top; text-align: left; min-width: 150px; }
+.carga-matriz thead th { font-weight: 600; border-bottom: 2px solid var(--borde); }
+.carga-matriz th.fila { position: sticky; left: 0; z-index: 1; min-width: 120px; max-width: 150px; background: var(--tarjeta); box-shadow: 1px 0 0 var(--borde); }
+.carga-matriz .col-cola { border-top: 4px solid var(--c); }
+.carga-matriz td.vacia { color: var(--tenue); text-align: center; }
+.carga-matriz .holgura { background: var(--chip); min-width: 170px; }
+.carga-matriz .linea { display: block; }
+.carga-matriz .grande { font-size: 15px; font-weight: 600; }
+.carga-matriz .chip { margin-top: 3px; }
+.carga-nota { display: block; font-size: 12px; font-weight: 400; color: var(--tenue); overflow-wrap: anywhere; }
+.valor.ok { color: var(--ok); }.valor.ojo { color: var(--ojo); }.valor.mal { color: var(--mal); font-weight: 700; }
+.carga-matriz th.proyectada, .carga-matriz td.proyectada { border: 2px dotted var(--tenue); }
+.carga-matriz .linea.proyectada { margin-top: 4px; padding: 2px 4px; border: 2px dotted var(--tenue); border-radius: 4px; color: var(--texto); }
+.carga-muestra { display: inline-block; width: 14px; height: 12px; margin-right: 6px; vertical-align: -1px; border-radius: 3px; }
+.carga-muestra.proyectada { border: 2px dotted var(--tenue); }
+.carga-leyenda { margin-top: 8px; }
+.carga-ayuda { margin: 0 0 10px; font-size: 13.5px; }.carga-ayuda summary { cursor: pointer; color: var(--tenue); }
+.carga-ayuda dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 8px 0 0; }
+.carga-ayuda dt { font-weight: 600; }.carga-ayuda dd { margin: 0; }
+.carga-fuera { margin-top: 16px; }.carga-fuera h3 { margin: 0 0 6px; font-size: 15px; }
+.carga-fuera ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.carga-fuera li { padding-top: 8px; border-top: 1px solid var(--borde); }
+.carga-casilla { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 13.5px; cursor: pointer; }
+@media (max-width: 560px) { .carga-ayuda dl { grid-template-columns: 1fr; } }
+/* Encargo 46c: los botones de cada cola (Reanudar, Pausar, Detener), su resultado y el timer en modo sólo lectura. */
+.cola-acciones { display: grid; gap: 6px; margin-top: 8px; }
+.cola-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+button.mini.peligro { color: var(--mal); border-color: var(--mal); }
+.cola-timer { margin: 0; font-size: 13px; }
+.accion-resultado { margin-bottom: 12px; }
+/* Encargo 50a: el estado del despacho, arriba de «Ahora», y las tablas de «Precisión del pronóstico». */
+.despacho { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 12px; }
+.pasado-tabla { border-collapse: collapse; font-size: 13px; }
+.pasado-tabla th, .pasado-tabla td { padding: 4px 10px; text-align: left; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+/* Encargo 84a: el marco de la consola (C · Híbrida). Barra de módulos arriba, riel de submódulos al costado y área de
+   trabajo con scroll propio: el cuerpo no se desplaza. Ajuste sobre base.css: `.consola-trabajo` es el `main` de la
+   página y ocupa todo el ancho que le deja el riel (la consola no se centra a 1100 px). Anchos: ≥ 1100 px riel de
+   240 px; 720–1100 px riel de 64 px con íconos y módulos con sólo íconos; < 720 px el riel es un cajón (☰) y los
+   módulos, un selector. El chip de cuentas se despliega salvo a ≥ 1600 px, donde caben las tres. */
+.consola { height: 100vh; height: 100dvh; overflow: hidden; display: grid; grid-template-rows: 64px minmax(0, 1fr); }
+.consola-barra { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 0 12px; background: var(--tarjeta); border-bottom: 1px solid var(--borde); position: relative; z-index: 20; }
+.consola-barra button { background: transparent; color: var(--texto); border: 1px solid var(--borde); font-weight: 500; }
+.consola-redondo { position: relative; flex: 0 0 auto; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%; }
+.consola-espacio { flex: 1 1 0; min-width: 0; }
+.consola-buscar { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; height: 36px; color: var(--tenue); }
+.consola-buscar kbd { padding: 1px 5px; border: 1px solid var(--borde); border-radius: 5px; background: var(--chip); font: 11px ui-monospace, monospace; }
+.consola-pulso { flex: 0 0 auto; display: block; width: 58px; height: 34px; padding: 2px; border-radius: 10px; background: var(--chip); }
+.consola-pulso svg { display: block; width: 100%; height: 100%; }
+.consola-pulso line { stroke: var(--borde); stroke-width: 1.5; }
+.consola-pulso circle { fill: var(--tenue); opacity: .35; }
+.consola-pulso.viva circle { fill: var(--ok); opacity: .95; animation: consola-latido 2.2s linear infinite; }
+.consola-pulso.viva circle:nth-of-type(2) { animation-delay: .25s; }
+.consola-pulso.viva circle:nth-of-type(3) { animation-delay: .5s; }
+.consola-pulso.viva circle:nth-of-type(4) { animation-delay: .75s; }
+.consola-pulso.viva circle:nth-of-type(5) { animation-delay: 1s; }
+@keyframes consola-latido { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .consola-pulso.viva circle { animation: none; } }
+.consola-cuentas { position: relative; flex: 0 0 auto; }
+.cuentas-resumen { height: 36px; padding: 0 10px; font-size: 12.5px; white-space: nowrap; }
+.consola-cuentas .cuentas-lista { display: none; position: absolute; z-index: 45; top: calc(100% + 8px); right: 0; width: max-content; max-width: calc(100vw - 24px); padding: 8px; gap: 6px; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 10px; box-shadow: 0 12px 34px rgba(0, 0, 0, .18); }
+.consola-cuentas.abierta .cuentas-lista { display: grid; }
+.cuenta-chip { --c: var(--acento); padding: 5px 8px; border-left: 3px solid var(--c); border-radius: 7px; background: var(--chip); line-height: 1.2; }
+.cuenta-chip.c-claude_diego { --c: var(--ojo); }.cuenta-chip.c-claude_cami { --c: var(--ok); }
+.cuenta-chip strong { display: block; font-size: 11.5px; white-space: nowrap; }
+.cuenta-chip span { font-size: 11px; color: var(--tenue); white-space: nowrap; }
+.riel-badge { min-width: 20px; padding: 1px 6px; border-radius: 999px; text-align: center; font-size: 11px; font-weight: 700; background: var(--ojo-fondo); color: var(--ojo); }
+.riel-badge.viva { background: var(--ok-fondo); color: var(--ok); }
+.riel-badge[hidden] { display: none; }
+.consola-redondo .riel-badge { position: absolute; top: -4px; right: -6px; min-width: 18px; padding: 0 4px; font-size: 10px; }
+.consola-trabajo { max-width: none; min-width: 0; min-height: 0; margin: 0; overflow: auto; overscroll-behavior: contain; padding: 16px 22px 40px; }
+.consola-migas { display: flex; flex-wrap: wrap; gap: 6px; color: var(--tenue); font-size: 12px; }
+/* El buscador Ctrl+K. */
+.buscador { position: fixed; inset: 0; z-index: 70; display: grid; place-items: start center; padding-top: 12vh; background: rgba(0, 0, 0, .46); }
+.buscador-caja { width: min(620px, calc(100% - 24px)); overflow: hidden; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px; box-shadow: 0 24px 80px rgba(0, 0, 0, .35); }
+.buscador-entrada { width: 100%; padding: 14px 16px; font: inherit; font-size: 16px; color: var(--texto); background: var(--tarjeta); border: 0; border-bottom: 1px solid var(--borde); }
+.buscador-lista { max-height: 50vh; overflow: auto; padding: 8px; }
+.buscador-lista .tenue { margin: 8px; }
+.buscador .buscador-item { display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left; background: transparent; color: var(--texto); border: 1px solid transparent; font-weight: 500; }
+.buscador .buscador-item:hover, .buscador .buscador-item:focus-visible { background: var(--chip); }
+.buscador-texto { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.buscador-item small { flex: 0 0 auto; color: var(--tenue); }
+/* Escritorio: el buscador con texto y las tres cuentas a la vista sólo si caben. */
+@media (min-width: 1600px) {
+    .cuentas-resumen { display: none; }
+    .consola-cuentas .cuentas-lista { display: flex; position: static; width: auto; max-width: none; padding: 0; background: transparent; border: 0; box-shadow: none; }
+}
+@media (max-width: 1599px) { .consola-buscar { width: 36px; padding: 0; justify-content: center; border-radius: 50%; }
+    .consola-buscar-texto, .consola-buscar kbd { display: none; } }
+/* Encargo 85a: AI Ops usa una sola barra superior. Las pestañas reemplazan al riel y a la fila de módulos de la 84. */
+.consola { height: 100vh; height: 100dvh; overflow: hidden; display: grid; grid-template-rows: 64px minmax(0, 1fr); }
+.consola-barra { gap: 12px; }
+.consola-identidad { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; }
+.consola-identidad strong { font-size: 16px; }
+.consola-identidad .consola-pulso { width: 42px; height: 28px; }
+.consola-pestanas { display: flex; align-self: stretch; align-items: stretch; gap: 2px; min-width: 0; flex: 1 1 auto; overflow-x: auto; scrollbar-width: thin; }
+.consola-pestana { position: relative; flex: 0 0 auto; padding: 0 9px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; color: var(--tenue); font-weight: 650; white-space: nowrap; }
+.consola-pestana:hover, .consola-pestana.activa { color: var(--texto); border-bottom-color: var(--acento); }
+.consola-pestana .riel-badge { margin-left: 3px; vertical-align: 1px; }
+.consola-pestanas-select { display: none; min-width: 0; flex: 1 1 auto; padding: 7px 9px; border: 1px solid var(--borde); border-radius: 8px; background: var(--tarjeta); color: var(--texto); }
+.consola-trabajo { max-width: none; min-width: 0; min-height: 0; margin: 0; overflow: auto; overscroll-behavior: contain; padding: 16px 22px 40px; }
+.term-tooltip { position: fixed; z-index: 100; right: 12px; bottom: 12px; width: min(320px, calc(100vw - 24px)); padding: 9px 11px; border: 1px solid var(--borde); border-radius: 8px; background: var(--texto); color: var(--tarjeta); box-shadow: 0 12px 34px rgba(0, 0, 0, .28); font-size: 12px; pointer-events: none; }
+.term-tooltip strong { display: block; margin-bottom: 2px; }
+/* Encargo 95: la tarjeta de una cola en el mismo tooltip, una línea por renglón, y la mención que lo abre. */
+.term-tooltip .linea-cola { display: block; margin-top: 3px; overflow-wrap: anywhere; }
+.term-tooltip .linea-cola b { font-weight: 600; }
+.mencion-cola { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
+.glosario { margin-top: 16px; }.glosario table { width: 100%; border-collapse: collapse; }.glosario th, .glosario td { padding: 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--borde); }
+@media (max-width: 1099px) { .consola-barra { gap: 8px; padding: 0 10px; }.consola-pestanas { overflow-x: auto; }.consola-cuentas { flex: 0 0 auto; } }
+@media (max-width: 719px) {
+    .consola-barra { gap: 3px; padding: 0 6px; }
+    .consola-identidad { gap: 2px; }
+    .consola-identidad strong { font-size: 13px; }
+    .consola-identidad .consola-pulso { width: 30px; }
+    .consola-pestanas { display: none; }
+    .consola-pestanas-select { display: block; min-width: 42px; }
+    .consola-cuentas { display: block; }
+    .cuentas-resumen { width: 32px; max-width: 32px; padding: 0; overflow: hidden; font-size: 0; }
+    .cuentas-resumen::before { content: "💳"; font-size: 16px; }
+    .consola-buscar, #releer { width: 32px; height: 32px; padding: 0; }
+    .consola-redondo { width: 32px; height: 32px; }
+    .consola-trabajo { padding: 12px 10px 48px; }
+}
+/* Encargo 84b: 🕸️ Flujo, la portada. Franja «Ahora», KPI finos, la red (SVG con su propio scroll: a 375 px se desplaza
+   la red, no la página) y el Historial filtrado debajo. Los colores de cuenta son los de la maqueta aprobada; el
+   retrabajo va en ámbar (--ojo). Las luces son círculos con clase; sólo el latido del pulso se fija por CSSOM. */
+.red-portada { display: grid; gap: 12px; min-width: 0; }
+.red-alcance { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px; border-bottom: 1px solid var(--borde); background: var(--tarjeta); }
+.red-alcance input { min-width: 180px; max-width: min(100%, 360px); }
+.red-tarjeta { padding: 0; overflow: hidden; min-width: 0; }
+.red-tarjeta > * { margin-left: 14px; margin-right: 14px; }
+.red-tarjeta > .red-franja { margin: 0; }
+.red-franja { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--borde); background: var(--chip); }
+.red-franja > strong { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ok); }
+.red-franja-nota { margin-left: auto; font-size: 12px; }
+.red-pastilla { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 3px 10px; border: 1px solid var(--borde); border-radius: 999px; background: var(--tarjeta); color: var(--texto); font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.red-pastilla.activa { border-color: var(--ok); background: var(--ok-fondo); }
+.red-punto { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.red-pastilla:disabled .red-punto { background: var(--tenue); }
+.red-cabeza { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; margin-top: 12px; }
+.red-cabeza h2 { margin: 0; }
+.red-kpis { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 4px 0 0; color: var(--tenue); font-size: 12px; }
+.red-kpis b { color: var(--texto); font-size: 14px; }
+.red-controles { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 13px; }
+.red-control { display: inline-flex; align-items: center; gap: 4px; }
+.red-modos { display: inline-flex; gap: 2px; }
+.red-modo.activa { border-color: var(--acento); color: var(--acento-texto); background: var(--acento); }
+.red-nota { display: grid; gap: 2px; margin-top: 8px; margin-bottom: 0; font-size: 12.5px; }
+.red-nota[hidden] { display: none; }
+.red-pipeline { margin-top: 10px; }
+.pipeline-tarjeta { padding: 12px 14px; }
+.pipeline-cabeza { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pipeline-cabeza h2 { margin: 0; }
+.pipeline { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(138px, 1fr); gap: 10px; overflow-x: auto; padding: 10px 2px 5px; }
+.pipeline-paso { position: relative; display: grid; gap: 3px; min-height: 72px; padding: 9px; border: 1px solid var(--borde); border-top: 4px solid var(--ok); border-radius: 8px; background: var(--chip); }
+.pipeline-luz { position: absolute; top: -8px; left: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); animation: pipeline-luz 1.8s linear infinite; }
+.pipeline-paso::after { content: "→"; position: absolute; right: -8px; top: 25px; z-index: 1; color: var(--tenue); }
+.pipeline-paso:last-child::after { display: none; }
+.pipeline-paso small { color: var(--tenue); }.pipeline-paso.corriendo { border-top-color: var(--acento); box-shadow: 0 0 0 2px color-mix(in srgb, var(--acento) 14%, transparent); }
+.pipeline-paso.pronosticado { border-top-style: dashed; opacity: .72; }.pipeline-paso.pronosticado small::after { content: " · Forecast"; }
+.pipeline-paso.pronosticado.peso-1 { border-top-width: 2px; }.pipeline-paso.pronosticado.peso-2 { border-top-width: 3px; }
+.pipeline-paso.pronosticado.peso-3 { border-top-width: 4px; }.pipeline-paso.pronosticado.peso-4 { border-top-width: 5px; }
+.pipeline-paso.pronosticado.peso-5 { border-top-width: 6px; }.pipeline-paso.pronosticado.peso-6 { border-top-width: 7px; }
+.pipeline-paso.corriendo .pipeline-luz { background: var(--acento); box-shadow: 0 0 10px var(--acento); animation-duration: .65s; }.pipeline-paso.pronosticado .pipeline-luz { opacity: .38; animation-duration: 2.7s; }
+.pipeline-paso.pronosticado small { border-bottom: 2px dotted var(--tenue); width: fit-content; }.pipeline-paso.vivo { animation: pipeline-vivo 1.1s ease-in-out infinite; }
+@keyframes pipeline-luz { 0%, 100% { transform: translateX(0); opacity: .35; } 50% { transform: translateX(72px); opacity: 1; } }
+@keyframes pipeline-vivo { 0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--acento) 14%, transparent); } 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--acento) 28%, transparent); } }
+.sin-luces .pipeline-luz { display: none; }
+.red-envoltura { margin-top: 10px; max-width: calc(100% - 28px); overflow: auto; overscroll-behavior-inline: contain; border: 1px solid var(--borde); border-radius: 10px; background: var(--fondo); }
+.red-ayuda { margin-top: 6px; margin-bottom: 12px; font-size: 12px; }
+svg.red { display: block; font-family: system-ui, sans-serif; }
+.red .c-claude_diego { --c: #9d79ef; }.red .c-claude_cami { --c: #35b7be; }.red .c-codex { --c: #ef8b3d; }.red .c-otra { --c: #7d8796; }.red .retrabajo { --c: var(--ojo); }
+.red-capa { fill: var(--tenue); font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.red-enlace { fill: none; stroke: var(--c); stroke-linecap: round; transition: opacity .18s; }
+.red-enlace.retrabajo { stroke-dasharray: 6 6; }
+.red-enlace.activo { stroke-opacity: .9; }
+.red-enlace.suave, .red-nodo.suave { opacity: .35; }
+.red-enlace.apagado, .red-nodo.apagado { opacity: .08; }
+.red-toque { fill: none; stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: pointer; }
+.red-toque:focus-visible { stroke: var(--acento); stroke-opacity: .35; outline: none; }
+.red-flecha { fill: var(--tenue); }
+.red-vuelta-texto { fill: var(--ojo); font-size: 11px; font-weight: 600; }
+.red-nodo { cursor: pointer; transition: opacity .18s; }
+.red-nodo rect { fill: var(--tarjeta); stroke: var(--borde); stroke-width: 1.2; }
+.red-nodo[class*=" c-"] rect { stroke: var(--c); }
+.red-nodo.retrabajo rect { stroke: var(--ojo); fill: var(--ojo-fondo); }
+.red-nodo text { fill: var(--texto); font-size: 11px; font-weight: 600; pointer-events: none; }
+.red-nodo.compacto text { font-size: 10.5px; }
+.red-nodo .red-sub { fill: var(--tenue); font-size: 9.5px; font-weight: 500; }
+.red-nodo:hover rect, .red-nodo:focus-visible rect, .red-nodo.elegido rect { stroke: var(--acento); stroke-width: 2.2; }
+.red-nodo:focus-visible { outline: none; }
+.red-nodo.vivo rect { stroke: var(--ok); stroke-width: 2; animation: red-vivo 2.2s ease-in-out infinite; }
+@keyframes red-vivo { 0%, 100% { stroke-opacity: 1; } 50% { stroke-opacity: .35; } }
+.red-luces { pointer-events: none; }
+.red-halo { fill: var(--c); opacity: .2; }
+.red-luz { fill: var(--c); stroke: var(--tarjeta); stroke-width: 1; }
+/* El pulso de la barra sigue a las luces de «En vivo»: red.js pone `sincro` y el latido (0–1) en --latido. */
+.consola-pulso.viva.sincro circle { animation: none; opacity: calc(.35 + .65 * var(--latido, 0)); }
+.red-historial-cabeza { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 8px; }
+.red-historial-cabeza h2 { margin: 0; }
+.red-filtro { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; overflow-wrap: anywhere; }
+.red-limpiar { padding: 0 6px; border: 0; background: transparent; color: var(--texto); font-weight: 700; line-height: 1.4; }
+.red-tabla { max-width: 100%; overflow-x: auto; }
+.red-tabla table { font-size: 13px; }
+.red-tabla th, .red-tabla td { white-space: nowrap; }
+.red-paginas { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 13px; }
+@media (max-width: 719px) {
+    .red-tarjeta > * { margin-left: 8px; margin-right: 8px; }
+    .red-envoltura { max-width: calc(100% - 16px); }
+    .red-franja-nota { width: 100%; margin-left: 0; }
+    .red-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .red-alcance input { min-width: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .red-nodo.vivo rect, .pipeline-paso.vivo, .pipeline-luz { animation: none; } .pipeline-luz { display: none; } .red-enlace, .red-nodo { transition: none; } }
+
+body { padding: 24px; } li { margin: 8px 0; }</style></head>
+<body class="consola"><h1>Encargo 95: tooltip de las colas (muestra con los fixtures reales)</h1>
+<p>Pasa el cursor, usa Tab o mantén presionado sobre cada nombre. El de cola91n trae un vivo armado (detenida), como en la prueba.</p>
+<ul id="menciones"></ul>
+<div id="term-tooltip" class="term-tooltip" role="tooltip" hidden></div>
+<script>/*
+ * `el()`: arma un elemento del DOM nodo por nodo, sin HTML en texto ni estilos en línea
+ * (el CSP de Cockpit los bloquea). ÚNICA copia (encargo 18): antes estaba repetida en
+ * sistema.js, noticias.js y bots/comun.js. La cargan las seis páginas, antes que barra.js.
+ */
+"use strict";
+
+function el(tag, attrs = {}, ...hijos) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+        if (k === "class") e.className = v;
+        else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+        else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+    }
+    for (const h of hijos.flat()) {
+        if (h == null || h === false) continue;
+        e.append(h instanceof Node ? h : document.createTextNode(String(h)));
+    }
+    return e;
+}
+</script><script>"use strict";
+// Términos fijos del paquete; no recibe texto desde el nodo.
+const GLOSARIO = {
+    "AI Ops": "Operación de tareas de IA: corridas, trazas, alertas y reglas del flujo.",
+    "Flow": "Mapa del trabajo y gasto entre cuentas, modelos, pasos y resultados.",
+    "Runs": "Corridas concretas de un pipeline de pasos de agentes.",
+    "Timeline": "Secuencia temporal de actividad, pausas y eventos operativos.",
+    "Traces": "Detalle paso a paso de una corrida, con tiempo, costo y veredictos.",
+    "Logs": "Registro técnico cronológico de eventos y diagnósticos.",
+    "Alerts": "Avisos y condiciones que requieren atención o aprobación.",
+    "Policies": "Reglas de asignación, límites y controles que gobiernan las corridas.",
+    "Task": "Encargo o unidad de trabajo que la cola debe completar.",
+    "Run": "Corrida concreta de un pipeline, con sus pasos y resultado.",
+    "Minutes": "Minutos efectivamente usados por los pasos medidos.",
+    "Tokens": "Claude y Codex cuentan tokens de forma distinta; compararlos entre proveedores es orientativo.",
+    "Steps": "Pasos del workflow de agentes, como autoría, revisión y arreglo.",
+    "Rework rate": "Porcentaje de tiempo destinado a arreglar y volver a revisar.",
+    "Estimation error": "Desvío entre los minutos pronosticados y los realmente usados.",
+    "Cost per task": "Costo medio de una tarea; se muestra por proveedor cuando existe la medida.",
+    "Worker": "Agente que ejecuta los pasos que le asigna el orquestador.",
+    "Orchestrator": "Agente que reparte la tarea, elige quién la hace y controla los pasos.",
+    "Cross-model review": "Evaluación hecha por un modelo distinto del que produjo el trabajo.",
+    "HITL": "Human in the loop: punto donde una persona revisa o autoriza antes de continuar.",
+    "Release gate": "Compuerta de aprobación antes de desplegar a producción.",
+    "Model routing": "Reglas para elegir modelo, cuenta y alternativa de respaldo.",
+    "Guardrails": "Límites técnicos y operativos que una corrida no puede cruzar.",
+    "Home": "Resumen del estado del nodo y de lo que espera respuesta.",
+    "Providers": "Proveedores de modelos, con su consumo, límites y capacidad.",
+    "Agents": "Agentes y asistentes del nodo, con sus sesiones y configuración.",
+    "Infrastructure": "Servicios, respaldos, tareas programadas y señales de la máquina.",
+    "News": "Noticias recolectadas y clasificadas, separadas de la operación de IA.",
+    "Memory health": "Salud de la base de conocimiento: índice, enlaces y vigencia.",
+    "Scope": "Alcance del filtro: decide qué encargos alimentan la red, los indicadores y la tabla.",
+    "Pipeline": "Secuencia ordenada de fases de un encargo, desde autoría hasta revisiones y arreglos.",
+    "Forecast": "Pronóstico publicado por la cola para fases que aún no se ejecutan; no se inventa si falta."
+};
+const GLOSARIO_MAPEO = [["Flujo", "Flow", "Mapa del trabajo y gasto"], ["Scope", "Scope", "Alcance del filtro"], ["Pipeline", "Pipeline", "Camino del encargo"], ["Forecast", "Forecast", "Pronóstico publicado"], ["Ahora", "Runs", "Corridas activas y recientes"], ["Línea de tiempo", "Timeline", "Secuencia de actividad"], ["Historial", "Traces", "Detalle paso a paso"], ["Bitácora", "Logs", "Registro técnico cronológico"], ["Avisos", "Alerts", "Condiciones que requieren atención"], ["Reparto y modelos", "Policies", "Reglas y controles de operación"], ["encargo", "Task", "Especificación de una tarea"], ["cola", "Run", "Corrida concreta del pipeline"], ["fases autor → rev → fix", "Steps", "Pasos del workflow de agentes"], ["revisión cruzada", "Cross-model review", "Otro modelo evalúa al autor"], ["pedido de despliegue", "Release gate", "Compuerta antes de producción"], ["retrabajo", "Rework rate", "Tiempo en arreglar y revisar"], ["precisión del pronóstico", "Estimation error", "Desvío real contra pronóstico"], ["reparto", "Model routing", "Selección de cuenta y modelo"], ["Memoria", "Memory health", "Salud de la base de conocimiento"]];
+</script>
+<script>"use strict";
+const DIR = "/opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/encargos";
+const USO = "/opt/nodo/datos/uso.json", CUENTAS = "/opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/botv3/cuentas.toml";
+const $ = s => document.querySelector(s); let d, panel = "ahora";
+const falta = () => el("span", { class: "tenue" }, "sin datos");
+const val = x => x == null || x === "" ? "sin datos" : String(x);
+function aviso(x) { $("#error").hidden = !x; $("#error").textContent = x || ""; }
+async function archivo(p, json) { try { const x = await cockpit.file(p).read(); return json ? JSON.parse(x) : x; } catch (e) { return null; } }
+function nombres(t) { const r = {}; let k; for (const l of (t || "").split("\n")) { let m = l.match(/^\[([^\]]+)\]/); if (m) { k = m[1]; r[k] = k; } m = l.match(/^nombre\s*=\s*"([^"]+)"/); if (m && k) r[k] = m[1]; } return r; }
+function historia(t) { try { return (t || "").split("\n").filter(Boolean).map(x => JSON.parse(x)); } catch (e) { return null; } }
+function espera(ts) { return ts.filter(Boolean).map(t => { const n = (t.match(/^nombre\s*=\s*"([^"]+)"/m) || [])[1]; const a = (t.match(/^esperar\s*=\s*\[([^\]]*)\]/m) || [])[1]; return n ? { n, a: [...(a || "").matchAll(/"([^"]+)"/g)].map(x => x[1]) } : null; }).filter(Boolean); }
+function fase(bit, sesion) { const etapa = sesion.replace(/^cola/, ""); const ls = (bit || "").split("\n").reverse(); const re = new RegExp(`\\b(${etapa}): (autor|rev\\d+|fix\\d+) con .*?\\(pronóstico (\\d+(?:\\.\\d+)?) min`, "i"); const l = ls.find(x => re.test(x)); const m = l && l.match(re), fecha = l && l.match(/- (\d\d)-(\d\d) (\d\d:\d\d) ·/); return m ? { etapa: m[1], fase: m[2], inicio: fecha ? `${new Date().getFullYear()}-${fecha[2]}-${fecha[1]}T${fecha[3]}:00-03:00` : null, pronostico: { min: Number(m[3]) }, deducido: true } : {}; }
+function manifiesto(t) { const r = []; for (const b of (t || "").split("[[etapa]]").slice(1)) { const dato = k => (b.match(new RegExp(`^${k}\\s*=\\s*"([^"]+)"`, "m")) || [])[1]; const id = dato("id"); if (id) r.push({ id, autor: dato("autor"), revisor: dato("revisor") }); } return r; }
+// Encargo 34: qué hace cada cola y cada etapa, y la barra de uso por fase. Todo es de lectura.
+// Lo que viene de un .toml o de un .md lo escribe cualquier agente: se muestra como texto (nunca como HTML)
+// y pasa por seguro(), el criterio de la lista blanca de la 22b/22c (programados.py) llevado a prosa: un token se
+// muestra sólo si es de signos, un número, una ruta o una palabra legibles; lo demás es «oculto». Las reglas duras
+// son las mismas (ninguna corrida de más de 16, ni más de 16 letras y dígitos en un token que no sea ruta, ni
+// tramos que mezclen letras y dígitos, ni el valor que sigue a una clave sensible). Los RE_ los lee la prueba.
+const OCULTO = "«oculto»";
+const RE_TRAMO = /[A-Za-z0-9_À-ÿ]+/g;
+const RE_PALABRA = /^[A-Za-z0-9_À-ÿ]+(?:[._\/–—-][A-Za-z0-9_À-ÿ]+)*$/;
+const RE_SEGMENTO = /^\.?[A-Za-z0-9_À-ÿ]+(?:[._-][A-Za-z0-9_À-ÿ]+)*$/;
+const RE_NUMERO = /^[0-9]+(?:[.,:\/-][0-9]+)*$/;
+const RE_RUTA = /^(?:\/|~\/|\.\/)/;
+const RE_PREFIJO = /^(?:(?:sk|pk|rk)-|gh[pousr]_|github_pat_|xox[abprs]-|akia|eyj|[0-9]{6,}:)/i;
+const RE_SENSIBLE = /token|key|secret|password|pass|pwd|auth|bearer|api/i;
+const RE_BORDE = /^(?!~\/|\.\/)[^A-Za-z0-9_À-ÿ\/-]+|[^A-Za-z0-9_À-ÿ]+$/g;
+const RE_ESQUEMA = /^(?:bearer|basic|token|-{1,2}p|-pw)$/i;
+const RE_CLAVE = /[:=]["'”»)\]]*$/;
+const RE_MAYUSCULA_Y_DIGITO = /[A-Z].*[0-9]|[0-9].*[A-Z]/;
+const RE_TITULO_PREFIJO = /^Encargo\s+[A-Za-z0-9_.-]+\s*[:—–-]\s*/;
+const RE_TITULO_AUTOR = /\s*\((?:[^()]|\([^()]*\))*[0-9]{2}-[0-9]{2}-[0-9]{4}\)\s*$/;
+const RE_TITULO_FECHA = /\s*[—–-]\s*[0-9]{2}-[0-9]{2}-[0-9]{4}\s*$/;
+const mixto = s => /[A-Za-z_À-ÿ]/.test(s) && /[0-9]/.test(s);
+function tramosMalos(t) { const rs = t.match(RE_TRAMO) || [], n = rs.filter(mixto).length; return rs.some(r => r.length > 16) || n >= 3 || (rs.length >= 3 && n >= 1); }
+function rutaSegura(t) {
+    let seguidos = 0;
+    for (const s of t.replace(RE_RUTA, "").split("/").filter(Boolean)) {
+        seguidos = mixto(s) ? seguidos + 1 : 0;
+        if (seguidos >= 4 || tramosMalos(s) || !RE_SEGMENTO.test(s) || (!/[-_]/.test(s) && s.length >= 14 && RE_MAYUSCULA_Y_DIGITO.test(s))) return false;
+    }
+    return true;
+}
+function tokenSeguro(t) {
+    const c = t.replace(RE_BORDE, ""), rs = c.match(RE_TRAMO) || [];
+    if (!rs.length) return true;                                        // sólo signos o emoji
+    if (RE_PREFIJO.test(c)) return false;
+    if (RE_RUTA.test(c)) return rutaSegura(c);
+    if (tramosMalos(c) || rs.join("").length > 16) return false;
+    if (RE_NUMERO.test(c)) return true;
+    const i = c.indexOf("=");
+    if (i >= 0) { const n = c.slice(0, i).replace(/^-+/, ""); return RE_SEGMENTO.test(n) && !RE_SENSIBLE.test(n) && tokenSeguro(c.slice(i + 1)); }
+    if (c.startsWith("-")) return !/^-p./i.test(c) && RE_SEGMENTO.test(c.replace(/^-+/, ""));
+    return RE_PALABRA.test(c);
+}
+function seguro(texto) {
+    let previo = "";
+    return String(texto).split(/(\s+)/).map(p => {
+        if (!p.trim()) return p;
+        const a = previo.replace(RE_BORDE, "");
+        const marcado = RE_ESQUEMA.test(a) || (RE_CLAVE.test(previo) && RE_SENSIBLE.test(previo)) || (a.startsWith("--") && RE_SENSIBLE.test(a.split("=")[0]));
+        previo = p;
+        return marcado || !tokenSeguro(p) ? OCULTO : p;
+    }).join("");
+}
+const unaLinea = x => seguro(String(x).replace(/\s+/g, " ").trim());
+// `resumen` es opcional en la raíz del manifiesto y en cada [[etapa]]. La raíz es lo que va antes de la primera tabla.
+function cadena(b, k) { const m = b.match(new RegExp(`^${k}\\s*=\\s*"((?:[^"\\\\]|\\\\.)*)"`, "m")); return m && m[1] ? m[1].replace(/\\(["\\])/g, "$1") : null; }
+function resumenes(t) {
+    const raiz = (t || "").split(/^\s*\[/m)[0], cola = cadena(raiz, "nombre");
+    if (!cola) return null;
+    return { cola, resumen: cadena(raiz, "resumen"), motivo: cadena(raiz, "motivo"),
+        etapas: t.split("[[etapa]]").slice(1).map(b => ({ id: cadena(b, "id"), resumen: cadena(b, "resumen"), encargo: cadena(b, "encargo") })).filter(x => x.id) };
+}
+// El título del encargo: la primera línea «# », sin «Encargo NN:» ni el autor y la fecha del final.
+function tituloLimpio(md) { const m = (md || "").match(/^# +(.+)$/m); return m ? m[1].replace(RE_TITULO_PREFIJO, "").replace(RE_TITULO_AUTOR, "").replace(RE_TITULO_FECHA, "").trim() || null : null; }
+// Los .md se leen una vez (el título no cambia) y sólo los de las etapas sin `resumen`. El nombre no puede salir de DIR.
+const titulos = new Map();
+async function leerTitulos(rs) {
+    const fs = [...new Set(rs.flatMap(c => c.etapas).filter(e => !e.resumen && /^[A-Za-z0-9_.-]+\.md$/.test(e.encargo || "")).map(e => e.encargo))].filter(f => !titulos.has(f));
+    await Promise.all(fs.map(async f => { const t = await archivo(`${DIR}/${f}`); if (t != null) titulos.set(f, tituloLimpio(t)); }));
+}
+function resumenCola(nombre) { const c = (d.resumenes || []).find(x => x.cola === nombre), t = c && (c.resumen || c.motivo); return t ? unaLinea(t) : "sin resumen"; }
+// Si dos colas traen la misma etapa (una la cierra después), vale la cola más nueva.
+function etapaDe(id) {
+    const xs = (d.resumenes || []).flatMap(c => c.etapas.filter(e => e.id === String(id)).map(e => ({ cola: c.cola, ...e })));
+    return xs.sort((a, b) => a.cola.localeCompare(b.cola, "es", { numeric: true })).at(-1) || null;
+}
+function resumenEtapa(e) { const t = e && (e.resumen || titulos.get(e.encargo)); return t ? unaLinea(t) : "sin resumen"; }
+function lineaResumen(texto, antes) { return el("p", { class: `resumen${texto === "sin resumen" ? " tenue" : ""}`, title: texto }, antes ? el("span", { class: "tenue" }, antes) : null, texto); }
+// Encargo 95: cada mención de una cola lleva el tooltip del glosario con su tarjeta: qué hace, su última etapa y fase, y su
+// última revisión. Sólo con lo que cargar() ya dejó en `d`: manifiestos (d.resumenes), vivo/<cola>.json (d.vivos) e
+// historial (d.h). Las etapas de una cola salen de su manifiesto y de vivo.etapas, nunca del número del nombre (cola88 tiene
+// 88a, 88b y 88c; cola9092n, 9092n), y «la última» es por `inicio`: la 88c corrió antes que la 88b.
+const COLA_SIN_DATOS = "sin datos de esta cola", MAX_LINEA_COLA = 180;
+function mencionCola(nombre) {
+    const texto = typeof nombre === "string" && COLA_VALIDA.test(nombre) ? nombre : delPanel(nombre);
+    return el("span", { class: "mencion-cola", "data-cola": typeof nombre === "string" ? nombre.slice(0, 64) : "" }, texto);
+}
+const corteCola = t => (t.length > MAX_LINEA_COLA ? `${t.slice(0, MAX_LINEA_COLA - 1).trimEnd()}…` : t);
+const PARTES_CHILE = new Intl.DateTimeFormat("es-CL", { timeZone: "America/Santiago", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+function fechaChile(iso) {
+    const t = typeof iso === "string" ? new Date(iso) : null;
+    if (!t || Number.isNaN(t.getTime())) return null;
+    const p = Object.fromEntries(PARTES_CHILE.formatToParts(t).map(x => [x.type, x.value]));
+    return `${p.day}-${p.month} ${p.hour}:${p.minute}`;
+}
+const minCola = x => (Number.isFinite(x) ? `${String(Math.round(x * 10) / 10).replace(".", ",")} min` : "minutos sin datos");
+const cuentaCola = id => { const n = propio(d.nombres, id); return typeof n === "string" ? delPanel(n) : id ? delPanel(id) : "sin datos"; };
+function etapasDeCola(c, v) {
+    return new Set([...(c ? c.etapas.map(e => e.id) : []), ...(v && Array.isArray(v.etapas) ? v.etapas : [])].filter(x => typeof x === "string" || typeof x === "number").map(String));
+}
+// [[etiqueta, texto]]. `extra` deja lista una línea más (la ampliación prevista: el primer hallazgo grave).
+function lineasCola(nombre, extra = []) {
+    const c = (d.resumenes || []).find(x => x && x.cola === nombre), v = (Array.isArray(d.vivos) ? d.vivos : []).find(x => x && x.nombre === nombre);
+    if (typeof nombre !== "string" || (!c && !v)) return [["Cola", COLA_SIN_DATOS]];
+    const ids = etapasDeCola(c, v), filas = porInicio((Array.isArray(d.h) ? d.h : []).filter(x => x && ids.has(String(x.encargo))));
+    const ultima = filas.at(-1), actual = v && v.etapa != null && v.etapa !== "" ? String(v.etapa) : ultima ? String(ultima.encargo) : null;
+    const etapa = c && actual ? c.etapas.find(e => e.id === actual) : null, deEtapa = etapa ? resumenEtapa(etapa) : "sin resumen";
+    const que = resumenCola(nombre) + (deEtapa !== "sin resumen" ? ` · etapa ${delPanel(actual)}: ${deEtapa}` : "");
+    const fase = v ? [v.etapa, v.fase].filter(x => x != null && x !== "").map(x => delPanel(x)).concat([v.cuenta ? delPanel(v.cuenta) : null,
+        ESTADOS_FUERA.get(v.estado) || delPanel(String(v.estado ?? "").replace(/_/g, " ")), fechaChile(v.fin) || fechaChile(v.escrito)].filter(Boolean)).join(" · ")
+        : ultima ? [delPanel(ultima.encargo), delPanel(ultima.fase), cuentaCola(ultima.cuenta), fechaChile(ultima.inicio)].filter(Boolean).join(" · ") : "sin fases todavía";
+    const rev = filas.filter(x => x.rol === "rev" && typeof x.veredicto === "string" && x.veredicto).at(-1);
+    const revision = rev ? [delPanel(rev.encargo), delPanel(rev.fase), cuentaCola(rev.cuenta), minCola(rev.min),
+        rev.veredicto === "DESPLEGABLE" || rev.veredicto === "NO DESPLEGABLE" ? rev.veredicto : delPanel(rev.veredicto)].join(" · ") : "sin revisión todavía";
+    return [["Qué hace", que], ["Última fase", fase || "sin datos"], ["Última revisión", revision], ...extra].map(([e, t]) => [e, corteCola(String(t))]);
+}
+function cuentaFase(etapa, fase) { const x = (d.etapas || []).find(x => x.id === String(etapa)); return x ? (/^rev/i.test(fase) ? x.revisor : x.autor) : null; }
+function cuenta(id) { return d.nombres && d.nombres[id] ? d.nombres[id] : "sin datos"; }
+function uso(id) { try { const x = d.uso.cuentas_interactivo[id].limites; return `5 h ${x.ventana_5h.usado_pct} % · semanal ${x.semanal.usado_pct} %`; } catch (e) { return "sin datos"; } }
+// La cola «deducida» de la bitácora: sólo para sesiones viejas que no escriben vivo/<cola>.json.
+function vivo() { const s = d.sesiones.find(x => !d.vivos.some(v => v.nombre === x)); if (!s) return null; return { cola: s, ...fase(d.estado, s) }; }
+function min(iso) { const n = new Date(iso).getTime(); return Number.isNaN(n) ? null : Math.max(0, Math.round((Date.now() - n) / 60000)); }
+// Encargos 24 y 46b: la matriz «Carga vs. capacidad» sale de `cola-run.py --panel` (`reglas`, `colas_fuera` y `cuentas`),
+// que la calcula con lo que publica cada cola en vivo/<cola>.json. La página sólo la dibuja. reglas null = no se pudo leer.
+// Encargo 34: del mismo panel salen los modelos de [niveles.*] de modelos.toml, para la paleta de la barra de uso.
+const esObjeto = x => !!x && typeof x === "object" && !Array.isArray(x);
+async function leerPanel() { try { const x = JSON.parse(await cockpit.spawn(["python3", `${DIR}/cola-run.py`, "--panel"], { err: "ignore" })); return { reglas: Array.isArray(x.reglas) ? x.reglas : [], fuera: Array.isArray(x.colas_fuera) ? x.colas_fuera : [], capacidad: esObjeto(x.capacidad_por_vencer) ? x.capacidad_por_vencer : {}, despacho: esObjeto(x.despacho) ? x.despacho : null, pasado: esObjeto(x.pasado) ? x.pasado : null, cuentas: x.cuentas || {}, colas: x.colas && typeof x.colas === "object" ? x.colas : {}, paleta: modelosPaleta(x.modelos) }; } catch (e) { return { reglas: null, fuera: [], capacidad: {}, despacho: null, pasado: null, cuentas: {}, colas: {}, paleta: [] }; } }
+async function leer() { const [h, estado, vivos, u, c, tmux, paths, panelColas] = await Promise.all([
+    archivo(`${DIR}/historial.jsonl`), archivo(`${DIR}/COLA-ESTADO.md`), barraNodo.leerVivos(), archivo(USO, true), archivo(CUENTAS),
+    cockpit.spawn(["tmux", "ls", "-F", "#{session_name}"], { err: "ignore" }).catch(() => ""),
+    cockpit.spawn(["find", DIR, "-maxdepth", "1", "-name", "cola-*.toml", "-print"], { err: "ignore" }).catch(() => ""), leerPanel()]);
+    const tomls = await Promise.all(paths.split("\n").filter(Boolean).map(x => archivo(x)));
+    const rs = tomls.map(resumenes).filter(Boolean); await leerTitulos(rs);
+    d = { h: historia(h), estado, vivos, uso: u, nombres: nombres(c), sesiones: tmux.split("\n").filter(x => /^cola[\w-]+$/.test(x)), colas: espera(tomls), etapas: tomls.flatMap(manifiesto), reglas: panelColas.reglas, fuera: panelColas.fuera, capacidad: panelColas.capacidad, cuentasPanel: panelColas.cuentas, colasPanel: panelColas.colas, despacho: panelColas.despacho, pasado: panelColas.pasado, resumenes: rs, paleta: panelColas.paleta }; barraNodo.leido(); pintar();
+}
+function ahoraDeducida(v, hayColas) { const e = d.colas ? d.colas.filter(x => x.a.length).flatMap((x, i) => [i ? " · " : null, mencionCola(x.n), ": espera ", ...x.a.flatMap((a, j) => [j ? ", " : null, mencionCola(a)])]).filter(Boolean) : "sin datos"; if (!v) { return hayColas ? [] : [el("section", { class: "tarjeta" }, el("h2", {}, "Ahora"), el("p", {}, "nada corriendo"), el("p", { class: "tenue" }, d.h && d.h.length ? `Última fase: ${d.h.at(-1).encargo} · ${d.h.at(-1).fase}` : "El historial aún no tiene datos; los encargos anteriores al 19 se ven sólo en la Bitácora."), el("p", {}, e.length ? e : "sin datos"))]; }
+    const h = (d.h || []).filter(x => String(x.encargo) === String(v.etapa) && x.fase === v.fase).at(-1), pr = v.pronostico || (h || {}).pronostico, cid = v.cuenta || cuentaFase(v.etapa, v.fase) || (h || {}).cuenta;
+    return [el("section", { class: "tarjeta" }, el("h2", {}, "Cola viva: ", mencionCola(v.cola)), lineaResumen(resumenCola(v.cola)), el("div", { class: "encargo-resumen" },
+        el("div", {}, el("strong", {}, "Etapa y fase"), el("div", {}, v.etapa && v.fase ? `${v.etapa} · ${v.fase}` : "sin datos"), v.deducido ? el("span", { class: "insignia" }, "deducido") : null),
+        el("div", {}, el("strong", {}, "Corridos / pronóstico"), el("div", {}, v.inicio ? `${min(v.inicio)} min / ${pr && pr.min != null ? pr.min + " min" : "sin datos"}` : `sin datos / ${pr && pr.min != null ? pr.min + " min" : "sin datos"}`)),
+        el("div", {}, el("strong", {}, "Cuenta"), el("div", {}, cuenta(cid)), el("div", { class: "tenue" }, uso(cid))), el("div", {}, el("strong", {}, "Colas en espera"), el("div", {}, e.length ? e : "sin datos"))))];
+}
+
+
+const ESTADOS_FUERA = new Map([["pausada_sin_timer", "pausada, sin reanudación programada"], ["detenida", "detenida"], ["en_candado", "espera autorización"],
+    ["caida", "caída"], ["sin_autorizacion", "sin autorización"], ["ilegible", "no se pudo leer"], ["pausada_por_usuario", "pausada por el usuario"], ["retenida_por_despacho", "retenida por el despacho"]]);
+
+function conEtiqueta(t) { return String(t).split(/(Claude \((?:(?:Diego)|(?:Cami))\))/).map((p, i) => (i % 2 ? p : p.replace(/(^|[^A-Za-z0-9_À-ÿ])(?:(?:Diego)|(?:Camila)|(?:Cami))(?![A-Za-z0-9_À-ÿ])/g, `$1${OCULTO}`))).join(""); }
+const delPanel = x => (x == null || x === "" ? "sin datos" : conEtiqueta(unaLinea(x)));
+const propio = (o, k) => (o && typeof o === "object" && typeof k === "string" && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined);
+const porInicio = fs => [...fs].sort((a, b) => (Date.parse(a.inicio) || 0) - (Date.parse(b.inicio) || 0));
+const COLA_VALIDA = /^cola[0-9]{2}[a-z0-9]*$/;
+// Un solo tooltip para términos fijos. Funciona con puntero, foco y presión sostenida táctil.
+function ocultarTooltip() { $("#term-tooltip").hidden = true; }
+function mostrarTooltip(ev) { const origen = ev.currentTarget, termino = origen.dataset.term, definicion = GLOSARIO[termino]; if (!definicion) return; const t = $("#term-tooltip"); t.replaceChildren(el("strong", {}, termino), el("span", {}, definicion)); t.hidden = false; }
+function activarGlosario(raiz = document) {
+    raiz.querySelectorAll("[data-term]").forEach(n => {
+        if (!GLOSARIO[n.dataset.term] || n.dataset.tooltip) return;
+        n.dataset.tooltip = "si"; n.setAttribute("aria-describedby", "term-tooltip");
+        if (!n.matches("button, a, input, select, textarea, [tabindex]")) n.setAttribute("tabindex", "0");
+        n.addEventListener("pointerenter", mostrarTooltip); n.addEventListener("pointerleave", ocultarTooltip);
+        n.addEventListener("focus", mostrarTooltip); n.addEventListener("blur", ocultarTooltip);
+        let espera = null;
+        n.addEventListener("pointerdown", ev => { const origen = ev.currentTarget; if (ev.pointerType !== "mouse") espera = setTimeout(() => mostrarTooltip({ currentTarget: origen }), 450); });
+        for (const evento of ["pointerup", "pointercancel", "pointerleave"]) n.addEventListener(evento, () => { clearTimeout(espera); });
+    });
+    activarMenciones(raiz);
+}
+// Encargo 95: el mismo tooltip, con la tarjeta de una cola (lineasCola). Dentro de un botón el foco y el tooltip son del
+// botón, para no anidar un enfocable en otro. Todo va por el() (textContent); nada se arma como HTML.
+function mostrarCola(nombre) {
+    const t = $("#term-tooltip"), titulo = typeof nombre === "string" && COLA_VALIDA.test(nombre) ? nombre : delPanel(nombre);
+    t.replaceChildren(el("strong", {}, titulo), ...lineasCola(nombre).map(([e, x]) => el("span", { class: "linea-cola" }, el("b", {}, `${e}: `), x)));
+    t.hidden = false;
+}
+function activarMenciones(raiz = document) {
+    raiz.querySelectorAll("[data-cola]").forEach(n => {
+        const blanco = n.closest("button, a") || n;
+        if (blanco.dataset.tooltip) return;
+        blanco.dataset.tooltip = "si"; blanco.setAttribute("aria-describedby", "term-tooltip");
+        if (!blanco.matches("button, a, input, select, textarea, [tabindex]")) blanco.setAttribute("tabindex", "0");
+        const ver = () => mostrarCola(n.dataset.cola);
+        blanco.addEventListener("pointerenter", ver); blanco.addEventListener("pointerleave", ocultarTooltip);
+        blanco.addEventListener("focus", ver); blanco.addEventListener("blur", ocultarTooltip);
+        let espera = null;
+        blanco.addEventListener("pointerdown", ev => { if (ev.pointerType !== "mouse") espera = setTimeout(ver, 450); });
+        for (const evento of ["pointerup", "pointercancel", "pointerleave"]) blanco.addEventListener(evento, () => { clearTimeout(espera); });
+    });
+}
+
+const D = {"tomls": ["nombre = \"cola84\"\nmotivo = \"Encargo 84: 🧵 Encargos pasa a ser la consola del nodo (C · Híbrida): 84a marco y navegación doble; 84b portada Flujo con la red de encargos y sus luces.\"\nresumen = \"Consola C dentro de Cockpit: módulos arriba, submódulos de Encargos al costado y la red con luces como portada.\"\nesperar = []\ndespliegue = \"pedir\"\nafinado = \"completo\"\nalcance = \"completo\"\npaciencia_h = 12\naprobado_por = \"usuario, 24-10-2026 14:53 America/Santiago, en el chat de Claude (Diego): eligió la C; reparto Recomendado (Claude (Cami) escribe, Codex revisa), sin experimento; lanzar ahora como excepción a la pausa general; la 84 va antes que la 36b (pausada)\"\npruebas = [\"pi/test_cockpit_paginas.py\"]\n\n\n[paginas]\nencargos = \"cockpit-encargos\"\n\n[[etapa]]\nid = \"84a\"\nencargo = \"84a-consola-marco.md\"\nresumen = \"Marco de la consola: módulos arriba (cockpit.jump), submódulos al costado con badges, pulso, cuentas, Ctrl+K, hash y anchos.\"\nautor = \"claude_cami\"\nrevisor = \"codex\"\nvueltas = 2\nnaturaleza = \"pagina\"\n\n\n[[etapa]]\nid = \"84b\"\nencargo = \"84b-consola-red-luces.md\"\nresumen = \"Portada Flujo: red de cinco capas con luces (Ambiente, Foco, En vivo real), franja Ahora, KPI e Historial filtrado.\"\nautor = \"claude_cami\"\nrevisor = \"codex\"\nvueltas = 2\nnaturaleza = \"pagina\"\n\n", "nombre = \"cola88\"\nmotivo = \"Encargo 88: Spotify por perfil (diseño 36): 88a dos receptores go-librespot, 88b intención «reproduce … en Spotify» y /spotify en Jaime y Pilar.\"\nesperar = []\ndespliegue = \"pedir\"\nafinado = \"completo\"\nalcance = \"minimo\"\naprobado_por = \"usuario, 25-10-2026 America/Santiago, eligió Codex como autor y Claude (Diego) como revisora (Claude (Cami) en 94 % semanal); preparado sin lanzar: despacho en pausa general desde el 23-10; 25-10: tras 88ar3 el usuario eligió la alternativa A (binario traído por Claude (Diego), etapa 88c de arreglo por Codex, relanzar después de las 15:29)\"\npruebas = [\"pi/spotify/test_plantillas.py\", \"pi/test_nodo_desplegar.py\", \"botv3/test_botv3.py\", \"botv3/test_temporizadores.py\", \"botv3/test_compras.py\", \"botv3/test_spotify.py\"]\n\n[[etapa]]\nid = \"88a\"\nencargo = \"88a-spotify-receptores.md\"\nautor = \"codex\"\nrevisor = \"claude_diego\"\nvueltas = 2\nnaturaleza = \"seguridad\"\n\n[[etapa]]\nid = \"88c\"\nencargo = \"88c-spotify-arreglo-rev3.md\"\nautor = \"codex\"\nrevisor = \"codex\"\nautorrevision = \"usuario la aceptó el 25-10-2026 13:23 America/Santiago (chat de Claude (Diego): «hacer este cierre todo con codex, hay que cuidar el uso de Claude (Diego)»)\"\nvueltas = 1\nnaturaleza = \"seguridad\"\n\n[[etapa]]\nid = \"88b\"\nencargo = \"88b-spotify-intencion-bot.md\"\nautor = \"codex\"\nrevisor = \"codex\"\nautorrevision = \"usuario la aceptó el 25-10-2026 13:23 America/Santiago (chat de Claude (Diego): «hacer este cierre todo con codex, hay que cuidar el uso de Claude (Diego)»)\"\nvueltas = 2\nnaturaleza = \"bot\"\n", "nombre = \"cola9092n\"\nmotivo = \"Encargo 9092n: revisión cruzada (Codex) de /uso como imagen (90) y del contador de uso (92), escritos por Claude (Diego) en la nube y mezclados sobre la 88b.\"\nresumen = \"Codex revisa el 90+92 ya mezclado en botv3.py y bots-info.py; los arreglos vuelven a la nube.\"\ndespliegue = \"nada\"\npaciencia_h = 6\naprobado_por = \"usuario, 25-10-2026 America/Santiago: escribir el 90+92 mezclado en el vault y que revise Codex; la línea se muestra antes de lanzar\"\npruebas = [\"botv3/test_botv3.py\", \"botv3/test_contador.py\", \"botv3/test_uso_imagen.py\", \"botv3/test_spotify.py\", \"botv3/test_clima_imagen.py\", \"pi/test_margen_panel.py\", \"pi/test_uso.py\", \"pi/test_cuentas_uso.py\"]\n\n[[etapa]]\nid = \"9092n\"\nencargo = \"9092n-revision-nube.md\"\nresumen = \"Revisión de Codex sobre 9092n-diff-nube.txt (90 + 92 + mezcla con la 88b).\"\nautor = \"claude_diego\"\nrevisor = \"codex\"\nvueltas = 0\nnaturaleza = \"bot\"\n", "nombre = \"cola91n\"\nmotivo = \"Encargo 91n: revisión cruzada (Codex) del aviso de temblores que escribió Claude (Diego) en la nube; sin arreglos en la Pi.\"\nresumen = \"Codex revisa pi/temblores.py, sus unidades y su suite; los arreglos vuelven a la nube.\"\nesperar = [\"cola88\"]\ndespliegue = \"nada\"\npaciencia_h = 6\naprobado_por = \"usuario, 25-10-2026 America/Santiago: traer el 91 de la nube al vault y que revise Codex en la Pi\"\npruebas = [\"pi/test_temblores.py\"]\n\n[[etapa]]\nid = \"91n\"\nencargo = \"91n-revision-nube.md\"\nresumen = \"Revisión de Codex del 91 (archivos nuevos: pi/temblores.*, pi/test_temblores.py, pi/fixtures/temblores/).\"\nautor = \"claude_diego\"\nrevisor = \"codex\"\nvueltas = 0\nnaturaleza = \"bot\"\n", "nombre = \"cola93n\"\nmotivo = \"Encargo 93n: revisión cruzada (Codex) de la guía de Jaime y Pilar que puso al día Claude (Diego) en la nube.\"\nresumen = \"Codex contrasta la guía nueva (doc 35) con el código del bot; los arreglos vuelven a la nube.\"\nesperar = [\"cola88\", \"cola91n\"]\ndespliegue = \"nada\"\npaciencia_h = 6\naprobado_por = \"usuario, 25-10-2026 America/Santiago: traer el 93 de la nube al vault y que revise Codex en la Pi\"\npruebas = []\n\n[[etapa]]\nid = \"93n\"\nencargo = \"93n-revision-nube.md\"\nresumen = \"Revisión de Codex de la guía 35 (.md y .html) contra botv3/.\"\nautor = \"claude_diego\"\nrevisor = \"codex\"\nvueltas = 0\nnaturaleza = \"menor\"\n"], "historial": "{\"encargo\": \"84a\", \"fase\": \"autor\", \"rol\": \"autor\", \"cuenta\": \"claude_cami\", \"motor\": \"claude\", \"modelo\": \"claude-opus-5-5\", \"esfuerzo\": \"medium\", \"nivel\": \"normal\", \"naturaleza\": \"pagina\", \"modelo_real\": \"claude-opus-5-5\", \"inicio\": \"2026-10-24T11:57:29-03:00\", \"min\": 18.7, \"tokens\": {\"entrada\": 104, \"salida\": 98464, \"cache_lectura\": 9058849, \"cache_escritura\": 254143, \"usd\": 5.814609800000003}, \"sin_cuota\": false, \"pct_5h\": [0.0, 26.0], \"pct_sem\": [78.0, 81.0], \"uso_momento\": [\"2026-10-24T11:57:28-03:00\", \"2026-10-24T12:16:11-03:00\"], \"medicion\": \"fresco\", \"veredicto\": null, \"pronostico\": {\"min\": 12.3, \"pct_5h\": 17.0, \"pct_sem\": 3.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"84a\", \"fase\": \"rev1\", \"rol\": \"rev\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"medium\", \"nivel\": \"normal\", \"naturaleza\": \"pagina\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-24T12:16:12-03:00\", \"min\": 5.4, \"tokens\": {\"total\": 176401}, \"sin_cuota\": false, \"pct_5h\": [0.0, 22.0], \"pct_sem\": [6.0, 17.0], \"uso_momento\": [\"2026-10-23T21:49:41-03:00\", \"2026-10-24T12:21:35-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"NO DESPLEGABLE\", \"pronostico\": {\"min\": 5.4, \"pct_5h\": 6.5, \"pct_sem\": 1.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"84a\", \"fase\": \"fix1\", \"rol\": \"fix\", \"cuenta\": \"claude_cami\", \"motor\": \"claude\", \"modelo\": \"claude-sonnet-5-5\", \"esfuerzo\": \"medium\", \"nivel\": \"agil\", \"naturaleza\": \"pagina\", \"modelo_real\": \"claude-sonnet-5-5\", \"inicio\": \"2026-10-24T12:21:39-03:00\", \"min\": 2.6, \"tokens\": {\"entrada\": 20, \"salida\": 6556, \"cache_lectura\": 362221, \"cache_escritura\": 36464, \"usd\": 0.24767809999999998}, \"sin_cuota\": false, \"pct_5h\": [26.0, 27.0], \"pct_sem\": [81.0, 82.0], \"uso_momento\": [\"2026-10-24T12:21:38-03:00\", \"2026-10-24T12:24:18-03:00\"], \"medicion\": \"fresco\", \"veredicto\": null, \"pronostico\": {\"min\": 3.4, \"pct_5h\": 2.0, \"pct_sem\": 0.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"84a\", \"fase\": \"rev2\", \"rol\": \"rev\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"medium\", \"nivel\": \"normal\", \"naturaleza\": \"pagina\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-24T12:24:19-03:00\", \"min\": 3.9, \"tokens\": {\"total\": 102696}, \"sin_cuota\": false, \"pct_5h\": [22.0, 27.0], \"pct_sem\": [17.0, 18.0], \"uso_momento\": [\"2026-10-24T12:21:35-03:00\", \"2026-10-24T12:28:11-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"DESPLEGABLE\", \"pronostico\": {\"min\": 5.2, \"pct_5h\": 6.5, \"pct_sem\": 1.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"84b\", \"fase\": \"autor\", \"rol\": \"autor\", \"cuenta\": \"claude_cami\", \"motor\": \"claude\", \"modelo\": \"claude-opus-5-5\", \"esfuerzo\": \"medium\", \"nivel\": \"normal\", \"naturaleza\": \"pagina\", \"modelo_real\": \"claude-opus-5-5\", \"inicio\": \"2026-10-24T12:28:14-03:00\", \"min\": 15.5, \"tokens\": {\"entrada\": 114, \"salida\": 95196, \"cache_lectura\": 9486214, \"cache_escritura\": 247925, \"usd\": 5.7850188000000005}, \"sin_cuota\": false, \"pct_5h\": [27.0, 52.0], \"pct_sem\": [82.0, 85.0], \"uso_momento\": [\"2026-10-24T12:28:13-03:00\", \"2026-10-24T12:43:48-03:00\"], \"medicion\": \"fresco\", \"veredicto\": null, \"pronostico\": {\"min\": 15.0, \"pct_5h\": 17.0, \"pct_sem\": 3.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"84b\", \"fase\": \"rev1\", \"rol\": \"rev\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"medium\", \"nivel\": \"normal\", \"naturaleza\": \"pagina\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-24T12:43:49-03:00\", \"min\": 4.1, \"tokens\": {\"total\": 149926}, \"sin_cuota\": false, \"pct_5h\": [27.0, 34.0], \"pct_sem\": [18.0, 19.0], \"uso_momento\": [\"2026-10-24T12:28:11-03:00\", \"2026-10-24T12:47:54-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"DESPLEGABLE\", \"pronostico\": {\"min\": 4.9, \"pct_5h\": 6.0, \"pct_sem\": 1.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88a\", \"fase\": \"autor\", \"rol\": \"autor\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"high\", \"nivel\": \"fuerte\", \"naturaleza\": \"seguridad\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T11:10:09-03:00\", \"min\": 11.1, \"tokens\": {\"total\": 191266}, \"sin_cuota\": false, \"pct_5h\": [0.0, 14.0], \"pct_sem\": [46.0, 2.0], \"uso_momento\": [\"2026-10-24T23:23:40-03:00\", \"2026-10-25T11:21:15-03:00\"], \"medicion\": \"fresco\", \"veredicto\": null, \"pronostico\": {\"min\": 15.7, \"pct_5h\": 22.0, \"pct_sem\": 3.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88a\", \"fase\": \"rev1\", \"rol\": \"rev\", \"cuenta\": \"claude_diego\", \"motor\": \"claude\", \"modelo\": \"claude-opus-5-5\", \"esfuerzo\": \"high\", \"nivel\": \"maximo\", \"naturaleza\": \"seguridad\", \"modelo_real\": \"claude-opus-5-5\", \"inicio\": \"2026-10-25T11:21:18-03:00\", \"min\": 5.7, \"tokens\": {\"entrada\": 56, \"salida\": 29396, \"cache_lectura\": 2267831, \"cache_escritura\": 99495, \"usd\": 1.8376702}, \"sin_cuota\": false, \"pct_5h\": [15.0, 25.0], \"pct_sem\": [33.0, 33.0], \"uso_momento\": [\"2026-10-25T11:21:18-03:00\", \"2026-10-25T11:26:51-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"NO DESPLEGABLE\", \"pronostico\": {\"min\": 9.0, \"pct_5h\": 18.0, \"pct_sem\": 2.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88a\", \"fase\": \"fix1\", \"rol\": \"fix\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"high\", \"nivel\": \"fuerte\", \"naturaleza\": \"seguridad\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T11:27:03-03:00\", \"min\": 15.0, \"tokens\": {\"total\": 211973}, \"sin_cuota\": false, \"pct_5h\": [14.0, 31.0], \"pct_sem\": [2.0, 5.0], \"uso_momento\": [\"2026-10-25T11:21:15-03:00\", \"2026-10-25T11:42:00-03:00\"], \"medicion\": \"fresco\", \"veredicto\": null, \"pronostico\": {\"min\": 9.9, \"pct_5h\": 12.0, \"pct_sem\": 2.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88a\", \"fase\": \"rev2\", \"rol\": \"rev\", \"cuenta\": \"claude_diego\", \"motor\": \"claude\", \"modelo\": \"claude-opus-5-5\", \"esfuerzo\": \"high\", \"nivel\": \"maximo\", \"naturaleza\": \"seguridad\", \"modelo_real\": \"claude-opus-5-5\", \"inicio\": \"2026-10-25T11:42:05-03:00\", \"min\": 10.2, \"tokens\": {\"entrada\": 76, \"salida\": 45662, \"cache_lectura\": 4708793, \"cache_escritura\": 152461, \"usd\": 3.0749906000000005}, \"sin_cuota\": false, \"pct_5h\": [25.0, 44.0], \"pct_sem\": [34.0, 35.0], \"uso_momento\": [\"2026-10-25T11:41:53-03:00\", \"2026-10-25T11:52:20-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"NO DESPLEGABLE\", \"pronostico\": {\"min\": 8.8, \"pct_5h\": 17.5, \"pct_sem\": 1.5, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88a\", \"fase\": \"fix2\", \"rol\": \"fix\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"high\", \"nivel\": \"fuerte\", \"naturaleza\": \"seguridad\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T11:58:23-03:00\", \"min\": 9.8, \"tokens\": {\"total\": 186177}, \"sin_cuota\": false, \"pct_5h\": [31.0, 44.0], \"pct_sem\": [5.0, 7.0], \"uso_momento\": [\"2026-10-25T11:42:00-03:00\", \"2026-10-25T12:08:09-03:00\"], \"medicion\": \"fresco\", \"veredicto\": null, \"pronostico\": {\"min\": 9.9, \"pct_5h\": 12.0, \"pct_sem\": 2.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88a\", \"fase\": \"rev3\", \"rol\": \"rev\", \"cuenta\": \"claude_diego\", \"motor\": \"claude\", \"modelo\": \"claude-opus-5-5\", \"esfuerzo\": \"high\", \"nivel\": \"maximo\", \"naturaleza\": \"seguridad\", \"modelo_real\": \"claude-opus-5-5\", \"inicio\": \"2026-10-25T12:08:12-03:00\", \"min\": 7.8, \"tokens\": {\"entrada\": 76, \"salida\": 38859, \"cache_lectura\": 4355008, \"cache_escritura\": 146121, \"usd\": 2.8174536000000003}, \"sin_cuota\": false, \"pct_5h\": [44.0, 61.0], \"pct_sem\": [35.0, 37.0], \"uso_momento\": [\"2026-10-25T12:08:11-03:00\", \"2026-10-25T12:16:06-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"NO DESPLEGABLE\", \"pronostico\": {\"min\": 9.0, \"pct_5h\": 18.0, \"pct_sem\": 1.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88c\", \"fase\": \"autor\", \"rol\": \"autor\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"high\", \"nivel\": \"fuerte\", \"naturaleza\": \"seguridad\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T16:13:04-03:00\", \"min\": 7.5, \"tokens\": {\"total\": 160498}, \"sin_cuota\": false, \"pct_5h\": [0.0, 10.0], \"pct_sem\": [10.0, 11.0], \"uso_momento\": [\"2026-10-25T14:49:06-03:00\", \"2026-10-25T16:20:31-03:00\"], \"medicion\": \"fresco\", \"veredicto\": null, \"pronostico\": {\"min\": 15.6, \"pct_5h\": 19.0, \"pct_sem\": 3.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88c\", \"fase\": \"rev1\", \"rol\": \"rev\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"xhigh\", \"nivel\": \"maximo\", \"naturaleza\": \"seguridad\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T16:20:32-03:00\", \"min\": 8.2, \"tokens\": {\"total\": 212319}, \"sin_cuota\": false, \"pct_5h\": [10.0, 24.0], \"pct_sem\": [11.0, 14.0], \"uso_momento\": [\"2026-10-25T16:20:31-03:00\", \"2026-10-25T16:28:42-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"DESPLEGABLE\", \"pronostico\": {\"min\": 6.8, \"pct_5h\": 16.0, \"pct_sem\": 2.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88b\", \"fase\": \"autor\", \"rol\": \"autor\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"medium\", \"nivel\": \"normal\", \"naturaleza\": \"bot\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T16:28:43-03:00\", \"min\": 12.1, \"tokens\": {\"total\": 266936}, \"sin_cuota\": false, \"pct_5h\": [24.0, 49.0], \"pct_sem\": [14.0, 17.0], \"uso_momento\": [\"2026-10-25T16:28:42-03:00\", \"2026-10-25T16:40:47-03:00\"], \"medicion\": \"fresco\", \"veredicto\": null, \"pronostico\": {\"min\": 8.7, \"pct_5h\": 10.5, \"pct_sem\": 2.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88b\", \"fase\": \"rev1\", \"rol\": \"rev\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"high\", \"nivel\": \"fuerte\", \"naturaleza\": \"bot\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T16:40:48-03:00\", \"min\": 6.8, \"tokens\": {\"total\": 185054}, \"sin_cuota\": false, \"pct_5h\": [49.0, 58.0], \"pct_sem\": [17.0, 19.0], \"uso_momento\": [\"2026-10-25T16:40:47-03:00\", \"2026-10-25T16:47:36-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"NO DESPLEGABLE\", \"pronostico\": {\"min\": 3.6, \"pct_5h\": 9.0, \"pct_sem\": 1.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88b\", \"fase\": \"fix1\", \"rol\": \"fix\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"medium\", \"nivel\": \"normal\", \"naturaleza\": \"bot\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T16:47:37-03:00\", \"min\": 5.4, \"tokens\": {\"total\": 106656}, \"sin_cuota\": false, \"pct_5h\": [58.0, 65.0], \"pct_sem\": [19.0, 20.0], \"uso_momento\": [\"2026-10-25T16:47:36-03:00\", \"2026-10-25T16:52:58-03:00\"], \"medicion\": \"fresco\", \"veredicto\": null, \"pronostico\": {\"min\": 10.3, \"pct_5h\": 10.0, \"pct_sem\": 1.5, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"88b\", \"fase\": \"rev2\", \"rol\": \"rev\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"high\", \"nivel\": \"fuerte\", \"naturaleza\": \"bot\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T16:52:59-03:00\", \"min\": 6.3, \"tokens\": {\"total\": 151469}, \"sin_cuota\": false, \"pct_5h\": [65.0, 72.0], \"pct_sem\": [20.0, 21.0], \"uso_momento\": [\"2026-10-25T16:52:58-03:00\", \"2026-10-25T16:59:14-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"DESPLEGABLE\", \"pronostico\": {\"min\": 3.6, \"pct_5h\": 9.0, \"pct_sem\": 1.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"91n\", \"fase\": \"rev1\", \"rol\": \"rev\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"high\", \"nivel\": \"fuerte\", \"naturaleza\": \"bot\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T17:00:35-03:00\", \"min\": 5.7, \"tokens\": {\"total\": 128328}, \"sin_cuota\": false, \"pct_5h\": [72.0, 78.0], \"pct_sem\": [21.0, 22.0], \"uso_momento\": [\"2026-10-25T16:59:14-03:00\", \"2026-10-25T17:06:18-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"NO DESPLEGABLE\", \"pronostico\": {\"min\": 3.9, \"pct_5h\": 8.5, \"pct_sem\": 1.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"93n\", \"fase\": \"rev1\", \"rol\": \"rev\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-reserve\", \"esfuerzo\": \"medium\", \"nivel\": \"agil\", \"naturaleza\": \"menor\", \"modelo_real\": \"gpt-reserve\", \"inicio\": \"2026-10-25T17:06:35-03:00\", \"min\": 2.1, \"tokens\": {\"total\": 147027}, \"sin_cuota\": false, \"pct_5h\": [78.0, 79.0], \"pct_sem\": [22.0, 22.0], \"uso_momento\": [\"2026-10-25T17:06:18-03:00\", \"2026-10-25T17:08:36-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"DESPLEGABLE\", \"pronostico\": {\"min\": 2.7, \"pct_5h\": 1.0, \"pct_sem\": 0.0, \"debil\": false, \"por_factor\": null}}\n{\"encargo\": \"9092n\", \"fase\": \"rev1\", \"rol\": \"rev\", \"cuenta\": \"codex\", \"motor\": \"codex\", \"modelo\": \"gpt-5.6-terra\", \"esfuerzo\": \"high\", \"nivel\": \"fuerte\", \"naturaleza\": \"bot\", \"modelo_real\": \"gpt-5.6-terra\", \"inicio\": \"2026-10-25T17:28:30-03:00\", \"min\": 8.3, \"tokens\": {\"total\": 241737}, \"sin_cuota\": false, \"pct_5h\": [79.0, 94.0], \"pct_sem\": [22.0, 24.0], \"uso_momento\": [\"2026-10-25T17:08:36-03:00\", \"2026-10-25T17:36:46-03:00\"], \"medicion\": \"fresco\", \"veredicto\": \"DESPLEGABLE\", \"pronostico\": {\"min\": 5.0, \"pct_5h\": 8.0, \"pct_sem\": 1.0, \"debil\": false, \"por_factor\": null}}\n", "cuentas": "[claude_diego]\nnombre = \"Claude (Diego)\"\n[claude_cami]\nnombre = \"Claude (Cami)\"\n[codex]\nnombre = \"Codex\"\n[groq]\nnombre = \"Groq\"\n[gemini]\nnombre = \"Gemini\"\n[openrouter]\nnombre = \"OpenRouter\"\n[tavily]\nnombre = \"Tavily\"", "vivos": [{"nombre": "cola91n", "estado": "detenida", "etapas": ["91n"], "etapa": "91n", "fase": "rev1", "cuenta": "Codex", "escrito": "2026-10-25T17:06:40-03:00"}]};
+
+d = { resumenes: D.tomls.map(resumenes).filter(Boolean), vivos: D.vivos, h: historia(D.historial), nombres: nombres(D.cuentas) };
+const lista = document.querySelector("#menciones");
+for (const c of ["cola84", "cola88", "cola91n", "cola93n", "cola9092n", "cola00z"]) lista.append(el("li", {}, "Cola: ", mencionCola(c)));
+lista.append(el("li", {}, el("button", { class: "red-pastilla" }, mencionCola("cola91n"), " · 91n · rev1 · detenida")));
+activarGlosario(document);
+</script></body></html>

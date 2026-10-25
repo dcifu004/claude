@@ -4821,8 +4821,8 @@ class ResumenYUsoTests(unittest.TestCase):
     def test_el_resumen_se_dibuja_en_ahora_y_en_la_linea_de_tiempo_como_texto_de_una_linea(self):
         linea = tramo(self.js, "function lineaResumen(texto, antes) {")
         self.assertIn('el("p", { class: `resumen${texto === "sin resumen" ? " tenue" : ""}`, title: texto }', linea)     # el texto completo en title
-        self.assertIn("el(\"h2\", {}, `${m.cola} · ${titulo}`), lineaResumen(resumenCola(m.cola)),", self.js)             # tarjeta de la cola en Ahora
-        self.assertIn("el(\"h2\", {}, `Cola viva: ${v.cola}`), lineaResumen(resumenCola(v.cola)),", self.js)              # la cola deducida de la bitácora
+        self.assertIn("el(\"h2\", {}, mencionCola(m.cola), ` · ${titulo}`), lineaResumen(resumenCola(m.cola)),", self.js)  # tarjeta de la cola en Ahora (95)
+        self.assertIn('el("h2", {}, "Cola viva: ", mencionCola(v.cola)), lineaResumen(resumenCola(v.cola)),', self.js)       # la cola deducida de la bitácora (95)
         self.assertIn('el("h2", {}, `Encargo ${id}`), lineaResumen(e ? resumenCola(e.cola) : "sin resumen"), lineaResumen(resumenEtapa(e), `Etapa ${id} · `),', self.js)
         regla = {s: d for m, s, d in reglas_css(self.css) if not m}[".resumen"]
         self.assertEqual((regla["white-space"], regla["overflow"], regla["text-overflow"]), ("nowrap", "hidden", "ellipsis"))
@@ -5344,7 +5344,7 @@ class CargaVsCapacidadTests(unittest.TestCase):
         self.assertNotIn("valor", tramo(self.js, 'extra ? el("span", { class: "linea proyectada" }, "con carga proyectada: ",\n            [')) 
         self.assertIn(".carga-matriz th.proyectada, .carga-matriz td.proyectada { border: 2px dotted var(--tenue); }", self.css)
         self.assertIn(".carga-matriz .linea.proyectada { margin-top: 4px; padding: 2px 4px; border: 2px dotted var(--tenue);", self.css)
-        self.assertIn("`incluye carga proyectada: ${proy.map(p => delPanel(p.cola)).join(\", \")}.", self.js)
+        self.assertIn('"incluye carga proyectada: ", proy.flatMap((p, i) => [i ? ", " : null, mencionCola(p.cola)]), ". Es un cálculo', self.js)
 
     def test_c2_la_casilla_no_escribe_en_ninguna_parte(self):
         # `marcadas` es un Set en la memoria de la pestaña: se pierde al recargar.
@@ -5520,8 +5520,12 @@ class CargaVsCapacidadTests(unittest.TestCase):
                            ("ESTADOS_FUERA.get(x.estado)", 1), ("x.motivo ? ", 1)):
             self.assertEqual(codigo.count(uso), veces, uso)
             codigo = codigo.replace(uso, "")
-        # Los que sí muestran: todos dentro de delPanel(). Quitados esos, no queda ningún campo de texto del panel.
-        envueltos = re.findall(r"delPanel\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)", codigo)
+        # 95: los nombres de `colas_que_caben` (una lista, no un campo) van uno a uno por mencionCola().
+        self.assertEqual(codigo.count("mencionCola(c)"), 1)
+        codigo = codigo.replace("mencionCola(c)", "")
+        # Los que sí muestran: todos dentro de delPanel() o, si es el nombre de una cola, de mencionCola() (95), que deja
+        # un nombre válido tal cual y pasa por delPanel() el que no lo es. Quitados esos, no queda ningún campo de texto.
+        envueltos = re.findall(r"(?:delPanel|mencionCola)\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)", codigo)
         self.assertEqual(len(envueltos), 8)
         for e in envueltos:
             self.assertRegex(e, campos)
@@ -5534,7 +5538,7 @@ class CargaVsCapacidadTests(unittest.TestCase):
         self.assertEqual((self.del_panel("41:rev3"), self.fase_panel("41:rev3"), self.fase_panel("46a:autor"), self.fase_panel(None)),
                          ("«oculto»", "41:rev3", "46a:autor", "sin datos"))
         self.assertEqual(self.fase_panel("41:sk-proj-A1b2C3d4E5f6G7h8:Diego"), "41:«oculto»:«oculto»")
-        self.assertIn('el("strong", {}, delPanel(x.cola))', self.js)
+        self.assertIn('el("strong", {}, mencionCola(x.cola))', self.js)
         # Los textos reales de la captura pasan enteros: la lista blanca no se come nada (trampa 22br1).
         self.assertEqual([self.fase_panel(c["fase"]) for c in self.PANEL["colas_fuera"]], ["41:rev3", "42:rev1", "46:autor"])
         reales = [str(c[k]) for c in self.PANEL["colas_fuera"] for k in ("cola", "motivo")] + \
@@ -5866,6 +5870,204 @@ class ConsolaEncargosTests(unittest.TestCase):
         # Cambiar de panel no limpia ni reemplaza ese temporizador: ningún clearInterval en la página.
         self.assertNotIn("clearInterval", self.codigo)
 
+    # ---------------- Encargo 95: tooltip de las colas ----------------
+    # Fixtures reales de encargos-nube/95-fixtures/ (manifiestos e historial de las colas 84, 88, 91n, 93n y 9092n). Esa
+    # carpeta no trae vivo/: los dos vivo de abajo están armados acá con la forma del real fixtures/vivo-cola85-85b.json.
+    FIX95 = PI.parent / "encargos-nube" / "95-fixtures"
+    VIVO_91N = {"nombre": "cola91n", "estado": "detenida", "etapas": ["91n"], "etapa": "91n", "fase": "rev1", "cuenta": "Codex",
+                "escrito": "2026-10-25T17:06:40-03:00"}
+    VIVO_88 = {"nombre": "cola88", "estado": "terminada", "etapas": ["88a", "88c", "88b"], "etapa": "88b", "fase": "rev2",
+               "cuenta": "Codex", "escrito": "2026-10-25T16:59:20-03:00", "fin": "2026-10-25T16:59:20-03:00"}
+    HOSTIL = ('nombre = "cola99x"\n'
+              'resumen = "<img src=x onerror=alert(1)> clave sk-ant-api03-AbCdEfGhIjKlMnOpQrStUvWx __proto__ ' + "relleno " * 40 + '"\n'
+              'motivo = "<script>alert(2)</script> token=sk-ant-oculto-123"\n\n[[etapa]]\nid = "99x"\nresumen = "__proto__ <b>negrita</b>"\n')
+    ESTADOS_95 = {"pausada_sin_timer": "pausada, sin reanudación programada", "detenida": "detenida", "en_candado": "espera autorización",
+                  "caida": "caída", "sin_autorizacion": "sin autorización", "ilegible": "no se pudo leer", "pausada_por_usuario": "pausada por el usuario",
+                  "retenida_por_despacho": "retenida por el despacho"}
+
+    @staticmethod
+    def linea_95(js, inicio):
+        """La línea de `js` que empieza con `inicio` (las definiciones de una línea que necesita la prueba con node)."""
+        i = js.index(inicio)
+        return js[i:js.index("\n", i)]
+
+    @classmethod
+    def datos_95(cls, vivos=()):
+        rs = [ResumenYUsoTests.resumenes(leer(p)) for p in sorted(cls.FIX95.glob("cola-*.toml"))]
+        h = [json.loads(x) for x in leer(cls.FIX95 / "historial.jsonl").splitlines() if x.strip()]
+        return {"resumenes": [r for r in rs if r], "vivos": list(vivos), "h": h,
+                "nombres": {"claude_diego": "Claude (Diego)", "claude_cami": "Claude (Cami)", "codex": "Codex"}}
+
+    @staticmethod
+    def fecha_chile(iso):
+        from zoneinfo import ZoneInfo
+        try:
+            return datetime.fromisoformat(iso).astimezone(ZoneInfo("America/Santiago")).strftime("%d-%m %H:%M")
+        except (TypeError, ValueError):
+            return None
+
+    @classmethod
+    def lineas_cola(cls, d, nombre):
+        """Espejo de lineasCola() (en la Pi no hay motor de JS; la prueba con node de abajo corre el JS real)."""
+        ry, dp = ResumenYUsoTests, CargaVsCapacidadTests.del_panel
+        c = next((x for x in d["resumenes"] if x["cola"] == nombre), None)
+        v = next((x for x in d["vivos"] if x.get("nombre") == nombre), None)
+        if not isinstance(nombre, str) or (not c and not v):
+            return [["Cola", "sin datos de esta cola"]]
+        ids = {str(x) for x in ([e["id"] for e in c["etapas"]] if c else []) + (v.get("etapas") if v and isinstance(v.get("etapas"), list) else [])}
+        filas = sorted((x for x in d["h"] if str(x.get("encargo")) in ids), key=lambda x: datetime.fromisoformat(x["inicio"]).timestamp())
+        ultima = filas[-1] if filas else None
+        actual = str(v["etapa"]) if v and v.get("etapa") not in (None, "") else str(ultima["encargo"]) if ultima else None
+        etapa = next((e for e in c["etapas"] if e["id"] == actual), None) if c and actual else None
+        de_etapa = ry.resumen_etapa(etapa, {}) if etapa else "sin resumen"
+        que = ry.resumen_cola(d["resumenes"], nombre) + (f" · etapa {dp(actual)}: {de_etapa}" if de_etapa != "sin resumen" else "")
+        cuenta = lambda i: dp(d["nombres"][i]) if i in d["nombres"] else dp(i) if i else "sin datos"
+        if v:
+            partes = [dp(x) for x in (v.get("etapa"), v.get("fase")) if x not in (None, "")]
+            partes += [x for x in (dp(v["cuenta"]) if v.get("cuenta") else None, cls.ESTADOS_95.get(v.get("estado")) or dp(str(v.get("estado") or "").replace("_", " ")),
+                                   cls.fecha_chile(v.get("fin")) or cls.fecha_chile(v.get("escrito"))) if x]
+            fase = " · ".join(partes)
+        else:
+            fase = " · ".join(x for x in (dp(ultima["encargo"]), dp(ultima["fase"]), cuenta(ultima["cuenta"]), cls.fecha_chile(ultima["inicio"])) if x) if ultima else "sin fases todavía"
+        revs = [x for x in filas if x.get("rol") == "rev" and isinstance(x.get("veredicto"), str) and x["veredicto"]]
+        r = revs[-1] if revs else None
+        minutos = f"{str(round(r['min'] * 10) / 10).replace('.', ',')} min" if r else ""
+        revision = " · ".join([dp(r["encargo"]), dp(r["fase"]), cuenta(r["cuenta"]), minutos, r["veredicto"] if r["veredicto"] in ("DESPLEGABLE", "NO DESPLEGABLE") else dp(r["veredicto"])]) if r else "sin revisión todavía"
+        corte = lambda t: t if len(t) <= 180 else t[:179].rstrip() + "…"
+        return [[e, corte(t)] for e, t in (["Qué hace", que], ["Última fase", fase or "sin datos"], ["Última revisión", revision])]
+
+    def test_95_c1_las_tres_lineas_con_los_fixtures_reales(self):
+        d = self.datos_95([self.VIVO_91N])
+        l91 = dict(self.lineas_cola(d, "cola91n"))
+        self.assertTrue(l91["Qué hace"].startswith("Codex revisa pi/temblores.py, sus unidades y su suite; los arreglos vuelven a la nube."), l91)
+        self.assertIn("etapa 91n: Revisión de Codex del 91", l91["Qué hace"])
+        self.assertEqual(l91["Última fase"], "91n · rev1 · Codex · detenida · 25-10 17:06")
+        self.assertEqual(l91["Última revisión"], "91n · rev1 · Codex · 5,7 min · NO DESPLEGABLE")
+        self.assertTrue(dict(self.lineas_cola(d, "cola93n"))["Última revisión"].endswith("· DESPLEGABLE"))
+        self.assertEqual(dict(self.lineas_cola(d, "cola9092n"))["Última revisión"], "9092n · rev1 · Codex · 8,3 min · DESPLEGABLE")
+        self.assertEqual(dict(self.lineas_cola(d, "cola84"))["Última revisión"], "84b · rev1 · Codex · 4,1 min · DESPLEGABLE")
+
+    def test_95_c1_trampa_88_la_ultima_es_por_inicio_no_por_nombre(self):
+        # 88c (16:13–16:20) corrió antes que 88b (16:28–16:52): la última es 88b, con vivo y sin él.
+        for vivos in ([], [self.VIVO_88]):
+            l = dict(self.lineas_cola(self.datos_95(vivos), "cola88"))
+            self.assertEqual(l["Última revisión"], "88b · rev2 · Codex · 6,3 min · DESPLEGABLE", vivos)
+            self.assertTrue(l["Última fase"].startswith("88b · rev2 · Codex"), l)
+            self.assertNotIn("88c", l["Última revisión"] + l["Última fase"])
+            self.assertNotIn("88a", l["Última revisión"] + l["Última fase"])
+        self.assertEqual(dict(self.lineas_cola(self.datos_95(), "cola88"))["Última fase"], "88b · rev2 · Codex · 25-10 16:52")
+
+    def test_95_c5_desconocida_y_sin_revision(self):
+        d = self.datos_95()
+        for nombre in ("cola00z", "__proto__", "constructor", "", None):
+            self.assertEqual(self.lineas_cola(d, nombre), [["Cola", "sin datos de esta cola"]], nombre)
+        sin_rev = dict(self.lineas_cola(dict(d, h=[x for x in d["h"] if x["encargo"] == "93n" and x["rol"] != "rev"]), "cola93n"))
+        self.assertEqual(sin_rev["Última revisión"], "sin revisión todavía")
+        # La tarjeta ya acepta una línea más (la ampliación del primer hallazgo grave).
+        self.assertIn("function lineasCola(nombre, extra = []) {", self.js)
+        self.assertIn('[["Qué hace", que], ["Última fase", fase || "sin datos"], ["Última revisión", revision], ...extra]', self.js)
+        self.assertIn('const COLA_SIN_DATOS = "sin datos de esta cola"', self.js)
+        self.assertIn('"sin revisión todavía"', self.js)
+
+    def test_95_c4_datos_hostiles_no_llegan_como_html(self):
+        d = self.datos_95([dict(self.VIVO_91N, nombre="cola99x", etapas=["99x"], etapa="99x", cuenta="__proto__", estado="<i>x</i>")])
+        d["resumenes"].append(ResumenYUsoTests.resumenes(self.HOSTIL))
+        d["h"].append({"encargo": "99x", "fase": "rev1", "rol": "rev", "cuenta": "__proto__", "min": 1.25, "inicio": "2026-10-25T18:00:00-03:00", "veredicto": "<b>SÍ</b>"})
+        lineas = self.lineas_cola(d, "cola99x")
+        texto = " ".join(t for _, t in lineas)
+        self.assertNotIn("sk-ant", texto)
+        self.assertIn("«oculto»", texto)
+        self.assertTrue(all(len(t) <= 180 for _, t in lineas), lineas)
+        # Todo sale por el() (texto), nunca como HTML; las claves se buscan sin prototipo.
+        bloque = self.js[self.js.index("const COLA_SIN_DATOS"):self.js.index("function cuentaFase(")] + tramo(self.js, "function mostrarCola(nombre) {") + tramo(self.js, "function activarMenciones(raiz = document) {")
+        for prohibido in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write"):
+            self.assertNotIn(prohibido, bloque)
+        self.assertIn("const cuentaCola = id => { const n = propio(d.nombres, id);", self.js)
+        self.assertIn('const propio = (o, k) => (o && typeof o === "object" && typeof k === "string" && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined);', self.js)
+
+    def test_95_c2_cada_lugar_del_inventario_usa_mencionCola(self):
+        red = leer(PAGINAS["encargos"] / "red.js")
+        lugares = ['el("h2", {}, "Cola viva: ", mencionCola(v.cola))',                          # Ahora · cola deducida
+                   'mencionCola(x.n), ": espera ", ...x.a.flatMap((a, j) => [j ? ", " : null, mencionCola(a)])',   # colas en espera
+                   'el("h2", {}, mencionCola(m.cola), ` · ${titulo}`)',                          # tarjeta de cola
+                   'scope: "col" }, mencionCola(c.cola), el("span", { class: "carga-nota" }',   # matriz · cabeceras
+                   'proy.flatMap((p, i) => [i ? ", " : null, mencionCola(p.cola)])',             # matriz · leyenda
+                   'el("li", {}, el("strong", {}, mencionCola(x.cola)), " ",',                  # colas_fuera
+                   'x.colas_que_caben.flatMap((c, i) => [i ? ", " : null, mencionCola(c)])',     # capacidad por vencer
+                   'autorizadas.flatMap((c, i) => [i ? ", " : null, mencionCola(c)])',           # despacho · autorizadas
+                   'r.cola === "Despacho" ? "Despacho" : mencionCola(r.cola), ": "']              # resultado de la acción
+        for x in lugares:
+            self.assertIn(x, self.js)
+        self.assertIn('el("i", { class: "red-punto", "aria-hidden": "true" }), mencionCola(v.nombre), texto);', red)   # Flow · franja Ahora
+        # Ningún nombre de cola queda pintado suelto: ni interpolado ni con delPanel() directo. La clave de caché de la red
+        # (`${v.nombre}:${v.estado}:…`) no se pinta: se descuenta una vez.
+        self.assertEqual(red.count("colasVivas().map(v => `${v.nombre}:${v.estado}:"), 1)
+        for codigo in (self.js, red.replace("colasVivas().map(v => `${v.nombre}:${v.estado}:", "")):
+            self.assertEqual(re.findall(r"\$\{(?:v|m|x|c|p|r)\.(?:cola|n|nombre)\}", codigo), [])
+            self.assertEqual(re.findall(r"delPanel\((?:v|m|x|c|p|r)\.cola\)|colas_que_caben\.map\(delPanel\)|autorizadas\.join\(", codigo), [])
+        self.assertNotIn("const cola = typeof v.nombre", red)
+        # Una sola función arma la mención.
+        self.assertEqual(len(re.findall(r'"mencion-cola"', self.js + red)), 1)
+        self.assertIn('return el("span", { class: "mencion-cola", "data-cola": typeof nombre === "string" ? nombre.slice(0, 64) : "" }, texto);', self.js)
+
+    def test_95_c3_accesible_igual_que_el_glosario(self):
+        bloque = tramo(self.js, "function activarMenciones(raiz = document) {")
+        for linea in ('blanco.setAttribute("aria-describedby", "term-tooltip");',
+                      'if (!blanco.matches("button, a, input, select, textarea, [tabindex]")) blanco.setAttribute("tabindex", "0");',
+                      'blanco.addEventListener("pointerenter", ver);', 'blanco.addEventListener("focus", ver);', 'blanco.addEventListener("blur", ocultarTooltip);',
+                      'if (ev.pointerType !== "mouse") espera = setTimeout(ver, 450);', 'const blanco = n.closest("button, a") || n;'):
+            self.assertIn(linea, bloque)
+        self.assertIn("    activarMenciones(raiz);\n}", self.js)                      # el mismo componente: activarGlosario lo llama
+        self.assertIn('const t = $("#term-tooltip")', tramo(self.js, "function mostrarCola(nombre) {"))
+        self.assertIn("activarGlosario(S.franja);", leer(PAGINAS["encargos"] / "red.js"))
+        self.assertIn("activarGlosario(p);", tramo(self.js, "function ahora() {"))
+        self.assertIn(".term-tooltip .linea-cola { display: block;", self.css)
+        self.assertIn(".mencion-cola {", self.css)
+        self.assertEqual(self.html.count('id="term-tooltip"'), 1)                     # un solo tooltip en la página
+
+    @unittest.skipUnless(shutil.which("node"), "sin node (en la Pi no hay): cubren el espejo y la fuente")
+    def test_95_el_js_real_con_node(self):
+        js = self.js
+        tramos = [js[js.index('"use strict";'):js.index("// Encargo 22, parte B")],
+                  js[js.index("const ESTADOS_FUERA"):js.index("const AYUDA_CARGA")],
+                  *(self.linea_95(js, x) for x in ("function conEtiqueta(t) {", "const delPanel = x =>", "const propio = (o, k) =>", "const porInicio = fs =>", "const COLA_VALIDA ="))]
+        datos = {"tomls": [leer(p) for p in sorted(self.FIX95.glob("cola-*.toml"))] + [self.HOSTIL], "historial": leer(self.FIX95 / "historial.jsonl"),
+                 "cuentas": leer(PI.parent / "botv3" / "cuentas.toml") if (PI.parent / "botv3" / "cuentas.toml").exists() else "",
+                 "vivos": [self.VIVO_91N, dict(self.VIVO_91N, nombre="cola99x", etapas=["99x"], etapa="99x", cuenta="__proto__")]}
+        programa = ("const el = (tag, attrs = {}, ...h) => ({ tag, attrs, hijos: h.flat().filter(x => x != null && x !== false).map(x => typeof x === 'object' ? x : String(x)) });\n"
+                    + "\n".join(tramos) + "\nconst D = " + json.dumps(datos) + ";\n"
+                    "d = { resumenes: D.tomls.map(resumenes).filter(Boolean), vivos: D.vivos, h: historia(D.historial), nombres: nombres(D.cuentas) };\n"
+                    "const sin = { ...d, vivos: [] };\n"
+                    "const r = { c91: lineasCola('cola91n'), c93: lineasCola('cola93n'), c99: lineasCola('cola99x'), proto: lineasCola('__proto__'),\n"
+                    "  nada: lineasCola('cola00z'), m: mencionCola('cola91n'), mala: mencionCola('<img src=x>'), extra: lineasCola('cola91n', [['Hallazgo', 'x']]) };\n"
+                    "d = sin; r.c88 = lineasCola('cola88');\n"
+                    "console.log(JSON.stringify(r));\n")
+        p = subprocess.run(["node", "-e", programa], capture_output=True, text=True, timeout=30)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        r = json.loads(p.stdout)
+        c91 = dict(r["c91"])
+        self.assertEqual(c91["Última fase"], "91n · rev1 · Codex · detenida · 25-10 17:06")
+        self.assertEqual(c91["Última revisión"], "91n · rev1 · Codex · 5,7 min · NO DESPLEGABLE")
+        self.assertTrue(c91["Qué hace"].startswith("Codex revisa pi/temblores.py"))
+        self.assertTrue(dict(r["c93"])["Última revisión"].endswith("DESPLEGABLE"))
+        self.assertEqual(dict(r["c88"])["Última revisión"], "88b · rev2 · Codex · 6,3 min · DESPLEGABLE")
+        self.assertEqual(dict(r["c88"])["Última fase"], "88b · rev2 · Codex · 25-10 16:52")
+        self.assertEqual(r["proto"], [["Cola", "sin datos de esta cola"]])
+        self.assertEqual(r["nada"], [["Cola", "sin datos de esta cola"]])
+        hostil = " ".join(t for _, t in r["c99"])
+        self.assertNotIn("sk-ant", hostil)
+        self.assertIn("«oculto»", hostil)
+        self.assertTrue(all(len(t) <= 180 for _, t in r["c99"]))
+        self.assertEqual(len(r["extra"]), 4)
+        self.assertEqual(r["m"], {"tag": "span", "attrs": {"class": "mencion-cola", "data-cola": "cola91n"}, "hijos": ["cola91n"]})
+        # Un nombre que no es de cola pasa por delPanel() y queda como TEXTO (un solo hijo string), nunca como nodo armado.
+        self.assertEqual(len(r["mala"]["hijos"]), 1)
+        self.assertIsInstance(r["mala"]["hijos"][0], str)
+        # El espejo de Python dice lo mismo que el JS real.
+        d = self.datos_95([self.VIVO_91N])
+        self.assertEqual(self.lineas_cola(d, "cola91n"), r["c91"])
+        self.assertEqual(self.lineas_cola(self.datos_95(), "cola88"), r["c88"])
+
 
 class FlujoEncargosTests(unittest.TestCase):
     """Encargo 84b: 🕸️ Flujo, la red de encargos con luces (red.js). Pruebas estáticas y espejos en Python: en la Pi no
@@ -6053,7 +6255,7 @@ class FlujoEncargosTests(unittest.TestCase):
         # Todo dato de un agente que se muestra pasa por delPanel() (lista blanca y regla de nombres) o es una cola válida.
         for linea in ("recientes.has(enc) ? nodo(3, enc, `Encargo ${delPanel(enc)}`)",
                       'const fase = `${delPanel(v.etapa)} · ${delPanel(v.fase)} · ${delPanel(String(v.estado ?? "").replace(/_/g, " "))}`;',
-                      'const cola = typeof v.nombre === "string" && COLA_VALIDA.test(v.nombre) ? v.nombre : delPanel(v.nombre);',
+                      'el("i", { class: "red-punto", "aria-hidden": "true" }), mencionCola(v.nombre), texto);',
                       'delPanel(bonito(x.naturaleza))', 'delPanel(textoId(x.fase).replace(/\\d+$/, ""))',
                       'return typeof n === "string" && n !== "sin datos" ? delPanel(n) : id ? delPanel(id) : "sin datos"; }'):
             self.assertIn(linea, self.red)
