@@ -61,12 +61,15 @@ def interpretar(texto: str, sonando: bool) -> dict[str, str] | None:
     if re.fullmatch(r"(?:pausa(?:\s+(?:la\s+)?(?:musica|spotify))?|para\s+(?:la\s+)?(?:musica|spotify))", frase):
         return {"accion": "pausa"} if sonando or frase != "pausa" else None
     if re.fullmatch(r"(?:sigue|continua|reanuda)(?:\s+(?:con\s+)?(?:la\s+)?(?:musica|spotify))?", frase):
-        return {"accion": "sigue"}
+        # 88d: «sigue» a secas también es conversación; el bot la toma sólo si su receptor está en pausa.
+        return {"accion": "sigue", "sola": True} if frase in ("sigue", "continua", "reanuda") else {"accion": "sigue"}
 
     verbo = r"(?:reproduce|reproducir|pon|pone|toca|tocame)"
     # «pon una alarma/temporizador» ya pertenece a temporizadores: poner música
     # exige nombrar Spotify incluso si trae un «de …» que parece artista.
-    if re.match(r"^(?:pon|pone)\b", frase) and not en_spotify:
+    # 88d: «toca» igual. En Chile «toca pagar la cuenta de la luz» es «es hora de…»;
+    # «tócame …» sí es música y no entra acá (`\b` no corta «tocame»).
+    if re.match(r"^(?:pon|pone|toca)\b", frase) and not en_spotify:
         return None
     m = re.fullmatch(rf"{verbo}\s+(?:musica\s+de|a)\s+(.+?)", frase)
     if m and m.group(1).strip():
@@ -75,6 +78,11 @@ def interpretar(texto: str, sonando: bool) -> dict[str, str] | None:
     # Una canción sin artista necesita decir Spotify; con «de artista» ya es
     # inequívoca. Así «reproducir la última nota» sigue al router.
     m = re.fullmatch(rf"{verbo}\s+(.+?)\s+de\s+(.+?)", frase)
+    # 88d: «reproduce la última nota de mi proyecto»: un «artista» con posesivo,
+    # demostrativo o día no es un artista, salvo que se haya dicho Spotify. Los
+    # artículos no cuentan: «Los Prisioneros» y «La Ley» son artistas.
+    if m and not en_spotify and re.match(r"(?:mis?|tus?|sus?|nuestr[oa]s?|est[eao]s?|es[eao]s?|ayer|hoy|manana)\b", m.group(2)):
+        return None
     if m and m.group(1).strip() and m.group(2).strip():
         return {"accion": "cancion", "titulo": m.group(1).strip(), "artista": m.group(2).strip()}
     m = re.fullmatch(rf"{verbo}\s+(.+?)", frase)

@@ -6774,18 +6774,27 @@ def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
     pausa_sola = spotify_mod._limpiar(limpio) == "pausa"
     if not inicial and not pausa_sola:
         return False
-    bases = [cfg["api"], *cfg["otros"]]
-    try:
-        estados = {base: spotify_mod.estado(base) for base in bases}
-    except spotify_mod.SpotifyError:
-        if inicial:
-            send_text(chat_id, "No pude usar Spotify ahora.")
-            return True
-        return False
+    estados: dict[str, Any] = {}
+    for base in [cfg["api"], *cfg["otros"]]:
+        try:
+            estados[base] = spotify_mod.estado(base)
+        except spotify_mod.SpotifyError:
+            if base == cfg["api"]:
+                if inicial:
+                    send_text(chat_id, "No pude usar Spotify ahora.")
+                    return True
+                return False
+            # 88d: el receptor del otro perfil sólo se consulta para saber si hay que
+            # pausarlo. Caído, cuenta como callado: no le apaga Spotify a este perfil.
+            LOG.warning("Spotify: el receptor del otro perfil no contesta; se trata como callado")
+            estados[base] = None
     intencion = spotify_mod.interpretar(limpio, sonando=any(_spotify_suena(x) for x in estados.values()))
     if not intencion:
         return False
     propio = estados[cfg["api"]]
+    # 88d: «sigue» a secas sólo si este receptor está en pausa; si no, es conversación y sigue su camino.
+    if intencion.get("sola") and not (isinstance(propio, dict) and propio.get("paused")):
+        return False
     try:
         if intencion["accion"] == "pausa":
             for base, estado_actual in estados.items():

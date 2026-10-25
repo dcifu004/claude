@@ -1,0 +1,33 @@
+# PROPUESTA (88d, hallazgo 1 de la 88r): spotify@.service con aislamiento. NO está instalada ni dada de alta.
+# Se prueba primero en la Pi, como dcifu004, con systemd-run --user (ver 88d-RESULTADO.md), y recién ahí se
+# reemplaza pi/spotify/spotify@.service, se recalcula su hash y se pide el alta de nuevo.
+#
+# Qué cambia: cada instancia sólo ve su propia carpeta del volumen (no la del otro perfil, ni los vaults, ni
+# ~/.ssh). PrivateUsers=yes es lo que permite las opciones de montaje en una unidad de USUARIO (lo mismo que
+# probó la 88ar1 con systemd-run --user en la Pi).
+[Unit]
+Description=Spotify Connect (%i)
+After=pipewire-pulse.service
+Wants=pipewire-pulse.service
+ConditionPathExists=/opt/nodo/datos/spotify/%i/config.yml
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/go-librespot --config_dir /opt/nodo/datos/spotify/%i
+Restart=on-failure
+RestartSec=10
+PrivateUsers=yes
+ProtectSystem=strict
+# /home de dcifu004 queda vacío; el socket de PipeWire vive en $XDG_RUNTIME_DIR (/run/user/<uid>), que no se tapa.
+ProtectHome=tmpfs
+# Del volumen cifrado sólo queda la carpeta de ESTA instancia (config.yml, state.json y el lockfile).
+TemporaryFileSystem=/opt/nodo/datos
+BindPaths=/opt/nodo/datos/spotify/%i
+PrivateTmp=yes
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LockPersonality=yes
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=default.target

@@ -50,6 +50,28 @@ class FrasesTests(unittest.TestCase):
         for texto in self.NO:
             with self.subTest(texto=texto): self.assertIsNone(spotify.interpretar(texto, False))
 
+    # 88d (hallazgo 3 de la 88r): «toca …» es «es hora de …» si no se dice Spotify, y un «artista» con posesivo,
+    # demostrativo o día no es un artista. Los artículos sí pueden serlo (Los Prisioneros, La Ley).
+    NO_88D = ["toca sacar la basura de la cocina", "toca pagar la cuenta de la luz", "Jaime, toca pagar el arriendo de noviembre",
+              "Toca regar las plantas de la terraza", "toca comprar leche de almendras", "toca a la puerta",
+              "reproduce la última nota de mi proyecto", "reproduce el audio de esta reunión", "reproduce lo de ayer de hoy"]
+    SI_88D = [("toca Bad Guy en Spotify", "cancion"), ("tócame Bad Guy de Billie Eilish", "cancion"),
+              ("reproduce Tren al sur de Los Prisioneros", "cancion"), ("reproduce Mentira de La Ley", "cancion"),
+              ("reproduce la última nota de mi banda en Spotify", "cancion")]
+
+    def test_88d_frases_que_ya_no_roba(self):
+        for texto in self.NO_88D:
+            for sonando in (False, True):
+                with self.subTest(texto=texto, sonando=sonando): self.assertIsNone(spotify.interpretar(texto, sonando))
+        for texto, accion in self.SI_88D:
+            with self.subTest(texto=texto): self.assertEqual(spotify.interpretar(texto, False)["accion"], accion)
+
+    def test_88d_sigue_a_secas_queda_marcado(self):
+        # Hallazgo 5: el bot decide con el estado del receptor; «sigue con la música» no cambia.
+        self.assertEqual(spotify.interpretar("sigue", False), {"accion": "sigue", "sola": True})
+        self.assertEqual(spotify.interpretar("Continúa.", False), {"accion": "sigue", "sola": True})
+        self.assertEqual(spotify.interpretar("sigue con la música", False), {"accion": "sigue"})
+
     def test_fixture_y_whisper(self):
         datos = json.loads((ROOT / "fixtures/spotify-search-oxytocin.json").read_text())
         elegido = spotify.elegir(datos["tracks"]["items"], "oxitocina", "billi eilish")
@@ -170,6 +192,71 @@ class IntegracionTests(unittest.TestCase):
                 self.assertEqual(estado.call_count, 2)
         finally:
             self.bot.PERFIL_CFG, self.bot.NOMBRE = previo, nombre
+
+
+class OtroReceptorYSigue88dTests(unittest.TestCase):
+    """88d (hallazgos 4 y 5 de la 88r). Los receptores son mocks de spotify.estado: nada abre un socket."""
+    @classmethod
+    def setUpClass(cls):
+        IntegracionTests.setUpClass()
+        cls.bot, cls.tmp = IntegracionTests.bot, IntegracionTests.tmp
+
+    @classmethod
+    def tearDownClass(cls): cls.tmp.cleanup()
+
+    def correr(self, texto, estados):
+        previo, persona, nombre = self.bot.PERFIL_CFG, self.bot.PERSONA, self.bot.NOMBRE
+        self.bot.PERFIL_CFG = {"spotify": {"api": "http://127.0.0.1:3678", "otros": ["http://127.0.0.1:3679"]}}
+        self.bot.PERSONA, self.bot.NOMBRE = "Diego", "Jaime"
+
+        def estado(base):
+            x = estados[base]
+            if isinstance(x, Exception):
+                raise x
+            return x
+        enviados, llamadas = [], []
+        try:
+            with mock.patch.object(self.bot.spotify_mod, "estado", side_effect=estado), \
+                 mock.patch.object(self.bot.spotify_mod, "reproducir", lambda base, uri: llamadas.append(("play", base))), \
+                 mock.patch.object(self.bot.spotify_mod, "reanudar", lambda base: llamadas.append(("resume", base))), \
+                 mock.patch.object(self.bot.spotify_mod, "pausar", lambda base: llamadas.append(("pause", base))), \
+                 mock.patch.object(self.bot.spotify_mod, "buscar", return_value=[{"name": "Oxytocin", "uri": "spotify:track:x", "artists": [{"name": "Billie Eilish"}]}]), \
+                 mock.patch.object(self.bot, "send_text", lambda _, t: enviados.append(t)):
+                r = self.bot.atender_spotify(1, texto, False)
+        finally:
+            self.bot.PERFIL_CFG, self.bot.PERSONA, self.bot.NOMBRE = previo, persona, nombre
+        return r, enviados, llamadas
+
+    def test_hallazgo_4_el_otro_caido_no_apaga_el_propio(self):
+        caido = spotify.SpotifyError("el receptor Spotify no está disponible")
+        propio = RECEPTOR_FIXTURE["status_detenido"]
+        with self.assertLogs("botv3", "WARNING") as log:
+            r, enviados, llamadas = self.correr("reproduce Oxytocin de Billie Eilish",
+                                                {"http://127.0.0.1:3678": propio, "http://127.0.0.1:3679": caido})
+        self.assertTrue(r)
+        self.assertEqual(llamadas, [("play", "http://127.0.0.1:3678")])
+        self.assertIn("▶️ Oxytocin — Billie Eilish · Spotify de Diego", enviados)
+        self.assertNotIn("127.0.0.1", "\n".join(log.output))          # el log no lleva la URL
+        pausado = dict(propio, stopped=False, paused=True)
+        r, enviados, llamadas = self.correr("sigue con la música", {"http://127.0.0.1:3678": pausado, "http://127.0.0.1:3679": caido})
+        self.assertEqual((r, llamadas), (True, [("resume", "http://127.0.0.1:3678")]))
+
+    def test_hallazgo_4_el_propio_caido_si_se_dice(self):
+        caido = spotify.SpotifyError("el receptor Spotify no está disponible")
+        r, enviados, llamadas = self.correr("reproduce Oxytocin de Billie Eilish",
+                                            {"http://127.0.0.1:3678": caido, "http://127.0.0.1:3679": RECEPTOR_FIXTURE["status_detenido"]})
+        self.assertEqual((r, enviados, llamadas), (True, ["No pude usar Spotify ahora."], []))
+
+    def test_hallazgo_5_sigue_a_secas_solo_en_pausa(self):
+        detenido = RECEPTOR_FIXTURE["status_detenido"]
+        r, enviados, llamadas = self.correr("sigue", {"http://127.0.0.1:3678": detenido, "http://127.0.0.1:3679": detenido})
+        self.assertEqual((r, enviados, llamadas), (False, [], []))           # conversación: sigue su camino
+        r, _, llamadas = self.correr("sigue", {"http://127.0.0.1:3678": None, "http://127.0.0.1:3679": detenido})
+        self.assertEqual((r, llamadas), (False, []))                          # sin vincular tampoco lo toma
+        pausado = dict(detenido, stopped=False, paused=True)
+        r, enviados, llamadas = self.correr("sigue", {"http://127.0.0.1:3678": pausado, "http://127.0.0.1:3679": detenido})
+        self.assertEqual((r, llamadas), (True, [("resume", "http://127.0.0.1:3678")]))
+        self.assertIn("▶️ Spotify de Diego sigue.", enviados)
 
 
 class ErroresYPerfilTests(unittest.TestCase):
