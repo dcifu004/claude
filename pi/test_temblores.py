@@ -35,6 +35,10 @@ def cargar(nombre, ruta):
 
 tb = cargar("temblores_91", AQUI / "temblores.py")
 descanso = cargar("descanso_91", AQUI / "descanso.py")
+# 91b: una casa INVENTADA, cerca de Santiago para que las distancias de las fixtures sigan valiendo, pero no
+# es la del perfil. Ninguna coordenada de la casa real va en esta suite: la de verdad la lee `casa()` del perfil.
+CASA_FICTICIA = (-33.50, -70.70)
+PERFIL_FICTICIO = f'clima = {{ lugar = "Comuna Ficticia", lat = {CASA_FICTICIA[0]}, lon = {CASA_FICTICIA[1]} }}\n'
 AHORA = datetime(2026, 10, 25, 18, 0, tzinfo=timezone.utc)     # domingo 15:00 en Chile: fuera de descanso
 NOCHE = datetime(2026, 10, 27, 6, 0, tzinfo=timezone.utc)      # martes 03:00 en Chile: en descanso
 
@@ -72,10 +76,8 @@ class Base(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.d = Path(self.tmp.name)
         perfil = self.d / "jaime.toml"
-        # La forma del perfil real: la casa a nivel de comuna (la misma línea de botv3/perfiles/jaime.toml).
-        linea = next(x for x in (AQUI.parent / "botv3/perfiles/jaime.toml").read_text(encoding="utf-8").splitlines()
-                     if x.startswith("clima ="))
-        perfil.write_text(linea + "\n", encoding="utf-8")
+        # La forma del perfil real (`clima = { lugar, lat, lon }`), con la casa inventada.
+        perfil.write_text(PERFIL_FICTICIO, encoding="utf-8")
         self.cfg = tb.cargar_config(AQUI / "temblores.toml")
         self.cfg["perfil"] = str(perfil)
         self.estado = self.d / "estado" / "estado.json"
@@ -107,12 +109,19 @@ class Distancia(unittest.TestCase):
     def test_haversine(self):
         self.assertAlmostEqual(tb.haversine_km(-33.45, -70.66, -33.05, -71.62), 99.0, delta=3)     # Santiago–Valparaíso
         self.assertAlmostEqual(tb.haversine_km(0, 0, 0, 180), 20015.1, delta=1)
-        self.assertEqual(tb.haversine_km(-33.41, -70.57, -33.41, -70.57), 0.0)
-        self.assertAlmostEqual(tb.haversine_km(-33.41, -70.57, -23.65, -70.40), tb.haversine_km(-23.65, -70.40, -33.41, -70.57))
+        self.assertEqual(tb.haversine_km(*CASA_FICTICIA, *CASA_FICTICIA), 0.0)
+        self.assertAlmostEqual(tb.haversine_km(*CASA_FICTICIA, -23.65, -70.40), tb.haversine_km(-23.65, -70.40, *CASA_FICTICIA))
 
-    def test_la_casa_sale_del_perfil_real(self):
+    def test_la_casa_sale_del_perfil(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".toml", dir=_TMP.name, delete=False) as fh:
+            fh.write('nombre = "Prueba"\n' + PERFIL_FICTICIO)
+        self.assertEqual(tb.casa(fh.name), CASA_FICTICIA)
+        # Otra casa en el temporal, otra respuesta: no hay coordenadas fijas en temblores.py.
+        Path(fh.name).write_text('clima = { lugar = "Otra", lat = -20.25, lon = -70.125 }\n', encoding="utf-8")
+        self.assertEqual(tb.casa(fh.name), (-20.25, -70.125))
+        # El perfil real se lee (sin comparar contra sus números, que no van en la suite).
         lat, lon = tb.casa(AQUI.parent / "botv3/perfiles/jaime.toml")
-        self.assertEqual((lat, lon), (-33.41, -70.57))
+        self.assertTrue(-56 <= lat <= -17 and -76 <= lon <= -66)
         for malo in ("clima = { lugar = \"x\" }\n", "otra = 1\n", "clima = { lat = 200, lon = 0 }\n"):
             with tempfile.NamedTemporaryFile("w", suffix=".toml", dir=_TMP.name, delete=False) as fh:
                 fh.write(malo)
@@ -174,14 +183,58 @@ class Fuentes(Base):
         self.assertEqual(emsc[0].lugar, "Offshore Valparaiso, Chile")
         self.assertTrue(emsc[0].url.startswith("https://www.seismicportal.eu/eventdetails.html?unid="))
 
-    def test_respuestas_reales_si_las_hay(self):
+    def test_respuestas_reales(self):
+        """91b: las dos respuestas que se bajaron en la Pi el 25-10 (17:39) con --guardar-fixtures. Ya no se
+        saltan: tienen que estar, leerse enteras y traer los campos que de verdad usa el parser."""
         reales = sorted(FIJ.glob("real-*.json"))
-        if not reales:
-            self.skipTest("todavía no hay real-*.json: se guardan en la Pi con --guardar-fixtures")
+        self.assertEqual(sorted({"usgs" if "-usgs-" in r.name else "emsc" for r in reales}), ["emsc", "usgs"])
         for ruta in reales:
-            lector = tb.leer_usgs if "-usgs-" in ruta.name else tb.leer_emsc
-            sismos, _ = lector(ruta.read_bytes())
-            self.assertTrue(all(-90 <= s.lat <= 90 and -180 <= s.lon <= 180 for s in sismos), ruta.name)
+            crudo = json.loads(ruta.read_text(encoding="utf-8"))
+            es_usgs = "-usgs-" in ruta.name
+            sismos, malos = (tb.leer_usgs if es_usgs else tb.leer_emsc)(ruta.read_bytes())
+            self.assertEqual((len(sismos), malos), (len(crudo["features"]), 0), ruta.name)
+            for f, s in zip(crudo["features"], sismos):
+                p = f["properties"]
+                if es_usgs:
+                    # id, ids, mag, place, time (ms), url y geometry.coordinates [lon, lat, prof]
+                    lon, lat, prof = f["geometry"]["coordinates"]
+                    self.assertEqual((s.id, s.mag, s.lat, s.lon, s.prof), (f["id"], p["mag"], lat, lon, prof))
+                    self.assertIn(f["id"], s.ids)
+                    self.assertEqual(set(s.ids), {x for x in p["ids"].split(",") if x})
+                    self.assertEqual(s.t, datetime.fromtimestamp(p["time"] / 1000, timezone.utc))
+                    self.assertEqual((s.lugar, s.url), (p["place"], p["url"]))
+                    self.assertEqual(s.auth, "")
+                else:
+                    # unid, source_id, mag, lat/lon/depth de properties, time ISO, flynn_region y auth
+                    self.assertEqual((s.id, s.mag, s.lat, s.lon, s.prof), (p["unid"], p["mag"], p["lat"], p["lon"], p["depth"]))
+                    self.assertEqual(s.ids, (p["unid"], p["source_id"]))
+                    self.assertEqual(s.t, tb._iso_utc(p["time"]))
+                    self.assertEqual(s.lugar, p["flynn_region"].title())
+                    self.assertTrue(s.url.endswith("unid=" + p["unid"]))
+                    self.assertEqual(s.auth, p["auth"])
+                    self.assertEqual(p["auth"], "EMSC")            # lo que se vio: no viene como GUC/CSN
+                self.assertTrue(-90 <= s.lat <= 90 and -180 <= s.lon <= 180, ruta.name)
+
+    def test_emsc_de_otra_autoridad_se_acepta_y_se_dice(self):
+        """91b: el respaldo es EMSC sin filtrar por autoridad. Un evento de otra (GUC, INGV…) se lee igual y el
+        aviso dice de quién es; una autoridad rara no entra al mensaje."""
+        doc = json.loads((FIJ / "forma-emsc-fdsn.json").read_text(encoding="utf-8"))
+        base = tb.leer_emsc(json.dumps(doc).encode())[0]
+        doc["features"][0]["properties"]["auth"] = "INGV"
+        doc["features"][1]["properties"]["auth"] = "<b>raro</b>\n" * 3
+        otros = tb.leer_emsc(json.dumps(doc).encode())[0]
+        self.assertEqual([s._replace(auth="") for s in otros], [s._replace(auth="") for s in base])
+        self.assertEqual((otros[0].auth, otros[1].auth), ("INGV", ""))
+        hogar = tb.casa(self.cfg["perfil"])
+        dist = tb.haversine_km(*hogar, otros[0].lat, otros[0].lon)
+        self.assertIn(" · según EMSC, autoridad INGV · ", tb.mensaje(otros[0], dist, False, AHORA))
+        self.assertIn(" · según EMSC · ", tb.mensaje(otros[1], dist, False, AHORA))
+        self.assertIn(" · según EMSC · ", tb.mensaje(base[0], dist, False, AHORA))   # forma: auth EMSC
+        usgs = tb.leer_usgs((FIJ / "forma-usgs-4.5_day.json").read_bytes())[0][0]
+        self.assertNotIn("según", tb.mensaje(usgs, dist, False, AHORA))
+        # Y en la corrida completa avisa igual que con auth EMSC.
+        self.assertEqual(self.correr(red(emsc=json.dumps(doc).encode())), 0)
+        self.assertEqual(len(self.bandeja()), 4)
 
     def test_respuesta_rota(self):
         for cuerpo in (b"<html>mantenimiento</html>", b'{"type": "Feature"}', b'{"features": 3}', b"\xff\xfe"):
@@ -259,15 +312,15 @@ class Avisos(Base):
 
     def test_mensaje_corto_y_sin_datos_personales(self):
         self.correr()
-        perfil = Path(self.cfg["perfil"]).read_text(encoding="utf-8")
+        lat, lon = tb.casa(self.cfg["perfil"])
         for t in self.bandeja():
             self.assertLess(len(t), 220, t)
-            self.assertNotIn("Las Condes", t)
-            self.assertNotIn("33.41", t)
-            self.assertNotIn("-70.57", t)
+            self.assertNotIn("Comuna Ficticia", t)            # la comuna está en el perfil, no en el mensaje
+            for x in (lat, lon):
+                for forma in (f"{x}", f"{x:.1f}", f"{x:.2f}", f"{abs(x):.2f}".replace(".", ",")):
+                    self.assertNotIn(forma, t)
             self.assertRegex(t, r"^(🌎 Temblor|🚩 Temblor fuerte) M \d+,\d a \d+ km de la casa · .+ · "
                                 r"\d\d:\d\d \(hora de Chile\) · https://\S+$")
-        self.assertIn("Las Condes", perfil)     # la comuna está en el perfil, no en el mensaje
 
     def test_bandeja_inactiva_no_marca_y_reintenta(self):
         self.bandeja_activa(False)
@@ -309,6 +362,17 @@ class Avisos(Base):
                 tb.guardar_estado(self.estado, {"x": 1})
         self.assertEqual(json.loads(self.estado.read_text(encoding="utf-8")), estado)
         self.assertEqual(sorted(p.name for p in self.estado.parent.iterdir()), ["estado.json"])
+
+
+class Unidad(Base):
+    def test_solo_escribe_su_carpeta_y_los_archivos_del_canal(self):
+        """91b: nunca todo /opt/nodo/datos. Lo escribible calza con lo que de verdad abre registro_avisos.py."""
+        lineas = (AQUI / "temblores.service").read_text(encoding="utf-8").splitlines()
+        rw = [r for x in lineas if x.startswith("ReadWritePaths=") for r in x.split("=", 1)[1].split()]
+        canal = {str(self.ra.REGISTRO_PRODUCCION), str(self.ra.BANDEJA_PRODUCCION), str(self.ra.BANDEJA_CERROJO)}
+        self.assertEqual(set(rw), {str(Path(tb.DEFECTO["estado"]).parent)} | canal)
+        self.assertNotIn("/opt/nodo/datos", rw)
+        self.assertTrue(all(r.startswith("/opt/nodo/datos/") for r in rw))
 
 
 class Descanso(Base):

@@ -7,7 +7,9 @@
 Lo corre temblores.timer cada 5 min como dcifu004. DOCTRINA:
 
 1. DOS FUENTES, LAS DOS EN CADA CORRIDA. La principal es el feed GeoJSON del USGS; el respaldo, el FDSN del
-   EMSC (que para Chile publica las soluciones del CSN, agencia GUC). Se consultan ambas: si una se cae, o
+   EMSC, SIN filtrar por autoridad (91b: en las respuestas reales del 25-10 todo trae `auth = "EMSC"`,
+   incluido un sismo frente a Perú; no se le atribuye al CSN). `auth` se lee y sale en el aviso («según EMSC»,
+   o «según EMSC, autoridad X» si es otra). Se consultan ambas: si una se cae, o
    contesta algo que no se entiende, se usa la otra y queda escrito en el estado (`fuentes`) y en stderr.
    Si fallan las dos, sale con 1. El CSN (sismologia.cl) solo expone HTML: raspar se rompe en silencio
    (ver encargos-nube/91-PLAN.md).
@@ -79,6 +81,7 @@ class Sismo(NamedTuple):
     lon: float
     prof: float | None
     url: str
+    auth: str = ""       # EMSC: quién calculó la solución (`properties.auth`); el USGS no lo trae
 
 
 # ---------------------------------------------------------------- configuración y casa
@@ -168,6 +171,9 @@ def leer_usgs(cuerpo: bytes) -> tuple[list[Sismo], int]:
     return out, malos
 
 
+_AUTH = re.compile(r"[A-Za-z0-9_-]{1,16}")
+
+
 def _iso_utc(x) -> datetime:
     d = datetime.fromisoformat(str(x).replace("Z", "+00:00"))
     return (d if d.tzinfo else d.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
@@ -185,9 +191,11 @@ def leer_emsc(cuerpo: bytes) -> tuple[list[Sismo], int]:
                 raise ValueError
             ids = tuple(x for x in (unid, p.get("source_id")) if isinstance(x, str) and x)
             lugar = _texto(p.get("flynn_region")).title()
+            # Cualquier autoridad vale (91b); solo se acota lo que llega al mensaje.
+            auth = p.get("auth") if isinstance(p.get("auth"), str) and _AUTH.fullmatch(p["auth"]) else ""
             out.append(Sismo("emsc", unid, ids, float(p["mag"]), lugar, _iso_utc(p["time"]), float(p["lat"]),
                              float(p["lon"]), float(p["depth"]) if _num(p.get("depth")) else None,
-                             URL_EMSC_EVENTO.format(unid=urllib.parse.quote(unid))))
+                             URL_EMSC_EVENTO.format(unid=urllib.parse.quote(unid)), auth))
         except (KeyError, TypeError, ValueError, AttributeError):
             malos += 1
     return out, malos
@@ -299,6 +307,8 @@ def mensaje(s: Sismo, dist: float, urgente: bool, ahora: datetime) -> str:
     partes = [f"{cabeza} M {_mag(s.mag)} a {round(dist):d} km de la casa"]
     if s.lugar:
         partes.append(s.lugar)
+    if s.fuente == "emsc":
+        partes.append("según EMSC" if s.auth in ("", "EMSC") else f"según EMSC, autoridad {s.auth}")
     partes += [f"{hora} (hora de Chile)", s.url]
     return " · ".join(partes)
 

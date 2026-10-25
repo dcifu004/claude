@@ -8,3 +8,6 @@ alrededor de Chile central, uno malformado en cada una y un par que es el mismo 
 En la Pi, para guardar respuestas reales (la suite las toma solas: `real-*.json`):
 
     python3 pi/temblores.py --guardar-fixtures pi/fixtures/temblores
+
+91b: en los `forma-*` el `auth` de EMSC pasó de `GUC` a `EMSC`, que es lo que traen las respuestas reales del
+25-10 (`real-*-20261025-2039.json`, bajadas en la Pi). Un evento de otra autoridad se prueba aparte.

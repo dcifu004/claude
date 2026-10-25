@@ -26,7 +26,7 @@
     "lon": -71.7,
     "depth": 30.0,
     "evtype": "ke",
-    "auth": "GUC",
+    "auth": "EMSC",
     "mag": 5.5,
     "magtype": "mw",
     "unid": "20261025_0000150"
@@ -53,7 +53,7 @@
     "lon": -70.9,
     "depth": 90.0,
     "evtype": "ke",
-    "auth": "GUC",
+    "auth": "EMSC",
     "mag": 5.1,
     "magtype": "mw",
     "unid": "20261025_0000162"
@@ -80,7 +80,7 @@
     "lon": -72.1,
     "depth": 22.0,
     "evtype": "ke",
-    "auth": "GUC",
+    "auth": "EMSC",
     "mag": 6.9,
     "magtype": "mw",
     "unid": "20261025_0000170"

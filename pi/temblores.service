@@ -3,8 +3,8 @@ Description=Revisa los sismos recientes y avisa si uno es relevante para la casa
 After=network-online.target
 Wants=network-online.target
 # A diferencia de avisos.service, este SÍ vive dentro del cifrado: escribe en la bandeja de salida y en el
-# registro único (/opt/nodo/datos, de dcifu004) y lee el perfil del bot. Con el volumen cerrado no corre,
-# y avisos.service ya avisa de eso.
+# registro único (tres archivos de /opt/nodo/datos, de dcifu004; ver ReadWritePaths) y lee el perfil del
+# bot. Con el volumen cerrado no corre, y avisos.service ya avisa de eso.
 RequiresMountsFor=/opt/nodo/datos
 
 [Service]
@@ -24,9 +24,19 @@ CapabilityBoundingSet=
 AmbientCapabilities=
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 UMask=0027
-# Lo único escribible: su estado, la bandeja de salida (y su cerrojo) y el registro único. La bandeja la
-# crea y recorta registro_avisos.py en la misma carpeta, como hacen las colas.
-ReadWritePaths=/opt/nodo/datos/temblores /opt/nodo/datos
+# Lo único escribible (91b): su carpeta de estado y los TRES archivos del canal que usa
+# encargos/registro_avisos.py en la raíz del volumen. NUNCA `/opt/nodo/datos` entero: eso abriría los
+# vaults y el estado de los demás servicios.
+#   avisos.jsonl          el registro único (append)
+#   avisos-salida.jsonl   la bandeja de salida (append)
+#   .avisos-salida.lock   el cerrojo (flock) que serializa a los que escriben la bandeja
+# Los tres tienen que EXISTIR antes de arrancar (un ReadWritePaths a un archivo que falta hace fallar la
+# unidad): el despliegue los crea una vez, de dcifu004 y 0664, con
+#   install -o dcifu004 -g dcifu004 -m 0664 /dev/null /opt/nodo/datos/<archivo>   (solo si falta)
+# y crea la carpeta /opt/nodo/datos/temblores (0750). Como la raíz queda de solo lectura, este servicio no
+# puede RECORTAR la bandeja (temporal + os.replace en la raíz): registro_avisos.py atrapa ese error y la
+# recortan las colas, que sí tienen la raíz. Escribir siempre puede.
+ReadWritePaths=/opt/nodo/datos/temblores /opt/nodo/datos/avisos.jsonl /opt/nodo/datos/avisos-salida.jsonl /opt/nodo/datos/.avisos-salida.lock
 ReadOnlyPaths=/opt/botv3/perfiles
 
 [Install]

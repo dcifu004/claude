@@ -20,9 +20,10 @@ también sobre cualquier `real-*.json` que encuentre en esa carpeta.
   raspa `/links/ultimos_sismos.html`, una página del sitio anterior. Raspar HTML se rompe en silencio con
   cada rediseño, así que **no es respaldo**.
 - **Respaldo: EMSC** (`seismicportal.eu/fdsnws/event/1/query?format=json`): el estándar FDSN, documentado y
-  sin clave, independiente de USGS. Para Chile publica las soluciones de la agencia `GUC` (el CSN, de la
-  Universidad de Chile), así que en la práctica es la vía legible por máquina hacia el dato del CSN.
-  Hay que verificarlo en la Pi con la primera respuesta real.
+  sin clave, independiente de USGS. **Se usa sin filtrar por autoridad (`auth`) y no se atribuye al CSN**
+  (91b): en las dos respuestas reales del 25-10 los eventos traen `auth = "EMSC"` y
+  `source_catalog = "EMSC-RTS"`, incluido uno frente a Perú, y no hay evidencia de que lo de Chile llegue como
+  `GUC`. `auth` se lee y sale en el aviso («según EMSC», o «según EMSC, autoridad X» si es otra).
 
 ## Comportamiento
 
