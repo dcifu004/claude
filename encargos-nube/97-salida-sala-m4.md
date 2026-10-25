@@ -56,7 +56,7 @@ de la Pi). Así, cuando lleguen `escucha.service` y `parlante.service`, no hay q
 
 ## Texto de M4
 
-> Pendiente de la revisión de Diego. Si cambia, se reemplaza aquí antes de lanzar.
+> **Aprobado por Diego el 25-10-2026.** Es el texto exacto: no se reescribe.
 
 **Hablado** (sala y nota de voz; máximo 2 frases):
 
