@@ -668,12 +668,13 @@ class CodexEscribeArbolesExtra(unittest.TestCase):
         cr.L = Path(tmp.name)
         vistos = []
 
-        def falso_run(cmd, **kw):
+        # 87b: el CLI ya no sale por subprocess.run sino por ejecutar_cli (grupo de procesos propio).
+        def falso_run(cmd, prompt, env, limite_s=None):
             vistos.append(cmd)
-            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+            return 0, "", "", False
 
         with mock.patch.object(cr, "_repos_extra", return_value=[("14-App-Matrimonio", object())]), \
-                mock.patch.object(cr.subprocess, "run", side_effect=falso_run):
+                mock.patch.object(cr, "ejecutar_cli", side_effect=falso_run):
             cr._correr({"motor": "codex"}, "codex", "x", "59-autor", {}, cr.HERRAMIENTAS, {})
         cmd = vistos[0]
         i = cmd.index("--add-dir")
@@ -683,7 +684,7 @@ class CodexEscribeArbolesExtra(unittest.TestCase):
 
         vistos.clear()
         with mock.patch.object(cr, "_repos_extra", return_value=[]), \
-                mock.patch.object(cr.subprocess, "run", side_effect=falso_run):
+                mock.patch.object(cr, "ejecutar_cli", side_effect=falso_run):
             cr._correr({"motor": "codex"}, "codex", "x", "59-autor", {}, cr.HERRAMIENTAS, {})
         self.assertNotIn("--add-dir", vistos[0])
 

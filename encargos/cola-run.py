@@ -137,6 +137,7 @@ import re
 import secrets
 import shlex
 import shutil
+import signal
 import stat
 import statistics
 import subprocess
@@ -199,6 +200,7 @@ RUTAS_SENSIBLES = ("*.service", "*.path", "*.timer", "*sudoers*", "*nodo-despleg
                    "encargos/modelos.toml", "botv3/cuentas.toml")
 CIERRE_MAX_LINEAS = 150         # agregadas + borradas del arreglo (git diff --numstat)
 CIERRE_MAX_MIN = 30             # un cierre que pasa de esto se corta y se escala (falla cerrada)
+CIERRE_MAX_BYTES = 512 * 1024   # 87b: un informe que el cierre lee (o pega en su prompt) no pasa de esto
 VEREDICTO_CIERRE = re.compile(r"VEREDICTO: (DESPLEGABLE|NO DESPLEGABLE|ESCALAR)")   # con fullmatch, sin espacios
 
 
@@ -1782,6 +1784,119 @@ def abrir_buzon_busquedas(mod: dict, nombre_log: str) -> BuzonBusquedas | None:
         return None
 
 
+GRUPO_TERM_S = 5.0          # 87b: tras TERM al grupo del CLI se espera esto antes del KILL
+GRUPO_TUBERIAS_S = 10.0     # y, ya muerto el grupo, esto para vaciar sus tuberías
+
+
+def procesos_del_grupo(pgid: int) -> list[int]:
+    """Los PID vivos (no zombis) del grupo `pgid`, leídos de /proc. Sin /proc, lo que diga killpg(pgid, 0)."""
+    try:
+        entradas = os.listdir("/proc")
+    except OSError:
+        try:
+            os.killpg(pgid, 0)
+        except ProcessLookupError:
+            return []
+        except PermissionError:
+            pass
+        return [pgid]
+    vivos = []
+    for n in entradas:
+        if not n.isdigit():
+            continue
+        try:
+            with open(f"/proc/{n}/stat", "rb") as fh:
+                campos = fh.read().decode("ascii", "replace").rsplit(")", 1)[-1].split()
+        except OSError:
+            continue
+        # Tras el nombre entre paréntesis: estado, ppid, pgrp…
+        if len(campos) > 2 and campos[2] == str(pgid) and campos[0] not in ("Z", "X"):
+            vivos.append(int(n))
+    return vivos
+
+
+def terminar_grupo(pgid: int) -> list[int]:
+    """TERM a todo el grupo, espera acotada, KILL y otra espera. Devuelve lo que siguió vivo (lo normal: [])."""
+    for senal, espera in ((signal.SIGTERM, GRUPO_TERM_S), (signal.SIGKILL, 2.0)):
+        if not procesos_del_grupo(pgid):
+            return []
+        try:
+            os.killpg(pgid, senal)
+        except ProcessLookupError:
+            return []
+        except PermissionError:
+            pass
+        limite = time.monotonic() + espera
+        while time.monotonic() < limite:
+            if not procesos_del_grupo(pgid):
+                return []
+            time.sleep(0.05)
+    return procesos_del_grupo(pgid)
+
+
+def ejecutar_cli(cmd: list[str], prompt: str, env: dict, limite_s: float | None = None) -> tuple[int, str, str, bool]:
+    """(rc, stdout, stderr, cortado) del CLI de una fase, en TODAS las fases (87b, decisión de Diego).
+
+    El CLI corre en una sesión propia, así que él y todo lo que lance comparten un grupo de procesos. Al vencer
+    `limite_s`, o apenas el CLI termina, se mata el grupo entero (TERM, espera, KILL) y se comprueba que no
+    quede nadie: un hijo suelto del revisor podría seguir escribiendo el árbol mientras corre la fase siguiente.
+    `subprocess.run(timeout=…)` sólo mataba al proceso principal."""
+    p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                         cwd=D, env=env, start_new_session=True)
+    # En su propia sesión el CLI ya no recibe el SIGHUP de `tmux kill-session` (detener) ni la señal que mate a
+    # la cola: mientras corre, esas señales terminan primero su grupo y después la cola, como antes.
+    previas = {}
+
+    def morir(senal, _marco):
+        terminar_grupo(p.pid)
+        raise SystemExit(128 + senal)
+    for senal in (signal.SIGHUP, signal.SIGTERM):
+        try:
+            previas[senal] = signal.signal(senal, morir)
+        except ValueError:      # fuera del hilo principal no se pueden poner: queda el finally
+            pass
+    try:
+        return _esperar_cli(p, prompt, limite_s)
+    except BaseException:
+        terminar_grupo(p.pid)   # Ctrl-C, SystemExit o un error: el grupo no queda corriendo
+        raise
+    finally:
+        for senal, previa in previas.items():
+            signal.signal(senal, previa)
+
+
+def _esperar_cli(p: subprocess.Popen, prompt: str, limite_s: float | None) -> tuple[int, str, str, bool]:
+    fin = None if limite_s is None else time.monotonic() + limite_s
+    cortado, quedan, entrada = False, None, prompt
+    while True:
+        espera = 0.5 if fin is None else max(0.0, min(0.5, fin - time.monotonic()))
+        try:
+            out, err = p.communicate(entrada, timeout=espera)
+            break
+        except subprocess.TimeoutExpired:
+            entrada = None          # communicate() ya tiene la entrada; reintentar no pierde salida
+            if fin is not None and time.monotonic() >= fin:
+                cortado = True
+            # Corte por tiempo, o el CLI ya salió pero un hijo retiene sus tuberías: se mata el grupo.
+            if cortado or p.poll() is not None:
+                quedan = terminar_grupo(p.pid)
+                try:
+                    out, err = p.communicate(timeout=GRUPO_TUBERIAS_S)
+                except subprocess.TimeoutExpired:   # alguien fuera del grupo (setsid) sigue con las tuberías
+                    p.kill()
+                    for tubo in (p.stdin, p.stdout, p.stderr):
+                        if tubo:
+                            tubo.close()
+                    p.wait()
+                    out, err = "", "[la salida quedó retenida por un proceso fuera del grupo]\n"
+                break
+    if quedan is None:
+        quedan = terminar_grupo(p.pid)      # lo que el CLI dejó vivo al terminar
+    if quedan:
+        print(f"⚠️ quedaron procesos del CLI después del KILL: {quedan}", file=sys.stderr, flush=True)
+    return p.returncode, out or "", err or "", cortado
+
+
 def _correr(m: dict, cid: str, prompt: str, nombre_log: str, mod: dict, herramientas: str, env: dict,
             limite_s: float | None = None) -> dict:
     t0 = time.monotonic()
@@ -1805,17 +1920,14 @@ def _correr(m: dict, cid: str, prompt: str, nombre_log: str, mod: dict, herramie
             cmd += ["--model", mod["modelo"]]
         if mod.get("esfuerzo"):
             cmd += ["--effort", mod["esfuerzo"]]
-    if limite_s is not None:
-        # Encargo 87: sólo el cierre pasa un límite. Un corte por tiempo no es un veredicto (escala).
-        try:
-            p = subprocess.run(cmd, input=prompt, text=True, capture_output=True, cwd=D, env=env, timeout=limite_s)
-        except subprocess.TimeoutExpired as e:
-            salida = (e.stdout or b"").decode("utf-8", "replace") if isinstance(e.stdout, bytes) else (e.stdout or "")
-            (L / f"{nombre_log}.log").write_text(salida + f"\n[cortado a los {limite_s:.0f} s]\n", encoding="utf-8")
-            return {"rc": 124, "min": round((time.monotonic() - t0) / 60, 1), "tokens": None, "sin_cuota": False,
-                    "modelo_real": None, "corte": "tiempo"}
-    else:
-        p = subprocess.run(cmd, input=prompt, text=True, capture_output=True, cwd=D, env=env)
+    # Encargo 87: sólo el cierre pasa un límite. Un corte por tiempo no es un veredicto (escala). 87b: en toda
+    # fase el CLI corre en su propio grupo de procesos y el grupo entero muere al cortar o al terminar.
+    rc, stdout, stderr, cortado = ejecutar_cli(cmd, prompt, env, limite_s)
+    if cortado:
+        (L / f"{nombre_log}.log").write_text(stdout + f"\n[cortado a los {limite_s:.0f} s]\n", encoding="utf-8")
+        return {"rc": 124, "min": round((time.monotonic() - t0) / 60, 1), "tokens": None, "sin_cuota": False,
+                "modelo_real": None, "corte": "tiempo"}
+    p = subprocess.CompletedProcess(cmd, rc, stdout, stderr)
     minutos = round((time.monotonic() - t0) / 60, 1)
     salida = (p.stdout or "") + (p.stderr or "")
     tokens, es_error, modelo_real = None, p.returncode != 0, None
@@ -2404,6 +2516,42 @@ def _sensible(ruta: str) -> bool:
     return any(fnmatch.fnmatchcase(ruta, patron) for patron in RUTAS_SENSIBLES) or bool(RE_SECRETO.search(ruta))
 
 
+class InformeInseguro(ValueError):
+    """87b: un informe del cierre que no se puede leer con seguridad. Siempre escala a la revisión completa."""
+
+
+def leer_informe(ruta: Path) -> str:
+    """El texto de un informe de encargos/ que lee el cierre, sin seguir enlaces: O_NOFOLLOW, archivo regular de
+    un solo nombre, acotado a CIERRE_MAX_BYTES, UTF-8 y con su carpeta resuelta igual a encargos/. Un arreglo
+    puede reemplazar <id>-RESULTADO.md por un enlace a algo de afuera y E1 no lo ve (sólo compara nombres): lo
+    que no pasa esto no llega al prompt. Cualquier falla, también un archivo que falta, es InformeInseguro."""
+    try:
+        if ruta.parent.resolve(strict=True) != E.resolve(strict=True) or "/" in ruta.name:
+            raise InformeInseguro(f"encargos/{ruta.name} no queda bajo encargos/")
+        fd = os.open(ruta, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except InformeInseguro:
+        raise
+    except OSError as e:
+        raise InformeInseguro(f"encargos/{ruta.name} no se puede abrir sin seguir enlaces ({type(e).__name__})") from e
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1:
+            raise InformeInseguro(f"encargos/{ruta.name} no es un archivo regular de un solo nombre")
+        if st.st_size > CIERRE_MAX_BYTES:
+            raise InformeInseguro(f"encargos/{ruta.name} pasa de {CIERRE_MAX_BYTES // 1024} KiB")
+        with os.fdopen(fd, "rb", closefd=False) as fh:
+            crudo = fh.read(CIERRE_MAX_BYTES + 1)
+        if len(crudo) > CIERRE_MAX_BYTES:
+            raise InformeInseguro(f"encargos/{ruta.name} pasa de {CIERRE_MAX_BYTES // 1024} KiB")
+        return crudo.decode("utf-8")
+    except UnicodeDecodeError as e:
+        raise InformeInseguro(f"encargos/{ruta.name} no es UTF-8") from e
+    except OSError as e:
+        raise InformeInseguro(f"encargos/{ruta.name} no se pudo leer ({type(e).__name__})") from e
+    finally:
+        os.close(fd)
+
+
 def decidir_cierre(et: dict, fase: str) -> tuple[bool, str, list[tuple[str, str]]]:
     """(cierre, motivo, [(antes, despues)] del arreglo) para la `fase` (rev2, rev3…). Sólo mira las fotos git
     propias de la etapa (GIT_BASE) y git: nunca un archivo que escriba el autor (trampa 32b). Ante cualquier
@@ -2414,6 +2562,9 @@ def decidir_cierre(et: dict, fase: str) -> tuple[bool, str, list[tuple[str, str]
             return False, "E4: la cola tiene `arboles_extra` y el diff del arreglo no se verifica entero", []
         if not (E / f"{i}r{int(fase[3:]) - 1}-RESULTADO.md").is_file():
             return False, f"E4: falta encargos/{i}r{int(fase[3:]) - 1}-RESULTADO.md", []
+        # 87b: lo que el cierre va a pegar en su prompt se valida antes de decidir (y se vuelve a leer igual).
+        for informe in (f"{i}r{int(fase[3:]) - 1}-RESULTADO.md", f"{i}-RESULTADO.md"):
+            leer_informe(E / informe)
         fases = GIT_BASE.get(f"{i}:fases")
         fases = [f for f in fases if isinstance(f, dict)] if isinstance(fases, list) else []
         pos = [k for k, f in enumerate(fases) if f.get("fase") == fix]
@@ -2428,6 +2579,17 @@ def decidir_cierre(et: dict, fase: str) -> tuple[bool, str, list[tuple[str, str]
                    for _, _, ruta in _numstat(f["antes"], f["despues"])}
         pares = [(fases[k]["antes"], fases[k]["despues"]) for k in pos]
         cambios = [c for a, d in pares for c in _numstat(a, d)]
+        # 87b: si la foto del arreglo registra otra cola viva, se cruza su atribución como en el despliegue.
+        # Registro que falta, abierto, ilegible o con una ruta en común con el arreglo: revisión completa.
+        ajenas = {}
+        for k in pos:
+            for nombre, quienes in compartidos_de_fase(fases[k], _nombres_cambio(fases[k]["antes"], fases[k]["despues"])).items():
+                ajenas.setdefault(nombre, set()).update(quienes)
+        if ajenas:
+            return False, (f"E1: {fix} comparte archivos con otra cola viva: "
+                           + "; ".join(f"{n} ({', '.join(sorted(q))})" for n, q in sorted(ajenas.items()))), []
+    except InformeInseguro as e:
+        return False, f"E4: {e}", []
     except Exception as e:      # noqa: BLE001 — git que falla es duda: revisión completa
         return False, f"E4: git falló ({type(e).__name__}: {e})", []
     rutas = sorted({ruta for _, _, ruta in cambios})
@@ -2454,11 +2616,9 @@ def veredicto_cierre(texto: str) -> str:
 
 
 def _seccion_arreglos(i: str, vuelta: int) -> str:
-    """La sección «Arreglos vuelta N» de encargos/<id>-RESULTADO.md, hasta el próximo título de su nivel."""
-    try:
-        texto = (E / f"{i}-RESULTADO.md").read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        texto = ""
+    """La sección «Arreglos vuelta N» de encargos/<id>-RESULTADO.md, hasta el próximo título de su nivel.
+    Levanta InformeInseguro si el archivo no se puede leer con seguridad."""
+    texto = leer_informe(E / f"{i}-RESULTADO.md")      # 87b: InformeInseguro sube y el cierre escala
     m = re.search(rf"^(#+)[ \t].*Arreglos vuelta {vuelta}\b.*$", texto, re.M)
     if not m:
         return f"(encargos/{i}-RESULTADO.md no trae la sección «Arreglos vuelta {vuelta}»)"
@@ -2468,15 +2628,17 @@ def _seccion_arreglos(i: str, vuelta: int) -> str:
 
 def prompt_cierre(et: dict, fase: str, diff_fix: str) -> str:
     """La instrucción del cierre: la plantilla con la revisión anterior, sólo el diff del último arreglo, su
-    sección «Arreglos vuelta» y el plan aprobado. Un solo reemplazo: lo pegado no pasa por los demás."""
+    sección «Arreglos vuelta» y el plan aprobado. Un solo reemplazo: lo pegado no pasa por los demás. Cada
+    informe pasa por leer_informe (87b): si uno no es seguro, levanta InformeInseguro."""
     i, n = et["id"], int(fase[3:])
     plan = E / f"{i}-PLAN.md"
     valores = {"ID": i, "ENCARGO": et.get("encargo", ""), "AUTOR": nombre(et["autor"]), "REVISOR": nombre(et["revisor"]),
                "N": str(n), "PREVIA": str(n - 1), "SUITES": ", ".join(MANIFIESTO["pruebas"]),
-               "REVISION_PREVIA": (E / f"{i}r{n - 1}-RESULTADO.md").read_text(encoding="utf-8"),
+               "REVISION_PREVIA": leer_informe(E / f"{i}r{n - 1}-RESULTADO.md"),
                "ARREGLOS": _seccion_arreglos(i, n - 1),
                "DIFF_FIX": diff_fix if diff_fix.strip() else "(el arreglo no cambió ningún archivo)\n",
-               "PLAN": plan.read_text(encoding="utf-8") if et.get("plan") and plan.is_file() else "(esta etapa no tiene plan)\n"}
+               "PLAN": leer_informe(plan) if et.get("plan") and (plan.is_file() or plan.is_symlink())
+               else "(esta etapa no tiene plan)\n"}
     return re.sub(r"\{(" + "|".join(valores) + r")\}", lambda m: valores[m.group(1)],
                   PLANTILLA_CIERRE.read_text(encoding="utf-8"))
 
@@ -2495,6 +2657,10 @@ def correr_cierre(et: dict, fase: str, desde: str, pares: list[tuple[str, str]])
         diff = "".join(f"## {a[:7]}..{d[:7]}\n\n{_vers().diff(a, d)}" for a, d in pares)
     except Exception as e:      # noqa: BLE001
         return "ESCALAR", f"no se pudo leer el diff del arreglo ({type(e).__name__}: {e})"
+    try:
+        prompt = prompt_cierre(et, fase, diff)      # 87b: antes de gastar cuota; un informe inseguro escala
+    except InformeInseguro as e:
+        return "ESCALAR", str(e)
     f, antes = chequear_cuota(cid, "cierre", desde, mod["modelo"], mod["esfuerzo"])
     atender_pausa(desde)
     res = E / f"{i}r-RESULTADO.md"
@@ -2507,7 +2673,7 @@ def correr_cierre(et: dict, fase: str, desde: str, pares: list[tuple[str, str]])
     log(f"{i}: {fase} como cierre con {nombre(cid)} · {quien} (pronóstico {f['min']} min"
         f"{', ' + etiqueta_pronostico(f) if etiqueta_pronostico(f) else ''})")
     git_foto(f"{MANIFIESTO['nombre']} · {i} · {fase} cierre (antes)")
-    r = correr(cid, prompt_cierre(et, fase, diff), f"{i}-{fase}-cierre", mod, HERRAMIENTAS, limite_s=CIERRE_MAX_MIN * 60)
+    r = correr(cid, prompt, f"{i}-{fase}-cierre", mod, HERRAMIENTAS, limite_s=CIERRE_MAX_MIN * 60)
     r["inicio"] = inicio
     git_foto(f"{MANIFIESTO['nombre']} · {i} · {fase} cierre")
     VIVO.pop("rol", None)
@@ -2516,12 +2682,14 @@ def correr_cierre(et: dict, fase: str, desde: str, pares: list[tuple[str, str]])
     if r["sin_cuota"]:
         anotar(i, fase, cid, "cierre", f, antes, r, mod)
         raise Pausa(f"{nombre(cid)} se quedó sin cuota a mitad del cierre de {fase} ({r['min']} min)", desde)
+    inseguro = ""
     try:
-        texto = res.read_text(encoding="utf-8") if res.is_file() else None
-    except (OSError, UnicodeDecodeError):
-        texto = None
+        texto = leer_informe(res) if res.is_file() or res.is_symlink() else None
+    except InformeInseguro as e:        # 87b: un enlace o algo raro en el informe final no es un veredicto
+        texto, inseguro = None, str(e)
     v = veredicto_cierre(texto) if texto is not None and r["rc"] == 0 and not r.get("corte") else ""
     motivo = ("corte por tiempo" if r.get("corte") else f"rc {r['rc']}" if r["rc"] != 0
+              else inseguro if inseguro
               else f"no escribió encargos/{i}r-RESULTADO.md" if texto is None
               else "sin una línea de veredicto exacta en las últimas 3" if not v
               else "el cierre pidió escalar" if v == "ESCALAR" else v)
@@ -2740,13 +2908,14 @@ def etapa(et: dict, desde_fase: str = "autor", reanuda: bool = False) -> bool:
                 return True
             if veredicto == "NO DESPLEGABLE":
                 res = E / f"{i}r-RESULTADO.md"
-                (E / f"{i}r{fase[-1]}-RESULTADO.md").write_bytes(res.read_bytes())
+                try:
+                    texto_rev = leer_informe(res)       # 87b: sin seguir enlaces, también al copiarlo
+                except InformeInseguro as e:
+                    veredicto, motivo_cierre = "ESCALAR", str(e)
+            if veredicto == "NO DESPLEGABLE":
+                (E / f"{i}r{fase[-1]}-RESULTADO.md").write_text(texto_rev, encoding="utf-8")
                 log(f"{i}: ❌ no desplegable ({fase}, cierre)")
                 if int(fase[3:]) <= vueltas:
-                    try:
-                        texto_rev = res.read_text(encoding="utf-8")
-                    except (OSError, UnicodeDecodeError):
-                        texto_rev = ""
                     consultar_o_seguir(et, fase, texto_rev)
                 continue
             log(f"{i}: {fase} con la revisión completa: {motivo_cierre}")
@@ -2983,6 +3152,38 @@ def _se_solapan_abierta(propia: dict, ajena: dict) -> bool:
         return True
 
 
+def compartidos_de_fase(f: dict, nombres: set[str]) -> dict[str, set[str]]:
+    """{archivo: colas} de los `nombres` que cambió la fase propia `f` y que una cola viva en ella (`f['vivas']`)
+    pudo haber tocado también. Sin foto legible de la otra, o con su fase abierta y simultánea, todos los
+    archivos de `f` quedan compartidos (dudoso / abierto). Lo usan el pedido de despliegue y, desde el 87b, la
+    decisión del cierre barato."""
+    compartidos: dict[str, set[str]] = {}
+    vivas = [n for n in f.get("vivas", []) if isinstance(n, str)] if isinstance(f.get("vivas", []), list) else []
+    for otra in vivas:
+        fases_otra = _fases_ajenas(otra)
+        if fases_otra is None:
+            for nombre in nombres:
+                compartidos.setdefault(nombre, set()).add(f"{otra} (registro dudoso)")
+            continue
+        otros = set()
+        try:
+            for ajena in fases_otra:
+                if ajena.get("_abierta"):
+                    if _se_solapan_abierta(f, ajena):
+                        for nombre in nombres:
+                            compartidos.setdefault(nombre, set()).add(f"{otra} (registro abierto)")
+                    continue
+                if _se_solapan(f, ajena):
+                    otros.update(_nombres_cambio(ajena["antes"], ajena["despues"]))
+        except Exception:  # un hash ajeno válido en forma pero inexistente tampoco autoriza a pedir
+            for nombre in nombres:
+                compartidos.setdefault(nombre, set()).add(f"{otra} (registro dudoso)")
+            continue
+        for nombre in nombres & otros:
+            compartidos.setdefault(nombre, set()).add(otra)
+    return compartidos
+
+
 def _propios_atribuidos() -> tuple[set[str], dict[str, set[str]]]:
     """Archivos de nuestras fases que ninguna cola viva cambió también.
 
@@ -2999,29 +3200,8 @@ def _propios_atribuidos() -> tuple[set[str], dict[str, set[str]]]:
                 raise RuntimeError("hay una fase propia sin sus dos fotos")
             nombres = _nombres_cambio(f["antes"], f["despues"])
             propios.update(nombres)
-            vivas = [n for n in f.get("vivas", []) if isinstance(n, str)] if isinstance(f.get("vivas", []), list) else []
-            for otra in vivas:
-                fases_otra = _fases_ajenas(otra)
-                if fases_otra is None:
-                    for nombre in nombres:
-                        compartidos.setdefault(nombre, set()).add(f"{otra} (registro dudoso)")
-                    continue
-                otros = set()
-                try:
-                    for ajena in fases_otra:
-                        if ajena.get("_abierta"):
-                            if _se_solapan_abierta(f, ajena):
-                                for nombre in nombres:
-                                    compartidos.setdefault(nombre, set()).add(f"{otra} (registro abierto)")
-                            continue
-                        if _se_solapan(f, ajena):
-                            otros.update(_nombres_cambio(ajena["antes"], ajena["despues"]))
-                except Exception:  # un hash ajeno válido en forma pero inexistente tampoco autoriza a pedir
-                    for nombre in nombres:
-                        compartidos.setdefault(nombre, set()).add(f"{otra} (registro dudoso)")
-                    continue
-                for nombre in nombres & otros:
-                    compartidos.setdefault(nombre, set()).add(otra)
+            for nombre, quienes in compartidos_de_fase(f, nombres).items():
+                compartidos.setdefault(nombre, set()).update(quienes)
     if not hay_fases:
         raise RuntimeError("no hay fases propias completas")
     return propios - set(compartidos), compartidos

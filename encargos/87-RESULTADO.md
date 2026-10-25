@@ -229,3 +229,95 @@ Las otras 7 suites de `encargos/` que no están en el manifiesto (`test_boletin_
   fuera de `<id>r-RESULTADO.md` no entra al diff de la revisión completa siguiente: es el mismo límite de hoy.
 - `revision-cierre-plantilla.md` todavía no corrió con un modelo real. Su redacción se ajusta con las primeras
   filas `cierre`.
+
+## Arreglos vuelta 1 (87b, 25-10-2026)
+
+Rama `claude/encargo-87b-arreglos`, creada desde `base-87b`. Cierra los tres hallazgos de la revisión de Codex
+(`encargos-nube/87nr-RESULTADO.md`, **NO DESPLEGABLE**). Archivos: `encargos/cola-run.py`,
+`encargos/test_cierre_barato.py` (15 pruebas nuevas), `encargos/test_diff_propio.py` (una prueba adaptada) y
+este informe. Las fallas antes y después están en `encargos-nube/87b-fallas-antes-despues.txt`.
+
+### 1. [Grave] Enlaces simbólicos → cerrado
+
+- `leer_informe(ruta)` nuevo: abre con `O_NOFOLLOW | O_NONBLOCK`, `fstat` de archivo regular con un solo nombre
+  y hasta `CIERRE_MAX_BYTES` (512 KiB), UTF-8, y exige que su carpeta resuelta sea `encargos/`. Cualquier falla,
+  también un archivo que falta, levanta `InformeInseguro`.
+- Pasan por ahí todos los informes del cierre: `<id>r<N-1>-RESULTADO.md` y `<id>-RESULTADO.md` (en
+  `decidir_cierre`, que da **E4** y la revisión completa), la revisión previa, la sección de arreglos y el plan
+  en `prompt_cierre`, el informe final `<id>r-RESULTADO.md` en `correr_cierre`, y su copia y lectura en el camino
+  NO DESPLEGABLE de `etapa()`. Ante cualquiera, ESCALAR.
+- `correr_cierre` arma el prompt **antes** de pedir cuota. Así, un informe inseguro escala sin esperar cuota y
+  sin llamar a `correr()`.
+- Pruebas (`C8EnlacesSimbolicos`): `87-RESULTADO.md` cambiado por un enlace a un archivo de afuera con una
+  sección «Arreglos vuelta 1» válida y un secreto (es la reproducción 1 de Codex): no se llama al cierre, no se
+  pide cuota del cierre y el secreto no aparece en **ningún** prompt. También la revisión previa cambiada por un
+  enlace entre la decisión y el prompt, el informe final del cierre como enlace (ESCALAR y revisión completa) y
+  `leer_informe` contra enlace, archivo grande, binario, enlace duro, FIFO, carpeta, archivo que falta, `..` y
+  subcarpeta.
+
+### 2. [Grave] Procesos hijos, en TODAS las fases → cerrado
+
+- `ejecutar_cli()` nuevo, usado por `_correr` en toda fase (autor, rev, fix, revplan, cierre). Lanza el CLI con
+  `start_new_session=True` y espera con `communicate` en tramos de 0,5 s. Cuando vence el tiempo, o apenas el CLI
+  sale (aunque un hijo retenga sus tuberías), `terminar_grupo()` manda TERM a todo el grupo, espera hasta 5 s,
+  manda KILL y espera 2 s más. Después confirma por `/proc` que no quedó nadie vivo (los zombis no cuentan) y, si
+  queda alguien, lo dice en stderr.
+- **Arreglo que no estaba pedido, pero hace falta:** en su propia sesión, el CLI ya no recibía el SIGHUP de
+  `tmux kill-session` (botón *detener*), así que habría seguido escribiendo después de detener la cola.
+  Mientras corre un CLI, SIGHUP y SIGTERM a la cola matan primero el grupo y después la cola (código
+  128 + señal). Ctrl-C o cualquier excepción también matan el grupo antes de subir.
+- `_correr` conserva lo demás tal cual: mismo log, tokens, `modelo_real`, `sin_cuota` y la forma del corte
+  (`rc 124`, `corte = "tiempo"`). `test_diff_propio` simulaba `subprocess.run` para ver los argumentos de Codex;
+  ahora simula `ejecutar_cli` y afirma lo mismo.
+- Pruebas (`C9GrupoDeProcesos`, con CLI falsos de verdad en el `PATH`): un CLI que lanza `sleep 30` en segundo
+  plano y anota su PID. Con el corte a 1 s, el hijo no existe al volver (reproducción 2). En autor, rev1 y fix1
+  normales, el hijo que deja el CLI muere y la salida JSON se lee igual. Un hijo que retiene stdout ya no cuelga
+  la fase (antes esperaba sus 30 s). Un prompt de 300 KB llega entero y el `rc` se conserva. Y *detener*: SIGHUP
+  a un proceso que corre `ejecutar_cli` mata al CLI y a su hijo. C1 (la salida de `--simular`, byte a byte) y
+  el flujo de fases siguen en verde.
+
+### 3. [Media] Colas vivas → cerrado
+
+- El cruce por fase de `_propios_atribuidos()` pasó, sin cambiar su lógica, a `compartidos_de_fase(f, nombres)`.
+  Lo usan el pedido de despliegue (como antes) y ahora también `decidir_cierre()`. Si la foto del arreglo
+  registra otra cola viva y su registro falta, está abierto en el mismo tramo, no se lee o comparte una ruta con
+  el arreglo, va revisión completa: «E1: fix1 comparte archivos con otra cola viva: <ruta> (<cola> [(registro
+  abierto|dudoso)])».
+- Pruebas (`C10ColasVivas`, con fotos git reales): cola ajena cerrada sin ruta en común (sigue el cierre),
+  cerrada con `modulo.py` en común (escala, como la reproducción 3), abierta (escala), registro ilegible
+  (escala), registro que falta (escala) y cerrada pero en otra hora (no cuenta, sigue el cierre).
+
+### Pruebas (salida real, contenedor de la nube, `NODO_PRUEBAS=1` y estado en `mktemp`)
+
+```
+                antes del arreglo                               después
+cierre_barato:  OK      Ran 33 tests                            OK      Ran 48 tests
+fase_plan:      FAILED (errors=3)  Ran 8                        FAILED (errors=3)  Ran 8
+diff_propio:    OK      Ran 19                                  OK      Ran 19
+balance:        OK      Ran 22                                  OK      Ran 22
+pronostico:     OK      Ran 6                                   OK      Ran 6
+consultas:      FAILED (errors=76, skipped=1) Ran 80            FAILED (errors=76, skipped=1) Ran 80
+acciones_cola:  FAILED (errors=5)  Ran 41                       FAILED (errors=5)  Ran 41
+
+$ python3 encargos/test_cierre_barato.py      (como la cola)
+Ran 48 tests in 11.591s
+OK
+```
+
+La lista de las 84 fallas es **idéntica** antes y después (`diff` vacío). Son del entorno de esta copia: faltan
+`/opt/nodo/.../revision-plantilla-v2.md`, `pi/nodo-desplegar.py` y algunos `NNr*-RESULTADO.md` viejos. En la Pi
+las 7 suites pasaban. Las 14 pruebas nuevas de los tres hallazgos, corridas contra el `cola-run.py` **anterior**,
+dan `FAILED (failures=10, errors=1)`. Las 3 que pasan con ambos son las de «sigue igual»: prompt entero y rc,
+cola ajena sin ruta en común y cola ajena de otra hora. La de *detener* se agregó después.
+
+### Riesgos abiertos
+
+- Un nieto que haga `setsid` sale del grupo y no muere. Si además retiene las tuberías, la fase espera 10 s, las
+  cierra y su salida se pierde (queda anotado en el log). Ningún CLI conocido lo hace.
+- La espera en tramos de 0,5 s agrega como mucho medio segundo por fase.
+- `procesos_del_grupo` lee `/proc` (la Pi es Linux). Sin `/proc` usa `killpg(pgid, 0)`, que cuenta los zombis
+  como vivos.
+- `leer_informe` también se exige al plan del prompt del cierre. El chequeo de plan aprobado e inmutable de
+  `etapa()` (hash) sigue leyendo como antes.
+- Los manejadores de SIGHUP/SIGTERM solo se instalan desde el hilo principal, que es donde corren las fases.
+  Desde otro hilo queda el `finally` (Ctrl-C o excepción), pero no la señal.

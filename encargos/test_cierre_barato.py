@@ -10,6 +10,7 @@ import os
 import shutil
 import sys
 import tempfile
+import time
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
@@ -452,6 +453,268 @@ class C7PausaYDesde(Base):
         self.guion = {}
         self.assertTrue(self.cr.etapa(self.etapa(), "rev2", reanuda=True))
         self.assertEqual([f for f in self.fases_roles() if f[0] == "rev2"], [("rev2", "cierre"), ("rev2", "cierre")])
+
+
+# ------------------------------------------------------------------------------------- 87b (arreglos vuelta 1)
+SECRETO = "SECRETO_DE_AFUERA_87B"
+
+
+class C8EnlacesSimbolicos(Base):
+    """Hallazgo 1: los informes que lee el cierre no siguen enlaces. Ante uno, revisión completa."""
+
+    def afuera(self, texto):
+        ruta = Path(self.tmp.name) / "afuera.md"          # fuera de encargos/ (y del árbol)
+        ruta.write_text(texto, encoding="utf-8")
+        return ruta
+
+    def completa_sin_secreto(self, motivo):
+        self.assertTrue(self.cr.etapa(self.etapa()))
+        self.assertEqual(self.fases_roles(), [("autor", "autor"), ("rev1", "rev"), ("fix1", "fix"), ("rev2", "rev")])
+        self.assertFalse([ll for ll in self.llamadas if ll["fase"].endswith("cierre")])
+        self.assertNotIn("cierre", [c[0] for c in self.cuota])
+        self.assertFalse([ll for ll in self.llamadas if SECRETO in ll["prompt"]])
+        self.assertTrue(any(motivo in x for x in self.logs), self.logs)
+
+    def test_resultado_del_autor_reemplazado_por_un_enlace(self):
+        externo = self.afuera(f"# R\n\n## Arreglos vuelta 1\n{SECRETO}\n")
+
+        def fix():
+            self.cambiar_lineas("encargos/modulo.py", 10)
+            (self.e / "87-RESULTADO.md").unlink()
+            (self.e / "87-RESULTADO.md").symlink_to(externo)
+        self.guion = {"fix1": fix}
+        self.completa_sin_secreto("E4: encargos/87-RESULTADO.md no se puede abrir sin seguir enlaces")
+
+    def test_revision_previa_reemplazada_por_un_enlace_justo_antes_del_cierre(self):
+        externo = self.afuera(f"{SECRETO}\nVEREDICTO: NO DESPLEGABLE\n")
+        r1 = self.e / "87r1-RESULTADO.md"
+        # Pasa la decisión y cambia antes de armar el prompt: prompt_cierre también lo rechaza.
+        decidir = self.cr.decidir_cierre
+
+        def decidir_y_cambiar(et, fase):
+            res = decidir(et, fase)
+            r1.unlink()
+            r1.symlink_to(externo)
+            return res
+        self.cr.decidir_cierre = decidir_y_cambiar
+        self.assertTrue(self.cr.etapa(self.etapa()))
+        self.assertFalse([ll for ll in self.llamadas if ll["fase"].endswith("cierre")])
+        self.assertNotIn("cierre", [c[0] for c in self.cuota])          # ni siquiera esperó cuota
+        self.assertFalse([ll for ll in self.llamadas if SECRETO in ll["prompt"]])
+        self.assertEqual(self.fases_roles()[-1], ("rev2", "rev"))
+        self.assertTrue(any("87r1-RESULTADO.md no se puede abrir sin seguir enlaces" in x for x in self.logs), self.logs)
+
+    def test_informe_final_del_cierre_que_es_un_enlace_escala(self):
+        externo = self.afuera("todo bien\nVEREDICTO: DESPLEGABLE\n")
+        self.guion = {"rev2-cierre": lambda: (self.e / "87r-RESULTADO.md").symlink_to(externo)}
+        self.assertTrue(self.cr.etapa(self.etapa()))
+        self.assertEqual(self.fases_roles(), [("autor", "autor"), ("rev1", "rev"), ("fix1", "fix"),
+                                              ("rev2", "cierre"), ("rev2", "rev")])
+        self.assertEqual(self.historial()[3]["veredicto"], "ESCALAR")
+        self.assertTrue(any("87r-RESULTADO.md no se puede abrir sin seguir enlaces" in x for x in self.logs), self.logs)
+
+    def test_leer_informe(self):
+        cr, e = self.cr, self.e
+        (e / "ok.md").write_text("hola ñ\n", encoding="utf-8")
+        self.assertEqual(cr.leer_informe(e / "ok.md"), "hola ñ\n")
+        (e / "enlace.md").symlink_to(e / "ok.md")                     # enlace aunque apunte adentro
+        (e / "grande.md").write_bytes(b"x" * (cr.CIERRE_MAX_BYTES + 1))
+        (e / "binario.md").write_bytes(b"\xff\xfe\x00")
+        os.link(e / "ok.md", e / "duro.md")                            # dos nombres
+        os.mkfifo(e / "fifo.md")
+        (e / "carpeta.md").mkdir()
+        (Path(self.tmp.name) / "fuera.md").write_text("x", encoding="utf-8")
+        for malo in ("enlace.md", "grande.md", "binario.md", "duro.md", "fifo.md", "carpeta.md", "no-existe.md"):
+            with self.assertRaises(cr.InformeInseguro, msg=malo):
+                cr.leer_informe(e / malo)
+        with self.assertRaises(cr.InformeInseguro):
+            cr.leer_informe(e / ".." / "fuera.md")
+        (e / "sub").mkdir()
+        (e / "sub" / "x.md").write_text("x", encoding="utf-8")
+        with self.assertRaises(cr.InformeInseguro):
+            cr.leer_informe(e / "sub" / "x.md")
+
+
+def vivo_pid(pid: int) -> bool:
+    """Si el PID existe y no es un zombi (un zombi ya no ejecuta nada; lo recoge init)."""
+    try:
+        with open(f"/proc/{pid}/stat", "rb") as fh:
+            return fh.read().decode("ascii", "replace").rsplit(")", 1)[-1].split()[0] not in ("Z", "X")
+    except OSError:
+        return False
+
+
+class C9GrupoDeProcesos(Base):
+    """Hallazgo 2: el CLI corre en su propio grupo y el grupo entero muere al cortar o al terminar, en toda fase."""
+
+    def cli(self, nombre, cuerpo):
+        bin_dir = Path(self.tmp.name) / "bin"
+        bin_dir.mkdir(exist_ok=True)
+        (bin_dir / nombre).write_text("#!/bin/sh\n" + cuerpo, encoding="utf-8")
+        (bin_dir / nombre).chmod(0o755)
+        viejo = os.environ["PATH"]
+        os.environ["PATH"] = f"{bin_dir}{os.pathsep}{viejo}"
+        self.addCleanup(lambda: os.environ.__setitem__("PATH", viejo))
+        self.pidfile = Path(self.tmp.name) / "hijo.pid"
+        self.addCleanup(self.matar_hijo)
+
+    def matar_hijo(self):          # si la prueba falla, el hijo no queda vivo
+        try:
+            os.kill(int(self.pidfile.read_text()), 9)
+        except (OSError, ValueError):
+            pass
+
+    def hijo(self):
+        self.assertTrue(self.pidfile.exists(), "el CLI falso no alcanzó a lanzar su hijo")
+        return int(self.pidfile.read_text())
+
+    def correr(self, motor, fase, limite_s=None):
+        cr = self.cr
+        cid = "claude_diego" if motor == "claude" else "codex"
+        t0 = time.monotonic()
+        r = cr._correr(cr.MOTORES[cid], cid, "hola", f"87-{fase}", {}, cr.HERRAMIENTAS, dict(os.environ),
+                       limite_s=limite_s)
+        return r, time.monotonic() - t0
+
+    def test_corte_por_tiempo_mata_al_hijo(self):
+        self.cli("claude", f"sleep 30 >/dev/null 2>&1 &\necho $! > {self.tmp.name}/hijo.pid\nsleep 30\n")
+        r, dur = self.correr("claude", "rev2-cierre", limite_s=1.0)
+        self.assertEqual((r["rc"], r["corte"], r["sin_cuota"]), (124, "tiempo", False))
+        self.assertLess(dur, 10)
+        self.assertFalse(vivo_pid(self.hijo()), "el hijo del CLI siguió vivo tras el corte")
+        self.assertIn("cortado", (self.cr.L / "87-rev2-cierre.log").read_text(encoding="utf-8"))
+
+    def test_fin_normal_mata_lo_que_el_cli_dejo_y_lee_igual(self):
+        salida = json.dumps({"result": "listo", "usage": {"input_tokens": 3, "output_tokens": 4},
+                             "modelUsage": {"claude-x": {}}, "is_error": False})
+        for fase in ("autor", "rev1", "fix1"):
+            self.cli("claude", f"sleep 30 >/dev/null 2>&1 &\necho $! > {self.tmp.name}/hijo.pid\n"
+                               f"cat > /dev/null\necho '{salida}'\n")
+            r, dur = self.correr("claude", fase)
+            self.assertEqual((r["rc"], r["sin_cuota"], r["modelo_real"]), (0, False, "claude-x"), fase)
+            self.assertEqual((r["tokens"]["entrada"], r["tokens"]["salida"]), (3, 4))
+            self.assertNotIn("corte", r)
+            self.assertLess(dur, 10)
+            self.assertFalse(vivo_pid(self.hijo()), f"{fase}: el hijo del CLI siguió vivo al terminar")
+            self.assertIn("listo", (self.cr.L / f"87-{fase}.log").read_text(encoding="utf-8"))
+
+    def test_hijo_que_retiene_la_salida_no_cuelga_la_fase(self):
+        # Antes: subprocess.run esperaba el EOF de las tuberías, o sea al hijo (30 s, o para siempre).
+        self.cli("codex", f"sleep 30 &\necho $! > {self.tmp.name}/hijo.pid\ncat > /dev/null\n"
+                          "echo 'model: gpt-x'\necho 'tokens used: 1,234'\n")
+        r, dur = self.correr("codex", "fix1")
+        self.assertEqual((r["rc"], r["tokens"], r["modelo_real"]), (0, {"total": 1234}, "gpt-x"))
+        self.assertLess(dur, 10)
+        self.assertFalse(vivo_pid(self.hijo()))
+
+    def test_el_prompt_llega_entero_y_el_rc_se_conserva(self):
+        grande = "x" * 300_000          # más que el búfer de una tubería
+        self.cli("claude", f"wc -c > {self.tmp.name}/bytes\nexit 3\n")
+        cr = self.cr
+        r = cr._correr(cr.MOTORES["claude_diego"], "claude_diego", grande, "87-autor", {}, cr.HERRAMIENTAS,
+                       dict(os.environ))
+        self.assertEqual(r["rc"], 3)
+        self.assertEqual(int((Path(self.tmp.name) / "bytes").read_text().strip()), len(grande))
+
+
+    def test_detener_la_cola_mata_tambien_al_cli(self):
+        """`detener` hace tmux kill-session: SIGHUP a la cola. El CLI, en su propia sesión, no lo recibe; la
+        cola tiene que matar su grupo antes de morir, o el revisor seguiría escribiendo el árbol."""
+        import signal
+        import subprocess
+        d = Path(self.tmp.name)
+        corredor = d / "corredor.py"
+        corredor.write_text(
+            "import importlib.util, os, sys\n"
+            f"spec = importlib.util.spec_from_file_location('cr', {str(AQUI / 'cola-run.py')!r})\n"
+            "cr = importlib.util.module_from_spec(spec); spec.loader.exec_module(cr)\n"
+            f"cr.D = __import__('pathlib').Path({str(d)!r})\n"
+            "cr.ejecutar_cli(['sh', '-c', 'echo $$ > cli.pid; sleep 30 >/dev/null 2>&1 & echo $! > hijo.pid; sleep 30'],"
+            " '', dict(os.environ))\n", encoding="utf-8")
+        proc = subprocess.Popen([sys.executable, "-B", str(corredor)], cwd=d, env=dict(os.environ, NODO_PRUEBAS="1"))
+        self.addCleanup(lambda: proc.poll() is None and proc.kill())
+        limite = time.monotonic() + 20
+        while not ((d / "hijo.pid").exists() and (d / "hijo.pid").read_text().strip()) and time.monotonic() < limite:
+            time.sleep(0.05)
+        cli, hijo = int((d / "cli.pid").read_text()), int((d / "hijo.pid").read_text())
+        self.addCleanup(lambda: [os.kill(x, 9) for x in (cli, hijo) if vivo_pid(x)])
+        self.assertTrue(vivo_pid(cli) and vivo_pid(hijo))
+        proc.send_signal(signal.SIGHUP)
+        self.assertEqual(proc.wait(timeout=20), 128 + signal.SIGHUP)
+        self.assertFalse(vivo_pid(cli), "el CLI siguió vivo tras detener la cola")
+        self.assertFalse(vivo_pid(hijo), "el hijo del CLI siguió vivo tras detener la cola")
+
+
+class C10ColasVivas(Base):
+    """Hallazgo 3: si la foto del arreglo registra otra cola viva, se cruza su atribución antes del cierre."""
+    OTRA = "cola88x"
+
+    def con_otra(self, fases_otra=None, crudo=None):
+        fix = self.por_defecto["fix1"]
+
+        def fix1():
+            fix()
+            mias = self.cr.GIT_BASE["87:fases"]
+            next(f for f in mias if f["fase"] == "fix1")["vivas"] = [self.OTRA]
+            ruta = self.cr.L / f"{self.OTRA}-git.json"
+            if crudo is not None:
+                ruta.write_text(crudo, encoding="utf-8")
+            elif fases_otra is not None:
+                ruta.write_text(json.dumps({"88:fases": fases_otra(mias)}), encoding="utf-8")
+        self.guion = {"fix1": fix1}
+
+    @staticmethod
+    def de(f, abierta=False):
+        x = {"fase": "autor", "antes": f["antes"], "vivas": [], "inicio": "2026-10-25T11:00:00+00:00"}
+        if not abierta:
+            x.update(despues=f["despues"], fin="2026-10-25T13:00:00+00:00")
+        return x
+
+    def escala(self, motivo):
+        self.assertTrue(self.cr.etapa(self.etapa()))
+        self.assertEqual(self.fases_roles()[-1], ("rev2", "rev"))
+        self.assertFalse([ll for ll in self.llamadas if ll["fase"].endswith("cierre")])
+        self.assertTrue(any(motivo in x for x in self.logs), self.logs)
+
+    def solo_ajeno(self, mias):
+        """Un par de fotos reales cuyo diff es sólo encargos/ajeno.txt (que al final no queda en el árbol)."""
+        repo, ajeno = self.cr._vers().abrir(), self.e / "ajeno.txt"
+        ajeno.write_text("de la otra cola\n", encoding="utf-8")
+        repo.foto("otra cola (después)")
+        con = repo.head()
+        ajeno.unlink()
+        repo.foto("otra cola (antes)")
+        return {"antes": repo.head(), "despues": con}
+
+    def test_cerrada_sin_ruta_en_comun_deja_el_cierre(self):
+        self.con_otra(lambda mias: [self.de(self.solo_ajeno(mias))])
+        self.assertTrue(self.cr.etapa(self.etapa()))
+        self.assertEqual(self.fases_roles()[-1], ("rev2", "cierre"))
+
+    def test_cerrada_con_una_ruta_del_arreglo_escala(self):
+        self.con_otra(lambda mias: [self.de(next(f for f in mias if f["fase"] == "autor"))])
+        self.escala("E1: fix1 comparte archivos con otra cola viva: encargos/modulo.py (cola88x)")
+
+    def test_abierta_escala(self):
+        self.con_otra(lambda mias: [self.de(next(f for f in mias if f["fase"] == "autor"), abierta=True)])
+        self.escala("encargos/modulo.py (cola88x (registro abierto))")
+
+    def test_ilegible_escala(self):
+        self.con_otra(crudo="{ esto no es json")
+        self.escala("encargos/modulo.py (cola88x (registro dudoso))")
+
+    def test_falta_el_registro_escala(self):
+        self.con_otra()
+        self.escala("encargos/modulo.py (cola88x (registro dudoso))")
+
+    def test_cerrada_pero_de_otra_hora_no_cuenta(self):
+        def lejos(mias):
+            x = self.de(next(f for f in mias if f["fase"] == "autor"))
+            x.update(inicio="2026-10-24T08:00:00+00:00", fin="2026-10-24T09:00:00+00:00")
+            return [x]
+        self.con_otra(lejos)
+        self.assertTrue(self.cr.etapa(self.etapa()))
+        self.assertEqual(self.fases_roles()[-1], ("rev2", "cierre"))
 
 
 if __name__ == "__main__":
