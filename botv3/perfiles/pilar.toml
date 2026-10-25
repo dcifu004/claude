@@ -18,9 +18,11 @@ vaults = []
 # 13-09-2026): sus preguntas no gastan la cuota de Diego. Es Claude como modelo
 # bueno para lo complejo, NO como lector de archivos — corre sobre un directorio
 # vacio y sin los vaults en su namespace.
-# `codex` queda fuera: corre con la cuenta de ChatGPT Plus de Diego y ya se agoto
-# una vez. Eso hace que la ruta `web` de Camila —que va por Codex— le gaste la
-# suscripcion; su respaldo es Claude, que ahora es cuenta propia.
+# `codex` ENTRO el 10-10-2026 con las propuestas AMPLIA aprobadas desde 🤖: la ruta
+# tecnica la contesta primero Claude (Cami) y, de respaldo, Codex, que corre con la
+# cuenta de ChatGPT Plus de Diego (ver `cuentas.codex` abajo). Su `web` NO pasa por
+# Codex: lo prohibe el muro 11 de recetas.py y contestan las dos cuentas Claude. El
+# auditor de rutas (encargo 94) avisa si alguna linea del registro sale de esto.
 # `plantas` llega en la Fase 2, cuando la ruta exista.
 rutas = ["gpt", "web", "ha", "claude", "codex", "boleta"]
 

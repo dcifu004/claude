@@ -155,6 +155,237 @@ def alertas_catalogo_modelos(ahora=None):
     return list(unicas.values())
 
 
+# ------------------------------------------------------------- auditor de rutas
+# Encargo 94 (25-10-2026). Vigila perfil → ruta → cuenta en el `uso-cuentas.jsonl` de cada
+# bot y avisa cuando aparece una combinación que lo desplegado no autoriza. Solo lee. La
+# lista blanca NO se escribe acá: sale en cada corrida de `rutas` y `cuentas` del perfil
+# desplegado, pasadas por `recetas.cadena_efectiva` (los mismos muros que aplica el bot).
+# Si una propuesta aprobada cambia el perfil, la lista cambia con él.
+# Dedup: los id son estables y avisos.py ya compara por id. Un hallazgo sigue activo
+# mientras tenga líneas dentro de la ventana y se resuelve solo cuando sale de ella.
+BOT_DIR = "/opt/botv3"
+MAX_REGISTRO_USO = 4 * 1024 * 1024
+VENTANA_RUTAS_S = 7 * 86400
+VENTANA_MUERTA_S = 24 * 3600
+FALLAS_MUERTA = 3
+MOTORES_CON_CATALOGO = {"groq", "gemini", "openrouter"}
+
+
+def _registros_uso():
+    """{perfil: {registro, catalogo, dueno}}: el registro vive junto al catálogo 80a."""
+    salida = {}
+    for perfil, ficha in CATALOGOS_MODELOS.items():
+        if isinstance(ficha, dict) and isinstance(ficha.get("ruta"), str) and isinstance(ficha.get("dueno"), str):
+            salida[perfil] = {"registro": os.path.join(os.path.dirname(ficha["ruta"]), "uso-cuentas.jsonl"),
+                              "catalogo": ficha["ruta"], "dueno": ficha["dueno"]}
+    return salida
+
+
+def _leer_cola_uso(ruta: str, dueno: str):
+    """(líneas, problema). Solo la cola acotada: el registro crece sin tope y basta una semana.
+    Mismo cuidado que el catálogo: este módulo corre como root."""
+    try:
+        uid = pwd.getpwnam(dueno).pw_uid; fd = os.open(ruta, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except FileNotFoundError: return None, "ausente"
+    except (KeyError, OSError): return None, "ilegible"
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1 or st.st_uid != uid: return None, "ilegible"
+        desde = max(0, st.st_size - MAX_REGISTRO_USO)
+        os.lseek(fd, desde, os.SEEK_SET)
+        with os.fdopen(fd, "rb", closefd=False) as fh: bruto = fh.read(MAX_REGISTRO_USO)
+    except OSError: return None, "ilegible"
+    finally: os.close(fd)
+    lineas = bruto.decode("utf-8", "replace").splitlines()
+    return (lineas[1:] if desde else lineas), None
+
+
+def _leer_toml(ruta: str):
+    import tomllib
+    try:
+        with open(ruta, "rb") as fh: dato = tomllib.load(fh)
+    except (OSError, ValueError): return None
+    return dato if isinstance(dato, dict) else None
+
+
+def _cargar_recetas_bot(bot_dir: str):
+    """recetas.py del bot DESPLEGADO, como bots-info: el del vault lo puede escribir cualquiera."""
+    import importlib.util
+    try:
+        spec = importlib.util.spec_from_file_location("recetas_auditor", f"{bot_dir}/recetas.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except (OSError, ImportError, SyntaxError, AttributeError):
+        return None
+
+
+def _dato_ok(x) -> bool:
+    return isinstance(x, str) and 0 < len(x) <= 120 and x.isprintable()
+
+
+def _lista_blanca(rec, cfg):
+    """(rutas, cuentas_de(ruta)) que autoriza el perfil. None si el perfil no se entiende."""
+    rutas = cfg.get("rutas")
+    if not isinstance(rutas, list) or not all(isinstance(r, str) for r in rutas):
+        return None
+    rutas = {rec.ruta_interna(r) for r in rutas}
+    recetas_cfg, _ = rec.normalizar_recetas(cfg.get("recetas"), tuple(rec.PROHIBIDO))
+    cache = {}
+
+    def cuentas_de(ruta):
+        if ruta not in cache:
+            ids = set(rec.cadena_efectiva(ruta, cfg.get("cuentas"))[0])
+            receta = recetas_cfg.get(ruta)
+            # `vision` sin receta es automática en el bot (VISION_RECETA).
+            if (receta or {}).get("automatico") or (receta is None and ruta == "vision"):
+                ids |= set(rec.cuentas_del_automatico(ruta))
+            cache[ruta] = ids
+        return cache[ruta]
+    return rutas, cuentas_de
+
+
+def _veces(n: int) -> str:
+    return "1 vez" if n == 1 else f"{n} veces"
+
+
+def alertas_rutas(ahora=None, bot_dir=BOT_DIR, registros=None, recetas_mod=None):
+    ahora = ahora or dt.datetime.now().astimezone()
+    salida = []
+
+    def add(id_, texto):
+        salida.append({"id": id_, "texto": texto})
+
+    def hora(t):
+        return f"{t.astimezone(ahora.tzinfo):%d-%m %H:%M}"
+    rec = recetas_mod or _cargar_recetas_bot(bot_dir)
+    if rec is None:
+        add("rutas:recetas", f"🔎 auditor de rutas detenido: no puede cargar {bot_dir}/recetas.py")
+        return salida
+    registro_cuentas = _leer_toml(f"{bot_dir}/cuentas.toml")
+    if registro_cuentas is None:
+        add("rutas:cuentas_toml", "🔎 auditor de rutas: cuentas.toml ilegible; no revisa cuentas desconocidas")
+    registros = _registros_uso() if registros is None else registros
+    perfiles = sorted(os.path.basename(p)[:-5] for p in glob.glob(f"{bot_dir}/perfiles/*.toml"))
+    desconocidas = {}
+    motores_mal = {}
+
+    def nombre_cuenta(c):
+        ficha = (registro_cuentas or {}).get(c)
+        nombre = ficha.get("nombre") if isinstance(ficha, dict) else None
+        return nombre if _dato_ok(nombre) else rec.NOMBRE_CUENTA.get(c, c)
+    for perfil in perfiles:
+        P = perfil.capitalize()
+        cfg = _leer_toml(f"{bot_dir}/perfiles/{perfil}.toml")
+        blanca = _lista_blanca(rec, cfg) if cfg is not None else None
+        if blanca is None:
+            add(f"rutas:perfil:{perfil}", f"🔎 auditor de rutas: no entiende el perfil de {P}; no lo revisa")
+            continue
+        rutas_ok, cuentas_de = blanca
+        ficha = registros.get(perfil)
+        if not isinstance(ficha, dict):
+            add(f"rutas:registro:{perfil}", f"🔎 auditor de rutas: no sabe dónde está el registro de uso de {P}")
+            continue
+        lineas, problema = _leer_cola_uso(ficha["registro"], ficha["dueno"])
+        if problema == "ausente":
+            add(f"rutas:registro:{perfil}", f"🔎 auditor de rutas: {P} no tiene registro de uso (uso-cuentas.jsonl)")
+            continue
+        if problema:
+            add(f"rutas:registro:{perfil}", f"🔎 auditor de rutas: el registro de uso de {P} no se puede leer con seguridad (dueño, enlace o tipo)")
+            continue
+        eventos, rotas = [], 0
+        for ln in lineas:
+            if not ln.strip():
+                continue
+            try:
+                d = json.loads(ln)
+                if isinstance(d, dict) and d.get("tipo") == "calificacion":
+                    continue
+                t = dt.datetime.fromisoformat(d["ts"])
+                if t.tzinfo is None: raise ValueError
+                if not (_dato_ok(d["ruta"]) and _dato_ok(d["cuenta"])): raise ValueError
+            except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+                rotas += 1
+                continue
+            eventos.append((t, rec.ruta_interna(d["ruta"]), d["cuenta"], d.get("ok") is True,
+                            d.get("motor") if _dato_ok(d.get("motor")) else None,
+                            d.get("modelo") if _dato_ok(d.get("modelo")) else None,
+                            d.get("forzada") is True))
+        if rotas and (rotas >= max(3, (rotas + len(eventos)) // 10) or not eventos):
+            add(f"rutas:registro:{perfil}", f"🔎 auditor de rutas: el registro de uso de {P} trae {rotas} líneas que no se leen")
+        eventos.sort(key=lambda e: e[0])
+        recientes = [e for e in eventos if 0 <= (ahora - e[0]).total_seconds() <= VENTANA_RUTAS_S]
+        catalogo, catalogo_leido = set(), False
+        if any(e[4] in MOTORES_CON_CATALOGO and e[5] for e in recientes):
+            dato = _leer_catalogo_modelos(ficha["catalogo"], ficha["dueno"])
+            if isinstance(dato, dict) and isinstance(dato.get("modelos"), list):
+                catalogo_leido = True
+                catalogo = {(f.get("proveedor"), f.get("modelo")) for f in dato["modelos"] if isinstance(f, dict)}
+        rutas_mal, cuentas_mal, modelos_mal = {}, {}, {}
+        for t, ruta, cuenta, ok, motor, modelo, forzada in recientes:
+            if ruta not in rutas_ok:
+                rutas_mal.setdefault(ruta, []).append(t)
+            elif cuenta not in cuentas_de(ruta):
+                cuentas_mal.setdefault((ruta, cuenta), []).append((t, forzada))
+            if registro_cuentas is not None:
+                ficha_c = registro_cuentas.get(cuenta)
+                if not isinstance(ficha_c, dict):
+                    desconocidas.setdefault(cuenta, []).append((perfil, t))
+                elif motor and _dato_ok(ficha_c.get("motor")) and motor != ficha_c["motor"]:
+                    motores_mal.setdefault((cuenta, motor, ficha_c["motor"]), []).append(t)
+            if catalogo_leido and motor in MOTORES_CON_CATALOGO and modelo and (motor, modelo) not in catalogo:
+                modelos_mal.setdefault((cuenta, modelo), []).append(t)
+        for ruta, ts in sorted(rutas_mal.items()):
+            add(f"rutas:ruta:{perfil}:{ruta}",
+                f"🚩 auditor de rutas: {P} usó la ruta {rec.ruta_nombre(ruta)}, que su perfil no tiene "
+                f"({_veces(len(ts))} en 7 días, la última {hora(ts[-1])})")
+        for (ruta, cuenta), xs in sorted(cuentas_mal.items()):
+            forzada = " (forzada)" if any(f for _, f in xs) else ""
+            add(f"rutas:cuenta:{perfil}:{ruta}:{cuenta}",
+                f"🚩 auditor de rutas: {P} → {rec.ruta_nombre(ruta)} → {nombre_cuenta(cuenta)} no está autorizado"
+                f"{forzada} ({_veces(len(xs))} en 7 días, la última {hora(xs[-1][0])})")
+        for (cuenta, modelo), ts in sorted(modelos_mal.items()):
+            add(f"rutas:modelo:{perfil}:{cuenta}:{modelo}",
+                f"🔎 auditor de rutas: {P} usó `{modelo}` de {nombre_cuenta(cuenta)}, que no está en su "
+                f"catálogo vigilado ({_veces(len(ts))} en 7 días)")
+        # Ruta muerta tapada por el respaldo: fallas seguidas de la misma cuenta en la
+        # misma ruta, sin un ok de esa cuenta después.
+        rachas, respaldos = {}, {}
+        for t, ruta, cuenta, ok, *_ in eventos:
+            if not 0 <= (ahora - t).total_seconds() <= VENTANA_MUERTA_S:
+                continue
+            if ok:
+                rachas.pop((ruta, cuenta), None)
+                for (r, c), racha in rachas.items():
+                    if r == ruta and c != cuenta:
+                        respaldos[(r, c)] = respaldos.get((r, c), 0) + 1
+            else:
+                racha = rachas.setdefault((ruta, cuenta), [])
+                if not racha:
+                    respaldos[(ruta, cuenta)] = 0
+                racha.append(t)
+        for (ruta, cuenta), racha in sorted(rachas.items()):
+            if len(racha) >= FALLAS_MUERTA:
+                tapada = respaldos.get((ruta, cuenta), 0)
+                cola = (f"el respaldo contestó {_veces(tapada)} y la tapa" if tapada
+                        else "nadie contestó por ella")
+                add(f"rutas:muerta:{perfil}:{ruta}:{cuenta}",
+                    f"🔎 auditor de rutas: {P} → {rec.ruta_nombre(ruta)} → {nombre_cuenta(cuenta)} falló "
+                    f"{len(racha)} veces seguidas desde {hora(racha[0])}; {cola}")
+    for cuenta, xs in sorted(desconocidas.items()):
+        quienes = ", ".join(sorted({p.capitalize() for p, _ in xs}))
+        add(f"rutas:desconocida:{cuenta}",
+            f"🚩 auditor de rutas: la cuenta `{cuenta}` no existe en cuentas.toml y la usó {quienes} "
+            f"({_veces(len(xs))} en 7 días)")
+    for (cuenta, motor, esperado), ts in sorted(motores_mal.items()):
+        add(f"rutas:motor:{cuenta}:{motor}",
+            f"🔎 auditor de rutas: {nombre_cuenta(cuenta)} aparece con motor {motor} y cuentas.toml dice {esperado}")
+    unicas = {}
+    for alerta in salida:
+        unicas.setdefault(alerta["id"], alerta)
+    return list(unicas.values())
+
+
 # ------------------------------------------------------------- inbox
 
 INBOX = f"{DATOS}/srv/vault_personal/00-Inbox"
@@ -773,6 +1004,12 @@ def alertas(e):
         if med["v"] >= med["ro"]:
             add(f"medidor:{k}", f"{k} en {med['v']:g}{med['u']} (limite {med['ro']:.0f})")
     a.extend(alertas_catalogo_modelos())
+    # El auditor (94) lee archivos que escriben los bots: si algo raro se le escapa, se
+    # dice como alerta y el resto del estado sale igual.
+    try:
+        a.extend(alertas_rutas())
+    except Exception as exc:
+        add("rutas:fallo", f"🔎 auditor de rutas falló: {type(exc).__name__}")
     return a
 
 
