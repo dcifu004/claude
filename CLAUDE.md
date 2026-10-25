@@ -16,6 +16,7 @@ El usuario dice cuál. Cada uno tiene su archivo:
 | 91, temblores | `encargos-nube/91-temblores.md` |
 | 92, contador de uso de los bots | `encargos-nube/92-contador-uso-bots.md` |
 | 93, guía de Jaime y Pilar al día | `encargos-nube/93-guia-jaime-pilar.md` |
+| 94, 🔎 auditor de rutas (rama base `base-94`) | `encargos-nube/94-auditor-de-rutas.md` |
 
 ## Reglas comunes
 
@@ -37,6 +38,6 @@ El usuario dice cuál. Cada uno tiene su archivo:
 
 ## Cómo correr las pruebas
 
-Desde la raíz: `NODO_PRUEBAS=1 python3 -B -m unittest botv3/test_botv3.py` (o la suite que
-corresponda). Algunas suites fallan por cosas del entorno de esta copia (faltan archivos de la Pi).
+Desde la raíz, **como las corre la cola**: `NODO_PRUEBAS=1 python3 -B botv3/test_botv3.py` (o la suite que
+corresponda). Con `-m unittest`, `botv3/` queda fuera del `sys.path` y salen cientos de errores falsos. Algunas suites fallan por cosas del entorno de esta copia (faltan archivos de la Pi).
 Anota la lista de fallas **antes y después** del cambio: tu cambio no puede agregar ninguna.
