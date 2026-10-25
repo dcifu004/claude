@@ -139,13 +139,37 @@ function min(iso) { const n = new Date(iso).getTime(); return Number.isNaN(n) ? 
 // Encargo 34: del mismo panel salen los modelos de [niveles.*] de modelos.toml, para la paleta de la barra de uso.
 const esObjeto = x => !!x && typeof x === "object" && !Array.isArray(x);
 async function leerPanel() { try { const x = JSON.parse(await cockpit.spawn(["python3", `${DIR}/cola-run.py`, "--panel"], { err: "ignore" })); return { reglas: Array.isArray(x.reglas) ? x.reglas : [], fuera: Array.isArray(x.colas_fuera) ? x.colas_fuera : [], capacidad: esObjeto(x.capacidad_por_vencer) ? x.capacidad_por_vencer : {}, despacho: esObjeto(x.despacho) ? x.despacho : null, pasado: esObjeto(x.pasado) ? x.pasado : null, cuentas: x.cuentas || {}, colas: x.colas && typeof x.colas === "object" ? x.colas : {}, paleta: modelosPaleta(x.modelos) }; } catch (e) { return { reglas: null, fuera: [], capacidad: {}, despacho: null, pasado: null, cuentas: {}, colas: {}, paleta: [] }; } }
-async function leer() { const [h, estado, vivos, u, c, tmux, paths, panelColas] = await Promise.all([
+async function leer() { const [h, estado, vivos, u, c, tmux, paths, panelColas, proy] = await Promise.all([
     archivo(`${DIR}/historial.jsonl`), archivo(`${DIR}/COLA-ESTADO.md`), barraNodo.leerVivos(), archivo(USO, true), archivo(CUENTAS),
     cockpit.spawn(["tmux", "ls", "-F", "#{session_name}"], { err: "ignore" }).catch(() => ""),
-    cockpit.spawn(["find", DIR, "-maxdepth", "1", "-name", "cola-*.toml", "-print"], { err: "ignore" }).catch(() => ""), leerPanel()]);
+    cockpit.spawn(["find", DIR, "-maxdepth", "1", "-name", "cola-*.toml", "-print"], { err: "ignore" }).catch(() => ""), leerPanel(), leerProyectos()]);
     const tomls = await Promise.all(paths.split("\n").filter(Boolean).map(x => archivo(x)));
     const rs = tomls.map(resumenes).filter(Boolean); await leerTitulos(rs);
-    d = { h: historia(h), estado, vivos, uso: u, nombres: nombres(c), sesiones: tmux.split("\n").filter(x => /^cola[\w-]+$/.test(x)), colas: espera(tomls), etapas: tomls.flatMap(manifiesto), reglas: panelColas.reglas, fuera: panelColas.fuera, capacidad: panelColas.capacidad, cuentasPanel: panelColas.cuentas, colasPanel: panelColas.colas, despacho: panelColas.despacho, pasado: panelColas.pasado, resumenes: rs, paleta: panelColas.paleta }; barraNodo.leido(); pintar();
+    d = { h: historia(h), estado, vivos, uso: u, nombres: nombres(c), sesiones: tmux.split("\n").filter(x => /^cola[\w-]+$/.test(x)), colas: espera(tomls), etapas: tomls.flatMap(manifiesto), reglas: panelColas.reglas, fuera: panelColas.fuera, capacidad: panelColas.capacidad, cuentasPanel: panelColas.cuentas, colasPanel: panelColas.colas, despacho: panelColas.despacho, pasado: panelColas.pasado, resumenes: rs, paleta: panelColas.paleta }; armarProyectos(proy); barraNodo.leido(); pintar();
+}
+// Encargo 99: 📋 Projects. proyectos.json se lee como texto (tope de 1 MB) y se parsea acá; si falta o está roto, la pestaña lo
+// dice en una línea y el resto de la página sigue igual. El índice de NN-*.md sale de dos `find` de argumentos fijos (sin
+// shell): «mtime nombre» y «ruta:# título» (grep -m1 de la primera línea «# »). modeloProyectos (modelo.js) arma lo demás.
+const PROYECTOS_JSON = `${DIR}/proyectos.json`, MAX_PROYECTOS = 1024 * 1024, MD_ENCARGOS = "[0-9]*-*.md";
+async function leerProyectos() {
+    const [t, listado, titulosMd] = await Promise.all([archivo(PROYECTOS_JSON),
+        cockpit.spawn(["find", DIR, "-maxdepth", "1", "-name", MD_ENCARGOS, "-printf", "%T@ %f\\n"], { err: "ignore" }).catch(() => ""),
+        cockpit.spawn(["find", DIR, "-maxdepth", "1", "-name", MD_ENCARGOS, "-exec", "grep", "-m1", "-H", "^# ", "{}", "+"], { err: "ignore" }).catch(() => "")]);
+    const indice = modeloProyectos.indiceDe(listado, titulosMd);
+    if (t == null) return { error: "Projects: no se pudo leer encargos/proyectos.json.", indice };
+    if (t.length > MAX_PROYECTOS) return { error: "Projects: encargos/proyectos.json pesa más de 1 MB y no se lee.", indice };
+    try { return { datos: JSON.parse(t), indice }; } catch (e) { return { error: "Projects: encargos/proyectos.json no es un JSON válido.", indice }; }
+}
+function armarProyectos(proy) {
+    d.proyError = proy.error || ""; d.proy = null;
+    if (proy.error) return;
+    try { d.proy = modeloProyectos.armar({ proyectos: proy.datos, historial: d.h || [], indice: proy.indice, vivos: d.vivos, ahora: Date.now() }); }
+    catch (e) { d.proyError = "Projects: no se pudo armar el tablero con proyectos.json."; }
+}
+const consultaHash = () => new URLSearchParams(location.hash.split("?")[1] || "");
+function projects() {
+    vistaProyectos.pintar($("[data-panel=projects]"), { m: d.proy, error: d.proyError, limpiar: delPanel, alDibujar: activarGlosario,
+        ir: c => { const q = consultaHash(); for (const [k, v] of Object.entries(c)) { if (v) q.set(k, v); else q.delete(k); } location.hash = `#/projects${q.size ? `?${q.toString()}` : ""}`; } }, consultaHash());
 }
 function ahoraDeducida(v, hayColas) { const e = d.colas ? d.colas.filter(x => x.a.length).flatMap((x, i) => [i ? " · " : null, mencionCola(x.n), ": espera ", ...x.a.flatMap((a, j) => [j ? ", " : null, mencionCola(a)])]).filter(Boolean) : "sin datos"; if (!v) { return hayColas ? [] : [el("section", { class: "tarjeta" }, el("h2", {}, "Ahora"), el("p", {}, "nada corriendo"), el("p", { class: "tenue" }, d.h && d.h.length ? `Última fase: ${d.h.at(-1).encargo} · ${d.h.at(-1).fase}` : "El historial aún no tiene datos; los encargos anteriores al 19 se ven sólo en la Bitácora."), el("p", {}, e.length ? e : "sin datos"))]; }
     const h = (d.h || []).filter(x => String(x.encargo) === String(v.etapa) && x.fase === v.fase).at(-1), pr = v.pronostico || (h || {}).pronostico, cid = v.cuenta || cuentaFase(v.etapa, v.fase) || (h || {}).cuenta;
@@ -604,6 +628,7 @@ function hist() {
     const o = el("select", { "aria-label": "Ordenar por" }, OPCIONES_ORDEN.map(([v, t]) => el("option", { value: v }, t)));
     const out = el("div", {});
     const dib = () => { o.value = `${orden.clave}:${orden.desc ? "desc" : "asc"}`; const fs = ordenar(d.h.filter(x => (!a.value || x.encargo === a.value) && (!c.value || x.cuenta === c.value)), orden.clave, orden.desc); const tot = Object.entries(agrupar(d.h, x => x.cuenta)).map(([k, xs]) => `${cuenta(k)}: ${xs.reduce((n, x) => n + (x.min || 0), 0).toFixed(1)} min`).join(" · "); const tabla = el("table", {}, el("thead", {}, el("tr", {}, ...CABEZAS_HISTORIAL.map(t => cabeza(t, dib)))), el("tbody", {}, fs.map(filaHistorial))); out.replaceChildren(el("p", { class: "tenue" }, "El historial empieza en el encargo 19; los anteriores se ven sólo en la Bitácora."), el("p", { class: "encargo-total tenue" }, tot || "sin datos"), tabla); activarGlosario(out); };
+    const e0 = new URLSearchParams(location.hash.split("?")[1] || "").get("e"); if (e0 && [...a.options].some(x => x.value === e0)) a.value = e0;      // encargo 99: el enlace de Projects
     a.onchange = c.onchange = dib; o.onchange = () => { const [clave, sentido] = o.value.split(":"); cambiarOrden(clave, sentido === "desc"); dib(); };
     dib(); p.replaceChildren(tarjetaPasado(), el("section", { class: "tarjeta" }, el("div", { class: "encargo-filtros" }, a, c, o), out));
 }
@@ -884,17 +909,17 @@ function hashFlujo(tipo, valor = "") {
     return `#/flujo${q.size ? `?${q.toString().replace(/%3A/gi, ":")}` : ""}`;
 }
 function flujo() { redEncargos.pintar($("[data-panel=flujo]"), d, alcanceFlujo(), hashFlujo); }
-function pintar() { pintarConsola(); if (!d) return; ({ flujo, ahora, tiempo, historial: hist, bitacora, avisos, config })[panel](); activarGlosario($("[data-panel=" + panel + "]")); verPendiente(); }
+function pintar() { pintarConsola(); if (!d) return; ({ flujo, ahora, projects, tiempo, historial: hist, bitacora, avisos, config })[panel](); activarGlosario($("[data-panel=" + panel + "]")); verPendiente(); }
 // Encargo 84a: la consola del nodo. Encargo 85a deja una sola barra: las pestañas conservan su data-p y el hash; Ctrl+K conserva los destinos
 // de barra.js como «Ir a». Nada de este marco ejecuta ni escribe: sólo navega, muestra el pulso y aplica el tema.
 const PAQUETE = "encargos", PORTADA = "flujo";
 const MODULOS = barraNodo.GRUPOS.flat();
-const RUTA = /^#\/([a-z]+)(?:\?(?:(?:e|n|c|o)=[^#&]*|curso=1)(?:&(?:(?:e|n|c|o)=[^#&]*|curso=1))*)?$/;
+const RUTA = /^#\/([a-z]+)(?:\?(?:(?:e|n|c|o|p|v)=[^#&]*|curso=1)(?:&(?:(?:e|n|c|o|p|v)=[^#&]*|curso=1))*)?$/;
 const CUENTAS_BARRA = ["claude_diego", "claude_cami", "codex"];
 const ESTILO = "shell:style", TEMAS = [["auto", "◐", "automático, como Cockpit"], ["light", "☀", "claro"], ["dark", "☾", "oscuro"]];
 const botonesPestanas = () => [...document.querySelectorAll("#pestanas [data-p]")];
 function rutaDeHash(h) { const m = RUTA.exec(h || ""); return m && botonesPestanas().some(b => b.dataset.p === m[1]) ? m[1] : null; }
-function nombreSub(p) { const b = botonesPestanas().find(x => x.dataset.p === p); return b ? b.textContent.trim().replace(/\s+\d+$/, "") : p; }
+function nombreSub(p) { const b = botonesPestanas().find(x => x.dataset.p === p); return b ? b.textContent.trim().replace(/\s+\d+(?:\/\d+)?$/, "") : p; }
 function mostrar(p) {
     const [clave, sentido] = (new URLSearchParams(location.hash.split("?")[1] || "").get("o") || "").split(":");
     if (Object.prototype.hasOwnProperty.call(COLUMNAS_ORDEN, clave) && (sentido === "asc" || sentido === "desc")) { orden.clave = clave; orden.desc = sentido === "desc"; }
@@ -925,6 +950,8 @@ function armarPulso() {
     $("#pulso").replaceChildren(s);
 }
 function badge(nodo, n, titulo) { nodo.hidden = !(n > 0); nodo.textContent = n > 0 ? String(n) : ""; nodo.title = n > 0 ? titulo : ""; }
+// Encargo 99: el badge de Projects es «en Review / tope», en rojo si se pasa.
+function badgeReview(nodo, m) { const n = m ? m.conteo.Review : 0, t = m ? m.tope.Review : null; nodo.hidden = !(n > 0); nodo.textContent = n > 0 ? (t ? `${n}/${t}` : String(n)) : ""; nodo.classList.toggle("mal", !!t && n > t); nodo.title = n > 0 ? `${n} en Review${t ? `, tope ${t}` : ""}` : ""; }
 // El chip de cuentas: las tres cuentas de los encargos, con uso() (el % de 5 h y semanal de uso.json).
 let cuentasAbiertas = false;
 const cuentasResumen = el("button", { class: "cuentas-resumen", "aria-expanded": "false", "aria-controls": "cuentas-lista", onclick: ev => { ev.stopPropagation(); abrirCuentas(!cuentasAbiertas); } }, "💳 Cuentas ▾");
@@ -941,6 +968,7 @@ function pintarConsola() {
     pulso.classList.toggle("viva", vivas > 0); pulso.title = texto; pulso.setAttribute("aria-label", texto);
     badge($('#pestanas [data-p="ahora"] .riel-badge'), vivas, `${vivas} cola(s) viva(s)`);
     badge($('#pestanas [data-p="avisos"] .riel-badge'), pendientes, `${pendientes} aviso(s) esperan tu ✅ en Telegram`);
+    badgeReview($('#pestanas [data-p="projects"] .riel-badge'), d && d.proy);
     badge($("#campana-badge"), pendientes, `${pendientes} aviso(s) esperan tu ✅ en Telegram`);
     pintarCuentas();
 }

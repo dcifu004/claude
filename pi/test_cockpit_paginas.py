@@ -267,7 +267,7 @@ class ComunTests(unittest.TestCase):
                         self.assertNotIn("shell:style", codigo)
                     self.assertNotIn("dataset.theme", codigo)
                     self.assertNotIn("prefers-color-scheme", codigo)
-        self.assertEqual(vistos, 15)      # suma glosario.js (85a), además de los archivos de la consola 84/84b
+        self.assertEqual(vistos, 17)      # suma glosario.js (85a), además de los archivos de la consola 84/84b, y modelo.js y proyectos.js (99)
 
     def test_las_seis_cargan_el_comun_y_ninguna_el_paquete_bots(self):
         for nombre, carpeta in PAGINAS.items():
@@ -329,7 +329,7 @@ class ComunTests(unittest.TestCase):
         archivos = [js for carpeta in [*PAGINAS.values(), COMUN] for js in guiones(carpeta)]
         self.assertEqual(sorted(a.name for a in archivos),
                      ["barra.js", "bots.js", "comun.js", "cuentas.js", "dom.js", "encargos.js", "glosario.js", "inicio.js", "luces.js",
-                          "memoria.js", "nodo.js", "noticias.js", "programados.js", "red.js", "revisar-anchos.js", "sistema.js", "tema.js"])
+                          "memoria.js", "modelo.js", "nodo.js", "noticias.js", "programados.js", "proyectos.js", "red.js", "revisar-anchos.js", "sistema.js", "tema.js"])
         for js in archivos:
             with self.subTest(js.name):
                 self.assertTrue(tokens_js(leer(js)).strip())
@@ -340,7 +340,7 @@ class ComunTests(unittest.TestCase):
     def test_no_hay_style_en_linea(self):
         archivos = [f for carpeta in [*PAGINAS.values(), COMUN] for f in sorted(carpeta.iterdir())
                     if f.suffix in (".html", ".js") and not f.name.startswith("maqueta")]   # la maqueta no se instala
-        self.assertEqual(len(archivos), 25)       # suma glosario.js de AI Ops (85a)
+        self.assertEqual(len(archivos), 27)       # suma glosario.js de AI Ops (85a), y modelo.js y proyectos.js (99)
         for f in archivos:
             texto = leer(f)
             # En los JS se mira el código y sus strings, sin los comentarios (que nombran
@@ -5041,7 +5041,7 @@ class ResumenYUsoTests(unittest.TestCase):
         tokens_js(self.js)                                           # ValueError si algún ({[ queda sin cerrar
         codigo = tokens_js(self.js, strings=True)
         self.assertEqual(re.findall(r"cockpit\.file\([^)]*\)\.(\w+)", self.js), ["read"])
-        self.assertEqual(len(re.findall(r"cockpit\.spawn\(", self.js)), 8)                           # los seis de antes del encargo 34, el de los botones de cola (46c) y el del despacho (50a)
+        self.assertEqual(len(re.findall(r"cockpit\.spawn\(", self.js)), 10)                          # los seis de antes del encargo 34, el de los botones de cola (46c), el del despacho (50a) y los dos `find` del índice (99)
         for prohibido in ("innerHTML", "outerHTML", "insertAdjacentHTML", "sudo"):
             self.assertNotIn(prohibido, codigo)
         self.assertNotIn("style=", self.css)
@@ -5355,7 +5355,7 @@ class CargaVsCapacidadTests(unittest.TestCase):
                           "location.", "history.", "navigator."):
             self.assertNotIn(escritura, codigo, escritura)
         # Y la página entera sigue con sus seis spawn de siempre (ninguno nuevo) y sin un solo .replace( de cockpit.file.
-        self.assertEqual(len(re.findall(r"cockpit\.spawn\(", self.js)), 8)        # el séptimo es el de los botones de cola (46c) y el octavo, el del despacho (50a): fuera de este bloque
+        self.assertEqual(len(re.findall(r"cockpit\.spawn\(", self.js)), 10)       # el séptimo es el de los botones de cola (46c), el octavo el del despacho (50a) y los dos últimos los `find` del índice de Projects (99): fuera de este bloque
         self.assertEqual(re.findall(r"cockpit\.file\([^)]*\)\.(\w+)", self.js), ["read"])
 
     def test_c2_la_proyeccion_es_la_misma_suma_de_la_46a(self):
@@ -5668,7 +5668,10 @@ class ConsolaEncargosTests(unittest.TestCase):
                    '["python3", COLA_RUN, EJEMPLO, "--simular", "--con-cambios"]', '["python3", REGISTRO_AVISOS, "--panel"]',
                    '["python3", `${DIR}/cola-run.py`, "--panel"]', '["tmux", "ls", "-F", "#{session_name}"]',
                    'argvAccion(accion, cola, simular, autorizar === true && accion === "reanudar" && !simular)', 'argvDespacho(orden, motivo)'}
-    SUBMODULOS = ["flujo", "ahora", "tiempo", "historial", "bitacora", "avisos", "config"]
+    # Encargo 99: los dos `find` de argumentos fijos del índice de NN-*.md (Projects). Ninguno lleva datos ni sudo.
+    SPAWN_99 = {'["find", DIR, "-maxdepth", "1", "-name", MD_ENCARGOS, "-printf", "%T@ %f\\\\n"]',
+                '["find", DIR, "-maxdepth", "1", "-name", MD_ENCARGOS, "-exec", "grep", "-m1", "-H", "^# ", "{}", "+"]'}
+    SUBMODULOS = ["flujo", "ahora", "projects", "tiempo", "historial", "bitacora", "avisos", "config"]
 
     @classmethod
     def setUpClass(cls):
@@ -5706,8 +5709,9 @@ class ConsolaEncargosTests(unittest.TestCase):
             self.assertNotIn(muerto, self.css, muerto)
 
     def test_c3_sin_ejecucion_nueva(self):
-        self.assertEqual(set(re.findall(r"cockpit\.spawn\((\[[^\]]*\]|\w+\([^)]*\))", self.js)), self.SPAWN_ANTES)
-        self.assertEqual(len(re.findall(r"cockpit\.spawn\(", self.js)), 8)
+        self.assertEqual(set(re.findall(r"cockpit\.spawn\((\[[^\]]*\]|\w+\([^)]*\))", self.js)), self.SPAWN_ANTES | self.SPAWN_99)
+        self.assertEqual(len(re.findall(r"cockpit\.spawn\(", self.js)), 10)
+        self.assertIn('MD_ENCARGOS = "[0-9]*-*.md";', self.js)
         self.assertIn('const argvAccion = (accion, cola, simular, autorizar) => ["python3", COLA_RUN, "--accion", accion, cola, ...(simular ? ["--simular"] : []), ...(autorizar ? ["--autorizar", cola] : [])];', self.js)
         self.assertIn('const argvDespacho = (orden, motivo) => ["python3", COLA_RUN, "--despacho", orden, "--por", POR_PAGINA, ...(motivo ? ["--motivo", motivo] : [])];', self.js)
         self.assertIn("const COLA_VALIDA = /^cola[0-9]{2}[a-z0-9]*$/;", self.js)
@@ -5723,7 +5727,7 @@ class ConsolaEncargosTests(unittest.TestCase):
         self.assertIn("cargarAvisos().then(pintarConsola);", self.consola)
         # La prueba mide: un spawn nuevo en la consola cambia el conjunto.
         malo = self.js + '\ncockpit.spawn(["sudo", "-n", "/usr/local/bin/x"]);'
-        self.assertNotEqual(set(re.findall(r"cockpit\.spawn\((\[[^\]]*\]|\w+\([^)]*\))", malo)), self.SPAWN_ANTES)
+        self.assertNotEqual(set(re.findall(r"cockpit\.spawn\((\[[^\]]*\]|\w+\([^)]*\))", malo)), self.SPAWN_ANTES | self.SPAWN_99)
 
     def test_c4_csp(self):
         self.assertIsNone(re.search(r"""(?:src|href)\s*=\s*["']?\s*(?:https?:)?//""", self.html))
@@ -5766,8 +5770,8 @@ class ConsolaEncargosTests(unittest.TestCase):
         self.assertEqual(ids, self.SUBMODULOS)
         self.assertEqual(re.findall(r'data-p="(\w+)"', self.html), ids)          # sólo los del riel
         self.assertEqual(re.findall(r'<section data-panel="(\w+)"', self.html), ids)
-        self.assertEqual(re.findall(r"<section data-panel=\"\w+\"( hidden)?></section>", self.html), [""] + [" hidden"] * 6)
-        self.assertIn("({ flujo, ahora, tiempo, historial: hist, bitacora, avisos, config })[panel]();", self.js)
+        self.assertEqual(re.findall(r"<section data-panel=\"\w+\"( hidden)?></section>", self.html), [""] + [" hidden"] * 7)
+        self.assertIn("({ flujo, ahora, projects, tiempo, historial: hist, bitacora, avisos, config })[panel]();", self.js)
         # Espejo de rutaDeHash(): el RUTA del propio JS ($ de JS = \Z de Python) y la lista del riel.
         (fuente,) = re.findall(r"^const RUTA = /(.+)/;$", self.js, re.M)
         ruta = re.compile(fuente.replace("$", r"\Z"))
@@ -6077,7 +6081,7 @@ class FlujoEncargosTests(unittest.TestCase):
 
     HISTORIAL = PI.parent / "encargos" / "historial.jsonl"
     # Las rutas que lee la página con cockpit.file (todas pasan por archivo()), tal como las dejó la 84a.
-    ARCHIVOS_ANTES = {"CUENTAS", "USO", "`${DIR}/${f}`", "`${DIR}/COLA-ESTADO.md`", "`${DIR}/historial.jsonl`", "x"}
+    ARCHIVOS_ANTES = {"CUENTAS", "USO", "`${DIR}/${f}`", "`${DIR}/COLA-ESTADO.md`", "`${DIR}/historial.jsonl`", "x", "PROYECTOS_JSON"}       # PROYECTOS_JSON: encargo 99
 
     @classmethod
     def setUpClass(cls):
@@ -6169,8 +6173,8 @@ class FlujoEncargosTests(unittest.TestCase):
         for x in ("cockpit", "spawn", "sudo", "fetch(", "XMLHttpRequest", "WebSocket", "eval(", "new Function", "import("):
             self.assertNotIn(x, self.codigo, x)
         # encargos.js: los mismos spawn y las mismas rutas leídas que dejó la 84a.
-        self.assertEqual(set(re.findall(r"cockpit\.spawn\((\[[^\]]*\]|\w+\([^)]*\))", self.js)), ConsolaEncargosTests.SPAWN_ANTES)
-        self.assertEqual(len(re.findall(r"cockpit\.spawn\(", self.js)), 8)
+        self.assertEqual(set(re.findall(r"cockpit\.spawn\((\[[^\]]*\]|\w+\([^)]*\))", self.js)), ConsolaEncargosTests.SPAWN_ANTES | ConsolaEncargosTests.SPAWN_99)
+        self.assertEqual(len(re.findall(r"cockpit\.spawn\(", self.js)), 10)
         self.assertEqual(re.findall(r"cockpit\.file\(([^)]*)\)", self.js), ["p"])           # sólo dentro de archivo()
         self.assertIn("async function archivo(p, json) { try { const x = await cockpit.file(p).read();", self.js)
         self.assertEqual(set(re.findall(r"(?<![\w.])archivo\((`[^`]*`|\w+)(?:, true)?\)", self.js)), self.ARCHIVOS_ANTES)
@@ -6213,7 +6217,7 @@ class FlujoEncargosTests(unittest.TestCase):
         # Un solo nombre global, que no choca con encargos.js, y se carga antes que ella.
         self.assertEqual(declarados_arriba(self.red), {"redEncargos"})
         self.assertNotIn("redEncargos", declarados_arriba(self.js))
-        self.assertIn('<script src="red.js"></script><script src="encargos.js"></script>', self.html)
+        self.assertIn('<script src="red.js"></script><script src="modelo.js"></script><script src="proyectos.js"></script><script src="encargos.js"></script>', self.html)       # 99: el modelo y la vista de Projects van entre red.js y encargos.js
 
     def etiqueta_modelo(self, ident):
         """Espejo de etiquetaModelo() con el mapa MODELOS extraído de red.js (sin el paso final de delPanel)."""
@@ -6408,6 +6412,256 @@ class FlujoEncargosTests(unittest.TestCase):
         for texto in ('["todo", "Todo"]', '["curso", `En curso (${colasActivas().length})`]', '["encargo", "Encargo…"]', '["naturaleza", "Naturaleza"]', '["cuenta", "Cuenta"]', 'onclick: () => elegirEncargo(v.etapa, v.nombre)'):
             self.assertIn(texto, self.red)
         self.assertIn("S.alcance = alcance; S.escribirHash = escribirHash;", self.red)
+
+
+# ---- Encargo 99: 📋 Projects. Un espejo en Python de modelo.js (asignación, columna deducida, semanas de Chile,
+# throughput y cycle time) y el modelo real con node cuando lo hay (en la Pi no hay: esas pruebas se saltan). ----
+FIX_PROYECTOS = PI / "fixtures" / "proyectos"
+COLUMNAS_99 = ["Idea", "Ready", "In progress", "Review", "Done"]
+RE_ID_99 = re.compile(r"^[0-9]{2}[a-z0-9]{0,8}$")
+
+
+def semana_chile(t):
+    """Lunes (AAAA-MM-DD) de la semana de t en hora de Chile, como semana() de modelo.js."""
+    from zoneinfo import ZoneInfo
+    d = t.astimezone(ZoneInfo("America/Santiago")).date()
+    return (d - timedelta(days=d.weekday())).isoformat()
+
+
+def modelo_99(proyectos, historial, indice, vivos):
+    """Espejo de modeloProyectos.armar(): sólo lo que fijan C2 y C3 (proyecto, columna, fin, cycle y throughput)."""
+    ps = [p for p in proyectos["proyectos"] if isinstance(p, dict)]
+    abiertos = {}
+    for p in ps:
+        for k, v in (p.get("abiertos") or {}).items():
+            abiertos.setdefault(k, v)
+    fases = {}
+    for f in historial:
+        fases.setdefault(str(f["encargo"]), []).append(f)
+    for xs in fases.values():
+        xs.sort(key=lambda f: datetime.fromisoformat(f["inicio"]))
+    cola = {}
+    for v in vivos:
+        if re.match(r"^(corriendo|pausada.*)$", str(v.get("estado", ""))) and RE_ID_99.match(str(v.get("etapa", ""))):
+            col = "Review" if v["fase"].startswith("rev") else "In progress" if re.match(r"^(autor|fix|plan)", v["fase"]) else None
+            if col:
+                cola[str(v["etapa"])] = col
+    ix = {x["id"]: x for x in indice}
+    tarjetas = {}
+    for id_ in dict.fromkeys([*ix, *fases, *abiertos, *cola]):
+        num = re.match(r"\d+", id_)[0]
+        p = next((p for p in ps if id_ in p.get("encargos", []) or id_ in (p.get("abiertos") or {})), None) \
+            or next((p for p in ps if num in p.get("encargos", []) or num in (p.get("abiertos") or {})), None)
+        fs = fases.get(id_, [])
+        revs = [f for f in fs if f.get("veredicto")]
+        t = {"proyecto": p["id"] if p else "otros", "fin": None, "cycle": None}
+        desp = revs and revs[-1]["veredicto"] == "DESPLEGABLE"
+        if id_ in abiertos:
+            t["columna"] = abiertos[id_]
+        elif id_ in cola:
+            t["columna"] = cola[id_]
+        elif desp:
+            t["columna"] = "Done"
+        elif not fs and id_ in ix and not ix[id_].get("resultados"):
+            t["columna"] = "Ready"
+        elif fs or (id_ in ix and ix[id_].get("resultados")):
+            t["columna"] = "Done"
+        else:
+            t["columna"] = "Idea"
+        if t["columna"] == "Done" and desp:
+            ini = datetime.fromisoformat(fs[0]["inicio"])
+            t["fin"] = datetime.fromisoformat(revs[-1]["inicio"]) + timedelta(minutes=revs[-1]["min"] or 0)
+            t["cycle"] = (t["fin"] - ini).total_seconds() / 60
+        tarjetas[id_] = t
+    semanas = {}
+    for t in tarjetas.values():
+        if t["fin"]:
+            s = semana_chile(t["fin"])
+            semanas[s] = semanas.get(s, 0) + 1
+    return tarjetas, dict(sorted(semanas.items()))
+
+
+def historial_99(ruta):
+    return [json.loads(x) for x in leer(ruta).splitlines() if x.strip()]
+
+
+class ProyectosTests(unittest.TestCase):
+    """Encargo 99: la pestaña Projects. Lo visual (anchos, temas, consola sin errores, el enlace a Flow) lo verifica
+    Claude (Diego) en el PC con el cockpit falso (encargos-nube/99-capturar.js)."""
+
+    @classmethod
+    def setUpClass(cls):
+        carpeta = PAGINAS["encargos"]
+        cls.html, cls.js, cls.css = leer(carpeta / "index.html"), leer(carpeta / "encargos.js"), leer(carpeta / "encargos.css")
+        cls.modelo, cls.vista = leer(carpeta / "modelo.js"), leer(carpeta / "proyectos.js")
+        cls.proyectos = json.loads(leer(PI.parent / "encargos" / "proyectos.json"))
+        cls.indice = json.loads(leer(FIX_PROYECTOS / "indice-98.json"))
+        cls.h98 = historial_99(FIX_PROYECTOS / "historial-98.jsonl")
+        cls.node = shutil.which("node")
+
+    def node_modelo(self, entrada):
+        programa = ("const M = require(process.argv[1]); const e = JSON.parse(require('fs').readFileSync(0, 'utf8'));\n"
+                    "const r = M.armar(e); const t = {}; for (const x of r.tarjetas) t[x.id] = { proyecto: x.proyecto, columna: x.columna, fin: x.fin ?? null, cycle: x.cycle ?? null };\n"
+                    "console.log(JSON.stringify({ semanas: r.semanas, porSemana: r.global.porSemana, tarjetas: t, errores: r.errores, cobertura: r.cobertura, conteo: r.conteo }));")
+        p = subprocess.run([self.node, "-e", programa, str(PAGINAS["encargos"] / "modelo.js")], input=json.dumps(entrada), capture_output=True, text=True, timeout=60)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        return json.loads(p.stdout)
+
+    def test_99_js_balanceado_un_nombre_y_sin_ejecutar_nada(self):
+        for nombre, codigo, global_ in (("modelo.js", self.modelo, "modeloProyectos"), ("proyectos.js", self.vista, "vistaProyectos")):
+            with self.subTest(nombre):
+                self.assertTrue(tokens_js(codigo).strip())                         # ValueError si algo queda sin cerrar
+                self.assertEqual(declarados_arriba(codigo), {global_})
+                limpio = tokens_js(codigo, strings=True)
+                for x in ("cockpit.", "spawn", "sudo", "fetch(", "XMLHttpRequest", "WebSocket", "eval(", "new Function", "import(", "innerHTML", "outerHTML",
+                          "insertAdjacentHTML", "document.write", "cssText", "localStorage", "location.hash ="):
+                    self.assertNotIn(x, limpio, x)
+        self.assertNotIn("document", tokens_js(self.modelo, strings=True))          # el modelo no toca el DOM
+        # Se cargan antes que encargos.js, que es la última (ComunTests) y la que los usa.
+        self.assertIn('<script src="red.js"></script><script src="modelo.js"></script><script src="proyectos.js"></script><script src="encargos.js"></script>', self.html)
+
+    def test_99_tokens_en_un_solo_lugar_y_colores_propios_con_tema(self):
+        comunes = set(TOKENS["claro"])
+        self.assertEqual(variables_css(self.css) & comunes, set())
+        propias = {v for v in variables_css(self.css) if v.startswith("--cfd-")}
+        self.assertEqual(propias, {"--cfd-prog", "--cfd-rev", "--cfd-done"})
+        reglas = reglas_css(self.css)
+        oscuras = [d for m, s, d in reglas if s.startswith(':root[data-theme="dark"] .proy-cfd')]
+        self.assertEqual(len(oscuras), 1)
+        self.assertEqual(set(oscuras[0]), propias)                                 # cada color propio tiene su variante oscura
+        self.assertNotIn("url(", self.css)
+        # Los anchos van por CSSOM (--w), nunca por un atributo style.
+        self.assertIn('nodo.style.setProperty("--w"', self.vista)
+
+    def test_99_la_pestana_va_en_la_url(self):
+        self.assertIn('data-p="projects" data-term="Projects">Projects <span class="riel-badge" hidden></span></button>', self.html)
+        self.assertEqual([p for p, _ in pestanas_encargos(self.html)][:3], ["flujo", "ahora", "projects"])   # entre Runs y Timeline
+        (fuente,) = re.findall(r"^const RUTA = /(.+)/;$", self.js, re.M)
+        ruta = re.compile(fuente.replace("$", r"\Z"))
+        for h in ("#/projects", "#/projects?p=voz", "#/projects?v=conflicts", "#/projects?v=board&p=voz", "#/projects?o=fecha:desc&v=flow", "#/historial?e=84a", "#/flujo?e=86"):
+            self.assertTrue(ruta.match(h), h)
+        for h in ("#/projects?x=1", "#/projects/", "#/projects?p=voz#x", "#/Projects"):
+            self.assertIsNone(ruta.match(h), h)
+        # p y v son datos de la URL: sólo valen si son una vista conocida o un proyecto de proyectos.json.
+        self.assertIn('const VISTAS = ["board", "carriles", "conflicts", "flow"];', self.vista)
+        self.assertIn('return { v: VISTAS.includes(v) ? v : "board", p: p && ctx.m.proyectos.some(x => x.id === p) ? p : null };', self.vista)
+        # El badge es «en Review / tope», y el nombre de la pestaña lo descuenta.
+        self.assertIn("badgeReview($('#pestanas [data-p=\"projects\"] .riel-badge'), d && d.proy);", self.js)
+        self.assertIn('replace(/\\s+\\d+(?:\\/\\d+)?$/, "")', self.js)
+
+    def test_99_proyectos_json_ausente_roto_o_enorme_no_rompe_la_pagina(self):
+        bloque = tramo(self.js, "async function leerProyectos() {")
+        self.assertIn('if (t == null) return { error: "Projects: no se pudo leer encargos/proyectos.json.", indice };', bloque)
+        self.assertIn("if (t.length > MAX_PROYECTOS) return", bloque)
+        self.assertIn("try { return { datos: JSON.parse(t), indice }; } catch (e) { return { error:", bloque)
+        self.assertIn("MAX_PROYECTOS = 1024 * 1024", self.js)
+        armar = tramo(self.js, "function armarProyectos(proy) {")
+        self.assertIn("try { d.proy = modeloProyectos.armar(", armar)
+        self.assertIn("catch (e) { d.proyError =", armar)
+        self.assertIn('if (!ctx.m) { nodo.replaceChildren(el("p", { class: "aviso ojo" }, ctx.error || "Projects: sin datos de proyectos.")); return; }', self.vista)
+        # El modelo copia proyectos.json a estructuras sin prototipo y descarta tipos raros.
+        self.assertIn("Object.create(null)", self.modelo)
+        self.assertIn("Object.prototype.hasOwnProperty.call(o, k)", self.modelo)
+
+    @unittest.skipUnless(shutil.which("node"), "sin node (en la Pi no hay motor de JS)")
+    def test_99_modelo_real_con_datos_hostiles(self):
+        hostil = {"__proto__": {"columnas": 1}, "tope_wip": {"Review": "3"}, "aging_dias": -4,
+                  "proyectos": [{"id": "voz", "nombre": "<img src=x onerror=alert(1)>", "resultado": 7, "encargos": ["16", 3, "<b>"],
+                                 "abiertos": {"16": "Hecho", "17": "Review", "__proto__": "Done"}, "ideas": "x", "bloqueo": {"x": 1}},
+                                {"id": "constructor", "nombre": "x", "encargos": "16"}, {"id": "voz"}, 5, None],
+                  "archivos_compartidos": {"__proto__": ["16"], "a.py": ["16", {}]}}
+        r = self.node_modelo({"proyectos": hostil, "historial": self.h98, "indice": self.indice, "vivos": [], "ahora": 1761424110000})
+        self.assertEqual(r["tarjetas"]["17"]["columna"], "Review")
+        self.assertEqual(r["tarjetas"]["16"]["proyecto"], "voz")
+        self.assertTrue(any("Hecho" in e for e in r["errores"]))
+        self.assertTrue(any("repetido" in e for e in r["errores"]))
+        r = self.node_modelo({"proyectos": [1, 2], "historial": "no", "indice": None, "vivos": {"x": 1}, "ahora": 0})
+        self.assertEqual(r["errores"], ["proyectos.json no es un objeto"])
+
+    def test_99_c2_las_cifras_del_98_con_el_espejo(self):
+        tarjetas, semanas = modelo_99(self.proyectos, self.h98, self.indice, [])
+        self.assertEqual(list(semanas.values()), [7, 22, 19, 28])
+        self.assertEqual(list(semanas), ["2026-09-28", "2026-10-05", "2026-10-12", "2026-10-19"])
+        self.assertAlmostEqual(tarjetas["19"]["cycle"], 7.75, places=2)            # 18:20:35 → 18:25:02 + 3,3 min
+        self.assertAlmostEqual(tarjetas["84a"]["cycle"], 30.733, places=2)          # 11:57:29 → 12:24:19 + 3,9 min
+        self.assertEqual(round(tarjetas["19"]["cycle"], 1), 7.8)
+        self.assertEqual(round(tarjetas["84a"]["cycle"], 1), 30.7)
+        # Con el historial de la rama (encargos/historial.jsonl, una copia más corta: 387 de las 397 fases), lo mismo
+        # salvo la última semana, que todavía no tiene las 10 fases del final.
+        rama = historial_99(PI.parent / "encargos" / "historial.jsonl")
+        t2, s2 = modelo_99(self.proyectos, rama, self.indice, [])
+        self.assertEqual(rama, self.h98[:len(rama)])
+        self.assertEqual(list(s2.values())[:3], [7, 22, 19])
+        self.assertEqual((round(t2["19"]["cycle"], 1), round(t2["84a"]["cycle"], 1)), (7.8, 30.7))
+
+    @unittest.skipUnless(shutil.which("node"), "sin node (en la Pi no hay motor de JS)")
+    def test_99_c2_el_modelo_de_la_pagina_da_lo_mismo_que_el_espejo(self):
+        for historial in (self.h98, historial_99(PI.parent / "encargos" / "historial.jsonl")):
+            ahora = max(datetime.fromisoformat(f["inicio"]).timestamp() + (f["min"] or 0) * 60 for f in historial) * 1000
+            r = self.node_modelo({"proyectos": self.proyectos, "historial": historial, "indice": self.indice, "vivos": [], "ahora": ahora})
+            tarjetas, semanas = modelo_99(self.proyectos, historial, self.indice, [])
+            self.assertEqual(dict(zip(r["semanas"], r["porSemana"])), semanas)
+            self.assertEqual({k: (v["proyecto"], v["columna"]) for k, v in r["tarjetas"].items()}, {k: (v["proyecto"], v["columna"]) for k, v in tarjetas.items()})
+            for k in ("19", "84a"):
+                self.assertAlmostEqual(r["tarjetas"][k]["cycle"] * 1440, tarjetas[k]["cycle"], places=6)
+            self.assertEqual(r["cobertura"]["perdidos"], [])
+            self.assertEqual(r["cobertura"]["indice"], 124)
+        self.assertEqual(r["errores"], [])
+
+    def test_99_c3_columna_deducida_con_colas_vivas(self):
+        vivos = [{"nombre": "cola86x", "estado": "corriendo", "etapa": "86", "fase": "rev2"},
+                 {"nombre": "cola77x", "estado": "pausada", "etapa": "77", "fase": "autor"},
+                 {"nombre": "cola83x", "estado": "corriendo", "etapa": "83", "fase": "rev1"},       # 83 está en «abiertos» (Ready)
+                 {"nombre": "cola61x", "estado": "terminada", "etapa": "61", "fase": "rev1"}]      # terminada: no cuenta
+        self.assertNotIn("86", json.dumps([p.get("abiertos") for p in self.proyectos["proyectos"]]))
+        sin, _ = modelo_99(self.proyectos, self.h98, self.indice, [])
+        con, _ = modelo_99(self.proyectos, self.h98, self.indice, vivos)
+        self.assertEqual((sin["86"]["columna"], sin["77"]["columna"], sin["83"]["columna"], sin["61"]["columna"]), ("Done", "Done", "Ready", "Done"))
+        self.assertEqual((con["86"]["columna"], con["77"]["columna"], con["83"]["columna"], con["61"]["columna"]), ("Review", "In progress", "Ready", "Done"))
+        # Y en el JS real, el mismo orden: abiertos, cola viva, DESPLEGABLE, escrito sin fases.
+        orden = [self.modelo.index(x) for x in ("if (ab) { t.columna = ab.abiertos.get(id);", "else if (viva) { t.columna = viva.columna;",
+                                                 'else if (ultimaRev && ultimaRev.veredicto === "DESPLEGABLE") { t.columna = "Done";',
+                                                 'else if (!fs.length && x && !t.resultados) { t.columna = "Ready";')]
+        self.assertEqual(orden, sorted(orden))
+        self.assertIn("const VIVA = /^(corriendo|pausada.*)$/;", self.modelo)
+        if shutil.which("node"):
+            r = self.node_modelo({"proyectos": self.proyectos, "historial": self.h98, "indice": self.indice, "vivos": vivos, "ahora": 1761424110000})
+            self.assertEqual([r["tarjetas"][k]["columna"] for k in ("86", "77", "83", "61")], ["Review", "In progress", "Ready", "Done"])
+
+    def test_99_c4_proyectos_check(self):
+        check = PI.parent / "encargos" / "proyectos_check.py"
+        indice = ["--indice", str(FIX_PROYECTOS / "indice-98.json")]
+        bien = subprocess.run([sys.executable, str(check), *indice], capture_output=True, text=True, timeout=60)
+        self.assertEqual(bien.returncode, 0, bien.stdout)
+        for nombre, error in (("id-repetido", "está en dos proyectos"), ("columna-inventada", "que no es una columna"), ("json-invalido", "JSON inválido")):
+            with self.subTest(nombre):
+                r = subprocess.run([sys.executable, str(check), str(FIX_PROYECTOS / f"{nombre}.json"), *indice], capture_output=True, text=True, timeout=60)
+                self.assertNotEqual(r.returncode, 0, r.stdout)
+                self.assertIn(error, r.stdout)
+        # Sólo lee: ni open(..., "w"), ni write_text, ni subprocess.
+        fuente = leer(check)
+        for x in ('"w"', "'w'", "write_text", "subprocess", "os.remove", "unlink"):
+            self.assertNotIn(x, fuente, x)
+
+    def test_99_enlaces_a_flow_y_traces(self):
+        self.assertIn('el("a", { href: `#/flujo?e=${e}` }, `Ver en Flow · encargo ${t.id} ›`)', self.vista)
+        self.assertIn('el("a", { href: `#/historial?e=${e}` }, "Ver en Traces ›")', self.vista)
+        self.assertIn("const e = encodeURIComponent(t.id);", self.vista)
+        # Traces preselecciona el encargo del hash sólo si es una de sus opciones.
+        self.assertIn('if (e0 && [...a.options].some(x => x.value === e0)) a.value = e0;', self.js)
+
+    def test_99_los_datos_van_como_texto(self):
+        # Títulos de los .md: por la limpieza de la página (delPanel); nombres de proyecto: como texto, recortados.
+        self.assertIn("const titulo = t => ctx.limpiar(t.titulo);", self.vista)
+        self.assertIn("limpiar: delPanel", self.js)
+        self.assertIn('const texto = x => (typeof x === "string" ? x.replace(/\\s+/g, " ").trim().slice(0, MAX_TEXTO) : "");', self.modelo)
+        self.assertEqual(re.findall(r"\bstyle:\s*\S+", tokens_js(self.vista)), [])
+        glosario = leer(PAGINAS["encargos"] / "glosario.js")
+        definidos = dict(re.findall(r'^    "([^"]+)": "([^"]+)"[,]?$', glosario, re.M))
+        for t in ("Projects", "Board", "WIP limit", "Cycle time", "Lead time", "Throughput", "Aging", "Cumulative flow", "Now/Next/Later", "Forecast", "Conflicts"):
+            self.assertIn(t, definidos)
+        usados = set(re.findall(r'"data-term": "([^"]+)"', self.vista))
+        self.assertLessEqual(usados, set(definidos))
 
 
 def cr_claves(fuente):

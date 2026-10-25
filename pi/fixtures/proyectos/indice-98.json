@@ -1,0 +1,1275 @@
+[
+ {
+  "id": "01",
+  "slug": "limites-codex",
+  "titulo": "Encargo 01 — Límites de la cuenta de Codex (para Codex, 29-09-2026)",
+  "resultados": [
+   "01-RESULTADO"
+  ]
+ },
+ {
+  "id": "02",
+  "slug": "limite-claude-investigar",
+  "titulo": "Encargo 02: ¿Claude expone el uso de toda la cuenta? (investigación con Claude Cami, 29-09-2026)",
+  "resultados": [
+   "02-RESULTADO"
+  ]
+ },
+ {
+  "id": "03",
+  "slug": "limites-claude",
+  "titulo": "Encargo 03 — Límites de toda la cuenta para las 2 cuentas Claude (para Codex, 29-09-2026)",
+  "resultados": [
+   "03-RESULTADO"
+  ]
+ },
+ {
+  "id": "04",
+  "slug": "metricas-por-motor",
+  "titulo": "Encargo 04 — Rendimiento por motor (Codex escribe, Claude (Cami) revisa, 29-09-2026)",
+  "resultados": [
+   "04-RESULTADO",
+   "04b-RESULTADO",
+   "04c-RESULTADO",
+   "04d-RESULTADO",
+   "04e-RESULTADO",
+   "04er-RESULTADO"
+  ]
+ },
+ {
+  "id": "04c",
+  "slug": "arreglos",
+  "titulo": "Encargo 04c: arreglar el 04 según su revisión (Codex, 29-09-2026)",
+  "resultados": [
+   "04c-RESULTADO"
+  ]
+ },
+ {
+  "id": "04e",
+  "slug": "arreglos-menores",
+  "titulo": "Encargo 04e: arreglos menores antes de desplegar el 04 (Codex, 29-09-2026)",
+  "resultados": [
+   "04e-RESULTADO",
+   "04er-RESULTADO"
+  ]
+ },
+ {
+  "id": "05",
+  "slug": "propuesta-visual-recetas",
+  "titulo": "Encargo 05: propuesta visual de «rutas y recetas» (Claude (Cami), 29-09-2026)",
+  "resultados": [
+   "05-RESULTADO"
+  ]
+ },
+ {
+  "id": "06",
+  "slug": "recetas-y-voz",
+  "titulo": "Encargo 06: recetas por ruta, modo automático y elegir la cuenta hablando (Codex, EN COLA)",
+  "resultados": [
+   "06a-RESULTADO",
+   "06ar-RESULTADO",
+   "06b-RESULTADO",
+   "06br-RESULTADO",
+   "06br1-RESULTADO",
+   "06br2-RESULTADO",
+   "06br3-RESULTADO",
+   "06cr-RESULTADO"
+  ]
+ },
+ {
+  "id": "06a",
+  "slug": "recetas",
+  "titulo": "Encargo 06a: recetas por ruta, modo automático y umbrales (Codex, 29-09-2026)",
+  "resultados": [
+   "06a-RESULTADO",
+   "06ar-RESULTADO"
+  ]
+ },
+ {
+  "id": "06b",
+  "slug": "voz-y-vision",
+  "titulo": "Encargo 06b: elegir la cuenta hablando + ruta `vision` (Codex, 29-09-2026)",
+  "resultados": [
+   "06b-RESULTADO",
+   "06br-RESULTADO",
+   "06br1-RESULTADO",
+   "06br2-RESULTADO",
+   "06br3-RESULTADO"
+  ]
+ },
+ {
+  "id": "06c",
+  "slug": "vision-sin-codex",
+  "titulo": "Encargo 06c: cerrar el hallazgo grave de `vision` (Claude (Cami), 30-09-2026)",
+  "resultados": [
+   "06cr-RESULTADO"
+  ]
+ },
+ {
+  "id": "07",
+  "slug": "ruta-noticias",
+  "titulo": "Encargo 07: ruta `noticias` en el bot (Claude (Cami), 30-09-2026)",
+  "resultados": [
+   "07-RESULTADO",
+   "07r-RESULTADO",
+   "07r1-RESULTADO",
+   "07r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "08",
+  "slug": "uso-de-los-pc",
+  "titulo": "Encargo 08: el uso de las cuentas desde los PC (Codex, 30-09-2026)",
+  "resultados": [
+   "08-RESULTADO",
+   "08r-RESULTADO",
+   "08r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "09",
+  "slug": "publicar-n8n",
+  "titulo": "Encargo 09: dejar lista la publicación de n8n (Codex, 30-09-2026)",
+  "resultados": [
+   "09-RESULTADO",
+   "09r-RESULTADO",
+   "09r1-RESULTADO",
+   "09r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "11",
+  "slug": "codex-no-lee-credenciales",
+  "titulo": "Encargo 11: que Codex en `web` y `noticias` no pueda leer credenciales (Codex, 30-09-2026)",
+  "resultados": [
+   "11-RESULTADO",
+   "11r-RESULTADO"
+  ]
+ },
+ {
+  "id": "12",
+  "slug": "terminar-reparto",
+  "titulo": "Encargo 12: terminar el reparto manejable (Codex, 30-09-2026)",
+  "resultados": [
+   "12-RESULTADO",
+   "12r-RESULTADO"
+  ]
+ },
+ {
+  "id": "13",
+  "slug": "herramienta-cuentas",
+  "titulo": "Encargo 13: 💳 Cuentas como herramienta propia de Cockpit (Claude (Cami), programado para el 06-10-2026)",
+  "resultados": [
+   "13-RESULTADO",
+   "13r-RESULTADO",
+   "13r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "15",
+  "slug": "proveedores-gratis",
+  "titulo": "Encargo 15: todos los proveedores gratis (sin tarjeta) y la recomendación por función (Claude (Cami), después de la cola 13)",
+  "resultados": [
+   "15-RESULTADO",
+   "15r-RESULTADO"
+  ]
+ },
+ {
+  "id": "16",
+  "slug": "parlante-mercado",
+  "titulo": "Encargo 16: estudio de mercado del parlante del nodo (Claude (Cami), 02-10-2026)",
+  "resultados": [
+   "16-RESULTADO"
+  ]
+ },
+ {
+  "id": "17",
+  "slug": "parlante-aux",
+  "titulo": "Encargo 17: segunda vuelta del parlante — sólo con entrada AUX, cualquier marca (Claude (Cami), 02-10-2026)",
+  "resultados": [
+   "17-RESULTADO"
+  ]
+ },
+ {
+  "id": "18",
+  "slug": "redisenio-cockpit",
+  "titulo": "Encargo 18: rediseño visual de Cockpit, plan B (Claude (Cami); revisa Codex)",
+  "resultados": [
+   "18-RESULTADO",
+   "18r-RESULTADO",
+   "18r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "19",
+  "slug": "umbral-desde-el-panel",
+  "titulo": "Encargo 19: el umbral de cada cuenta se edita desde 💳 Cuentas (Claude (Diego), 03-10-2026)",
+  "resultados": [
+   "19-RESULTADO",
+   "19r-RESULTADO"
+  ]
+ },
+ {
+  "id": "20",
+  "slug": "ventana-encargos",
+  "titulo": "Encargo 20: 🧵 Encargos, ventana de las colas en Cockpit (escribe {AUTOR}; revisa {REVISOR})",
+  "resultados": [
+   "20-RESULTADO",
+   "20r-RESULTADO",
+   "20r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "21",
+  "slug": "skill-encargar",
+  "titulo": "Encargo 21: la skill `encargar` (Claude (Diego), 03-10-2026)",
+  "resultados": [
+   "21-RESULTADO",
+   "21r-RESULTADO",
+   "21r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "22",
+  "slug": "tareas-programadas",
+  "titulo": "Encargo 22: ⏰ Programados en 🍇 + barra de progreso de las colas en 🧵 (Claude (Diego), 03-10-2026)",
+  "resultados": [
+   "22-RESULTADO",
+   "22b-RESULTADO",
+   "22br-RESULTADO",
+   "22br1-RESULTADO",
+   "22br2-RESULTADO",
+   "22c-RESULTADO",
+   "22cr-RESULTADO",
+   "22r-RESULTADO",
+   "22r1-RESULTADO",
+   "22r2-RESULTADO",
+   "22r3-RESULTADO"
+  ]
+ },
+ {
+  "id": "22b",
+  "slug": "lista-blanca",
+  "titulo": "Encargo 22b: ⏰ Programados con lista blanca en vez de tapar secretos (Claude (Diego), 04-10-2026)",
+  "resultados": [
+   "22b-RESULTADO",
+   "22br-RESULTADO",
+   "22br1-RESULTADO",
+   "22br2-RESULTADO"
+  ]
+ },
+ {
+  "id": "22c",
+  "slug": "bajos-lista-blanca",
+  "titulo": "Encargo 22c: los cuatro hallazgos bajos de la lista blanca de ⏰ Programados (Claude (Diego), 04-10-2026)",
+  "resultados": [
+   "22c-RESULTADO",
+   "22cr-RESULTADO"
+  ]
+ },
+ {
+  "id": "23a",
+  "slug": "reparto-editable",
+  "titulo": "Encargo 23a: reparto y modelos editables desde el panel (Claude (Diego), 04-10-2026)",
+  "resultados": [
+   "23a-RESULTADO",
+   "23ar-RESULTADO",
+   "23ar1-RESULTADO"
+  ]
+ },
+ {
+  "id": "23b",
+  "slug": "panel-avisos",
+  "titulo": "Encargo 23b: 🔔 Avisos, un solo punto de salida y un panel (Claude (Diego), 04-10-2026)",
+  "resultados": [
+   "23b-RESULTADO",
+   "23br-RESULTADO",
+   "23br1-RESULTADO",
+   "23br2-RESULTADO"
+  ]
+ },
+ {
+  "id": "23c",
+  "slug": "acciones-programados",
+  "titulo": "Encargo 23c: acciones en ⏰ Programados, fase 2 (Claude (Diego), 04-10-2026)",
+  "resultados": [
+   "23c-RESULTADO",
+   "23cr-RESULTADO",
+   "23cr1-RESULTADO",
+   "23cr2-RESULTADO",
+   "23cr3-RESULTADO"
+  ]
+ },
+ {
+  "id": "23d",
+  "slug": "trabajador-pc2503",
+  "titulo": "Encargo 23d: encargos laborales a PC-2503 por un buzón de Syncthing (Claude (Diego), 04-10-2026)",
+  "resultados": [
+   "23d-RESULTADO",
+   "23dr-RESULTADO",
+   "23dr1-RESULTADO",
+   "23dr2-RESULTADO",
+   "23dr3-RESULTADO"
+  ]
+ },
+ {
+  "id": "23e",
+  "slug": "arreglar-23c",
+  "titulo": "Encargo 23e — Cerrar los hallazgos de la revisión 3 de 23c (04-10-2026)",
+  "resultados": [
+   "23e-RESULTADO",
+   "23er-RESULTADO"
+  ]
+ },
+ {
+  "id": "23f",
+  "slug": "pruebas-23b-fixture",
+  "titulo": "Encargo 23f — Pruebas de 23b independientes del `cuentas.toml` real — 04-10-2026",
+  "resultados": [
+   "23f-RESULTADO"
+  ]
+ },
+ {
+  "id": "23g",
+  "slug": "arreglar-23b",
+  "titulo": "Encargo 23g — Cerrar 23b: root sin `O_NOFOLLOW` + revisión de las pruebas fijas (23f) — 04-10-2026",
+  "resultados": [
+   "23g-RESULTADO",
+   "23gr-RESULTADO",
+   "23gr1-RESULTADO"
+  ]
+ },
+ {
+  "id": "23h",
+  "slug": "arreglar-23a",
+  "titulo": "Encargo 23h — Cerrar los hallazgos medios de 23a — 04-10-2026",
+  "resultados": [
+   "23h-RESULTADO",
+   "23hr-RESULTADO"
+  ]
+ },
+ {
+  "id": "24",
+  "slug": "espera-de-cuota-visible",
+  "titulo": "Encargo 24: la espera de cuota se ve, se avisa y se anticipa (Claude (Cami), 04-10-2026)",
+  "resultados": [
+   "24-RESULTADO",
+   "24r-RESULTADO",
+   "24r1-RESULTADO",
+   "24r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "25",
+  "slug": "memoria-lector",
+  "titulo": "Encargo 25 — 🧠 Memoria, Fase 1: lector `memoria-cockpit` (solo lectura) — 04-10-2026",
+  "resultados": [
+   "25-RESULTADO"
+  ]
+ },
+ {
+  "id": "26",
+  "slug": "memoria-pagina",
+  "titulo": "Encargo 26 — 🧠 Memoria, Fase 2: la página de Cockpit (sin reorden, sin desplegar) — 04-10-2026",
+  "resultados": [
+   "26-RESULTADO",
+   "26b-RESULTADO",
+   "26br-RESULTADO"
+  ]
+ },
+ {
+  "id": "26b",
+  "slug": "memoria-cierre",
+  "titulo": "Encargo 26b — 🧠 Memoria: cierre de Fases 1 y 2 para revisión — 04-10-2026",
+  "resultados": [
+   "26b-RESULTADO",
+   "26br-RESULTADO"
+  ]
+ },
+ {
+  "id": "27",
+  "slug": "root-sin-symlinks",
+  "titulo": "Encargo 27 — Root no escribe en `/opt/nodo/datos` siguiendo symlinks (`estado` y `uso`) — 05-10-2026",
+  "resultados": [
+   "27-RESULTADO",
+   "27b-RESULTADO",
+   "27br-RESULTADO",
+   "27br1-RESULTADO",
+   "27br2-RESULTADO",
+   "27br3-RESULTADO",
+   "27c-RESULTADO",
+   "27cr-RESULTADO",
+   "27r-RESULTADO",
+   "27r1-RESULTADO",
+   "27r2-RESULTADO",
+   "27r3-RESULTADO"
+  ]
+ },
+ {
+  "id": "27b",
+  "slug": "restic-cache",
+  "titulo": "Encargo 27b — Cerrar el encargo 27: el caché de restic que root sigue por symlink — 07-10-2026",
+  "resultados": [
+   "27b-RESULTADO",
+   "27br-RESULTADO",
+   "27br1-RESULTADO",
+   "27br2-RESULTADO",
+   "27br3-RESULTADO"
+  ]
+ },
+ {
+  "id": "27c",
+  "slug": "pruebas-inestables",
+  "titulo": "Encargo 27c — Dos pruebas de `test_cockpit_paginas.py` que fallan según el entorno — 07-10-2026",
+  "resultados": [
+   "27c-RESULTADO",
+   "27cr-RESULTADO"
+  ]
+ },
+ {
+  "id": "28",
+  "slug": "programados-detalles",
+  "titulo": "Encargo 28 — ⏰ Programados: detalles pendientes de 23c/23e — 07-10-2026",
+  "resultados": [
+   "28-RESULTADO",
+   "28r-RESULTADO",
+   "28r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "29",
+  "slug": "memoria-detalles",
+  "titulo": "Encargo 29 — 🧠 Memoria: detalles pendientes de las Fases 1 y 2 — 07-10-2026",
+  "resultados": [
+   "29-RESULTADO",
+   "29r-RESULTADO"
+  ]
+ },
+ {
+  "id": "31",
+  "slug": "historial-ordenar",
+  "titulo": "Encargo 31 — 🧵 Encargos → Historial: ordenar, y lo más reciente primero — 07-10-2026",
+  "resultados": [
+   "31-RESULTADO",
+   "31r-RESULTADO",
+   "31r1-RESULTADO",
+   "31r2-RESULTADO",
+   "31r3-RESULTADO"
+  ]
+ },
+ {
+  "id": "32",
+  "slug": "busqueda-tavily-encargos",
+  "titulo": "Encargo 32: buscador Tavily para los encargos de investigación (Claude (Diego), 06-10-2026)",
+  "resultados": [
+   "32-RESULTADO",
+   "32b-RESULTADO",
+   "32br-RESULTADO",
+   "32br1-RESULTADO",
+   "32br2-RESULTADO",
+   "32br3-RESULTADO",
+   "32c-RESULTADO",
+   "32cr-RESULTADO"
+  ]
+ },
+ {
+  "id": "32b",
+  "slug": "revisar-buscador",
+  "titulo": "Encargo 32b — Cerrar el encargo 32 (buscador Tavily) para su revisión cruzada — 07-10-2026",
+  "resultados": [
+   "32b-RESULTADO",
+   "32br-RESULTADO",
+   "32br1-RESULTADO",
+   "32br2-RESULTADO",
+   "32br3-RESULTADO"
+  ]
+ },
+ {
+  "id": "32c",
+  "slug": "permiso-busqueda",
+  "titulo": "Encargo 32c: la cola busca por el autor; límite aceptado por escrito (Claude (Diego), 09-10-2026)",
+  "resultados": [
+   "32c-RESULTADO",
+   "32cr-RESULTADO"
+  ]
+ },
+ {
+  "id": "33",
+  "slug": "git-proyecto",
+  "titulo": "Encargo 33 — Historial de versiones con git para `10-Proyectos/11-Pi5` — 07-10-2026",
+  "resultados": [
+   "33-RESULTADO",
+   "33b-RESULTADO",
+   "33br-RESULTADO",
+   "33br1-RESULTADO",
+   "33br2-RESULTADO",
+   "33br3-RESULTADO",
+   "33r-RESULTADO",
+   "33r1-RESULTADO",
+   "33r2-RESULTADO",
+   "33r3-RESULTADO"
+  ]
+ },
+ {
+  "id": "33b",
+  "slug": "cierre-git",
+  "titulo": "Encargo 33b: cierre del encargo 33 (git del proyecto) (Claude (Diego), 08-10-2026)",
+  "resultados": [
+   "33b-RESULTADO",
+   "33br-RESULTADO",
+   "33br1-RESULTADO",
+   "33br2-RESULTADO",
+   "33br3-RESULTADO"
+  ]
+ },
+ {
+  "id": "34",
+  "slug": "resumen-y-barra-de-uso",
+  "titulo": "Encargo 34: resumen por encargo y etapa, y barra de uso por modelo en 🧵 Encargos (Claude (Diego), 07-10-2026)",
+  "resultados": [
+   "34-RESULTADO",
+   "34r-RESULTADO"
+  ]
+ },
+ {
+  "id": "35",
+  "slug": "ordenes-recurrentes",
+  "titulo": "Encargo 35: órdenes recurrentes en temporizadores y `/ordenes` (Claude (Diego), 07-10-2026)",
+  "resultados": [
+   "35-RESULTADO",
+   "35r-RESULTADO",
+   "35r1-RESULTADO",
+   "35r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "36b",
+  "slug": "frontera-y-blindaje",
+  "titulo": "Encargo 36b: frontera aceptada y blindaje del panel publicado (Claude (Diego), 09-10-2026)",
+  "resultados": []
+ },
+ {
+  "id": "37",
+  "slug": "huerta-siembra-y-sensores",
+  "titulo": "Encargo 37: huerta — propuesta de siembra y de sensores (Claude (Diego), 09-10-2026)",
+  "resultados": [
+   "37-RESULTADO",
+   "37r-RESULTADO"
+  ]
+ },
+ {
+  "id": "38",
+  "slug": "boletin-audio-piper-muestra",
+  "titulo": "Encargo 38: muestra de boletín de noticias en audio con Piper (Claude (Diego), 09-10-2026)",
+  "resultados": [
+   "38-RESULTADO",
+   "38r-RESULTADO",
+   "38r1-RESULTADO",
+   "38r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "39a",
+  "slug": "goteo-huerta",
+  "titulo": "Encargo 39a: sistema de goteo de la huerta en la lámina (Claude (Diego), 09-10-2026)",
+  "resultados": [
+   "39a-RESULTADO",
+   "39ar-RESULTADO"
+  ]
+ },
+ {
+  "id": "39b",
+  "slug": "enviar-archivo-telegram",
+  "titulo": "Encargo 39b: `nodo-desplegar enviar` — mandar un archivo del vault por Telegram (Claude (Diego), 09-10-2026)",
+  "resultados": [
+   "39b-RESULTADO",
+   "39br-RESULTADO",
+   "39br1-RESULTADO",
+   "39br2-RESULTADO"
+  ]
+ },
+ {
+  "id": "41",
+  "slug": "compras-v2-checklist-y-voz",
+  "titulo": "Encargo 41: lista de compras v2 — checklist inline, lote y voz (Claude (Diego), 10-10-2026)",
+  "resultados": [
+   "41-RESULTADO",
+   "41r-RESULTADO",
+   "41r1-RESULTADO",
+   "41r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "42",
+  "slug": "boleta-a-flujo-caja",
+  "titulo": "Encargo 42: boleta por Telegram → fila en Flujo Caja (Claude (Diego), 10-10-2026)",
+  "resultados": [
+   "42-RESULTADO",
+   "42r-RESULTADO",
+   "42r1-RESULTADO",
+   "42r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "43",
+  "slug": "senales-de-luces",
+  "titulo": "Encargo 43: reglas de las luces — eventos, repeticiones y horario de brillo (Claude (Diego), 10-10-2026)",
+  "resultados": [
+   "43-RESULTADO",
+   "43a-RESULTADO",
+   "43ar-RESULTADO",
+   "43ar1-RESULTADO",
+   "43ar2-RESULTADO",
+   "43b-RESULTADO",
+   "43br-RESULTADO",
+   "43br1-RESULTADO",
+   "43br2-RESULTADO",
+   "43c-RESULTADO",
+   "43cr-RESULTADO",
+   "43cr1-RESULTADO",
+   "43cr2-RESULTADO"
+  ]
+ },
+ {
+  "id": "43a",
+  "slug": "luces-reglas-y-comandos",
+  "titulo": "Encargo 43a: reglas, composición y comandos de `luces` (F1 y F2) (Claude (Diego), 10-10 / Fase 0 11-10-2026)",
+  "resultados": [
+   "43a-RESULTADO",
+   "43ar-RESULTADO",
+   "43ar1-RESULTADO",
+   "43ar2-RESULTADO"
+  ]
+ },
+ {
+  "id": "43b",
+  "slug": "luces-vigilante",
+  "titulo": "Encargo 43b: vigilante `luces-senales` y fuentes de eventos (F3) (Claude (Diego), 10-10 / Fase 0 11-10-2026)",
+  "resultados": [
+   "43b-RESULTADO",
+   "43br-RESULTADO",
+   "43br1-RESULTADO",
+   "43br2-RESULTADO"
+  ]
+ },
+ {
+  "id": "43c",
+  "slug": "luces-pagina-y-doc",
+  "titulo": "Encargo 43c: reglas y horario en la página 🌈, y documentación (F4 y F5) (Claude (Diego), 10-10 / Fase 0 11-10-2026)",
+  "resultados": [
+   "43c-RESULTADO",
+   "43cr-RESULTADO",
+   "43cr1-RESULTADO",
+   "43cr2-RESULTADO"
+  ]
+ },
+ {
+  "id": "45",
+  "slug": "maqueta-matriz-cuota",
+  "titulo": "Encargo 45: maqueta visual de la matriz cuentas × encargos (Claude (Diego), 10-10-2026)",
+  "resultados": [
+   "45-RESULTADO"
+  ]
+ },
+ {
+  "id": "46",
+  "slug": "matriz-cuota",
+  "titulo": "Encargo 46: matriz cuentas × encargos — sumar todo lo que falta, por ventana (Claude (Diego), 10-10-2026)",
+  "resultados": [
+   "46-RESULTADO",
+   "46a-RESULTADO",
+   "46ar-RESULTADO",
+   "46ar1-RESULTADO",
+   "46ar2-RESULTADO",
+   "46ar3-RESULTADO",
+   "46b-RESULTADO",
+   "46br-RESULTADO",
+   "46c-RESULTADO",
+   "46cr-RESULTADO"
+  ]
+ },
+ {
+  "id": "46a",
+  "slug": "matriz-motor",
+  "titulo": "Encargo 46a: matriz de cuota, el motor en `cola-run.py` (Claude (Diego), 10-10 / Fase 0 11-10-2026)",
+  "resultados": [
+   "46a-RESULTADO",
+   "46ar-RESULTADO",
+   "46ar1-RESULTADO",
+   "46ar2-RESULTADO",
+   "46ar3-RESULTADO"
+  ]
+ },
+ {
+  "id": "46b",
+  "slug": "matriz-paginas",
+  "titulo": "Encargo 46b: matriz de cuota en 🧵 Encargos y tramos en 💳 Cuentas (Claude (Diego), 10-10 / Fase 0 11-10-2026)",
+  "resultados": [
+   "46b-RESULTADO",
+   "46br-RESULTADO"
+  ]
+ },
+ {
+  "id": "46c",
+  "slug": "botones-de-cola",
+  "titulo": "Encargo 46c: botones Reanudar, Pausar y Detener en 🧵 Encargos (Claude (Diego), 11-10-2026)",
+  "resultados": [
+   "46c-RESULTADO",
+   "46cr-RESULTADO"
+  ]
+ },
+ {
+  "id": "47a",
+  "slug": "balance-y-trampas",
+  "titulo": "Encargo 47a: balance de encargos y catálogo de trampas (Claude (Diego), 11-10-2026)",
+  "resultados": [
+   "47a-RESULTADO",
+   "47ar-RESULTADO"
+  ]
+ },
+ {
+  "id": "48",
+  "slug": "esfuerzo-sin-modelo",
+  "titulo": "Encargo 48: `esfuerzo_<rol>` sin `modelo_<rol>` usa el modelo de la naturaleza (Claude (Diego), 11-10-2026)",
+  "resultados": [
+   "48-RESULTADO",
+   "48b-RESULTADO",
+   "48br-RESULTADO",
+   "48r-RESULTADO",
+   "48r1-RESULTADO",
+   "48r2-RESULTADO",
+   "48r3-RESULTADO"
+  ]
+ },
+ {
+  "id": "49",
+  "slug": "adaptador-de-motor",
+  "titulo": "Encargo 49: diseño de un «adaptador de motor» para la cola (Claude (Diego), 11-10-2026)",
+  "resultados": [
+   "49-RESULTADO",
+   "49r-RESULTADO"
+  ]
+ },
+ {
+  "id": "50",
+  "slug": "capacidad-pasado-y-despacho",
+  "titulo": "Encargo 50: «Capacidad», la mirada de pasado y el estado del despacho (Claude (Diego), 11-10-2026)",
+  "resultados": [
+   "50a-RESULTADO",
+   "50ar-RESULTADO",
+   "50b-RESULTADO",
+   "50br-RESULTADO",
+   "50br1-RESULTADO"
+  ]
+ },
+ {
+  "id": "50a",
+  "slug": "pasado-y-despacho",
+  "titulo": "Encargo 50a: «Capacidad», la mirada de pasado y el estado del despacho (Claude (Diego), 11-10-2026)",
+  "resultados": [
+   "50a-RESULTADO",
+   "50ar-RESULTADO"
+  ]
+ },
+ {
+  "id": "50b",
+  "slug": "capacidad-por-vencer",
+  "titulo": "Encargo 50b: tope de encargos separado del bot y capacidad por vencer (Claude (Diego), 11-10-2026)",
+  "resultados": [
+   "50b-RESULTADO",
+   "50br-RESULTADO",
+   "50br1-RESULTADO"
+  ]
+ },
+ {
+  "id": "51",
+  "slug": "consultas-entre-fases",
+  "titulo": "Encargo 51: consultas al usuario entre fases, versión mínima (Claude (Diego), 12-10-2026)",
+  "resultados": [
+   "51-RESULTADO",
+   "51r-RESULTADO",
+   "51r1-RESULTADO",
+   "51r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "52",
+  "slug": "modo-descanso",
+  "titulo": "Encargo 52: «modo descanso» del nodo, versión mínima (Claude (Diego), 12-10-2026)",
+  "resultados": [
+   "52-RESULTADO",
+   "52b-RESULTADO",
+   "52br-RESULTADO",
+   "52br1-RESULTADO",
+   "52r-RESULTADO",
+   "52r1-RESULTADO",
+   "52r2-RESULTADO",
+   "52r3-RESULTADO"
+  ]
+ },
+ {
+  "id": "52b",
+  "slug": "modo-descanso-cierre",
+  "titulo": "Encargo 52b: cerrar el modo descanso (Claude (Diego), 13-10-2026)",
+  "resultados": [
+   "52b-RESULTADO",
+   "52br-RESULTADO",
+   "52br1-RESULTADO"
+  ]
+ },
+ {
+  "id": "54",
+  "slug": "fase-plan",
+  "titulo": "Encargo 54: fase `plan` antes del código (Claude (Diego), 12-10-2026)",
+  "resultados": [
+   "54-RESULTADO",
+   "54r-RESULTADO",
+   "54r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "55",
+  "slug": "despachador-unico",
+  "titulo": "Encargo 55: despachador único con lista de prioridad, versión mínima (Claude (Diego), 12-10-2026)",
+  "resultados": [
+   "55-RESULTADO",
+   "55r-RESULTADO",
+   "55r1-RESULTADO",
+   "55r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "56",
+  "slug": "pronostico-realista",
+  "titulo": "Encargo 56: pronóstico de cuota realista para decidir si una fase parte (Claude (Diego), 12-10-2026)",
+  "resultados": [
+   "56-RESULTADO",
+   "56b-RESULTADO",
+   "56br-RESULTADO",
+   "56br1-RESULTADO",
+   "56r-RESULTADO",
+   "56r1-RESULTADO",
+   "56r2-RESULTADO",
+   "56r3-RESULTADO"
+  ]
+ },
+ {
+  "id": "56b",
+  "slug": "pronostico-realista-otra-vez",
+  "titulo": "Encargo 56b: pronóstico de cuota realista, segunda pasada (Claude (Diego), 13-10-2026)",
+  "resultados": [
+   "56b-RESULTADO",
+   "56br-RESULTADO",
+   "56br1-RESULTADO"
+  ]
+ },
+ {
+  "id": "57a",
+  "slug": "luces-reglas-robustas",
+  "titulo": "Encargo 57a: reglas de luces robustas — última configuración buena, sin `despliegue_esperando`, interruptor general (Claude (Diego), 13-10-2",
+  "resultados": [
+   "57a-RESULTADO",
+   "57ar-RESULTADO",
+   "57ar1-RESULTADO"
+  ]
+ },
+ {
+  "id": "58",
+  "slug": "pruebas-sin-avisos-reales",
+  "titulo": "Encargo 58: que ninguna prueba ni ningún agente pueda mandar avisos reales (Claude (Diego), 12-10-2026)",
+  "resultados": [
+   "58-RESULTADO",
+   "58r-RESULTADO",
+   "58r1-RESULTADO",
+   "58r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "59",
+  "slug": "cotizador-matrimonio",
+  "titulo": "Encargo 59: cotizador del matrimonio con guardado (Claude (Diego), 17-10-2026)",
+  "resultados": [
+   "59-RESULTADO",
+   "59r-RESULTADO",
+   "59r1-RESULTADO",
+   "59r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "61",
+  "slug": "compras-predictivo",
+  "titulo": "Encargo 61: /compras entiende frases libres (Claude (Diego), 18-10-2026)",
+  "resultados": [
+   "61-RESULTADO",
+   "61r-RESULTADO"
+  ]
+ },
+ {
+  "id": "62",
+  "slug": "torrents-pendrive",
+  "titulo": "Encargo 62: qBittorrent-nox con descarga al pendrive (Claude (Diego), 18-10-2026)",
+  "resultados": []
+ },
+ {
+  "id": "63",
+  "slug": "cierre-43-y-46",
+  "titulo": "Encargo 63: cierre formal de los encargos 43 y 46 (Claude (Diego), 18-10-2026)",
+  "resultados": [
+   "63-RESULTADO",
+   "63r-RESULTADO"
+  ]
+ },
+ {
+  "id": "64",
+  "slug": "gastos-manual",
+  "titulo": "Encargo 64: `/gastos` — anotar a mano, saldo y últimos 5 (Claude (Diego), 18-10-2026)",
+  "resultados": [
+   "64-RESULTADO",
+   "64r-RESULTADO",
+   "64r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "65",
+  "slug": "compras-menu",
+  "titulo": "Encargo 65: menú de botones en /compras (Claude (Diego), 18-10-2026)",
+  "resultados": [
+   "65-RESULTADO",
+   "65r-RESULTADO"
+  ]
+ },
+ {
+  "id": "66",
+  "slug": "menu-y-google-botones",
+  "titulo": "Encargo 66: `/menu` central y menú de `/google` con botones locales (Claude (Diego), 19-10-2026)",
+  "resultados": [
+   "66-RESULTADO",
+   "66r-RESULTADO",
+   "66r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "67",
+  "slug": "gastos-por-voz",
+  "titulo": "Encargo 67: anotar gastos hablando o escribiendo, sin comando (Claude (Diego), 19-10-2026)",
+  "resultados": [
+   "67-RESULTADO",
+   "67r-RESULTADO",
+   "67r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "68",
+  "slug": "agenda-y-correo-locales",
+  "titulo": "Encargo 68: agenda y correo sin LLM, escritos o dictados, con `voz_habla_agenda` (Claude (Diego), 19-10-2026)",
+  "resultados": [
+   "68-RESULTADO",
+   "68r-RESULTADO",
+   "68r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "69",
+  "slug": "clima-y-hora-locales",
+  "titulo": "Encargo 69: clima y hora locales, sin LLM (Claude (Diego), 19-10-2026)",
+  "resultados": [
+   "69-RESULTADO",
+   "69r-RESULTADO"
+  ]
+ },
+ {
+  "id": "70",
+  "slug": "mensajes-a-pilar",
+  "titulo": "Encargo 70: las IA le mandan mensajes y documentos al chat de Pilar, con ✅ del usuario (Claude (Diego), 19-10-2026)",
+  "resultados": [
+   "70-RESULTADO",
+   "70r-RESULTADO",
+   "70r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "71",
+  "slug": "consultas-abc",
+  "titulo": "Encargo 71: las consultas de la cola como UN mensaje A/B/C (Claude (Diego), 20-10-2026)",
+  "resultados": [
+   "71-RESULTADO",
+   "71r-RESULTADO",
+   "71r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "72",
+  "slug": "botanico-gemini",
+  "titulo": "Encargo 72: agente botánico — botón «Analizar» con Gemini en la app de captura (Claude (Diego), 20-10-2026)",
+  "resultados": [
+   "72-RESULTADO",
+   "72r-RESULTADO"
+  ]
+ },
+ {
+  "id": "73",
+  "slug": "remote-control-telegram",
+  "titulo": "Encargo 73: botón de Remote Control en Telegram (Jaime) (Claude (Diego), 20-10-2026)",
+  "resultados": [
+   "73-RESULTADO",
+   "73r-RESULTADO",
+   "73r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "74",
+  "slug": "clima-imagen",
+  "titulo": "Encargo 74: el botón 🌦️ Clima manda una imagen de 3 días (Claude (Diego), 21-10-2026)",
+  "resultados": [
+   "74-RESULTADO",
+   "74r-RESULTADO",
+   "74r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "75",
+  "slug": "clima-aviso-programado",
+  "titulo": "Encargo 75: aviso programado del clima, como orden recurrente (Claude (Diego), 21-10-2026)",
+  "resultados": [
+   "75-RESULTADO",
+   "75r-RESULTADO",
+   "75r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "76",
+  "slug": "clima-comuna",
+  "titulo": "Encargo 76: comuna del clima, consulta puntual y cambio desde Telegram (Claude (Diego), 21-10-2026)",
+  "resultados": [
+   "76-RESULTADO",
+   "76r-RESULTADO",
+   "76r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "77",
+  "slug": "remoto-revisa-sesion",
+  "titulo": "Encargo 77: /remoto revisa la sesión antes de abrir y confirma antes de avisar (Claude (Diego), 22-10-2026)",
+  "resultados": [
+   "77-RESULTADO",
+   "77r-RESULTADO",
+   "77r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "78a",
+  "slug": "servicios-prueba",
+  "titulo": "Encargo 78a: changedetection.io y SearXNG en prueba (Claude (Diego), 21-10-2026)",
+  "resultados": [
+   "78a-RESULTADO",
+   "78ar-RESULTADO",
+   "78ar1-RESULTADO"
+  ]
+ },
+ {
+  "id": "78b",
+  "slug": "buscar-en-bots",
+  "titulo": "Encargo 78b: /buscar con SearXNG en Jaime y Pilar (Claude (Diego), 21-10-2026)",
+  "resultados": [
+   "78b-RESULTADO",
+   "78br-RESULTADO",
+   "78br1-RESULTADO"
+  ]
+ },
+ {
+  "id": "79",
+  "slug": "pedido-completo-y-atribucion",
+  "titulo": "Encargo 79: el pedido de una cola lleva todo lo suyo y nada ajeno (Claude (Diego), 22-10-2026)",
+  "resultados": [
+   "79-RESULTADO",
+   "79r-RESULTADO",
+   "79r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "80a",
+  "slug": "centinela-modelos",
+  "titulo": "Encargo 80a: centinela del catálogo de modelos (Claude (Diego), 22-10-2026)",
+  "resultados": [
+   "80a-RESULTADO",
+   "80ar-RESULTADO",
+   "80ar1-RESULTADO"
+  ]
+ },
+ {
+  "id": "80b",
+  "slug": "ruta-web-gpt-oss",
+  "titulo": "Encargo 80b: la ruta web pasa a gpt-oss-120b con browser_search (Claude (Diego), 22-10-2026)",
+  "resultados": [
+   "80b-RESULTADO",
+   "80br-RESULTADO"
+  ]
+ },
+ {
+  "id": "81",
+  "slug": "auditoria-desfases",
+  "titulo": "Encargo 81: auditoría de lo desfasado entre el vault y lo instalado (Claude (Diego), 22-10-2026)",
+  "resultados": [
+   "81-RESULTADO",
+   "81r-RESULTADO",
+   "81r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "82",
+  "slug": "respaldo-al-dia",
+  "titulo": "Encargo 82: el respaldo al día (cierre de la 33b) (Claude (Diego), 23-10-2026)",
+  "resultados": [
+   "82-RESULTADO",
+   "82r-RESULTADO"
+  ]
+ },
+ {
+  "id": "83",
+  "slug": "quema-de-cupo",
+  "titulo": "Encargo 83: aviso de quema de cupo antes de la renovación (Claude (Diego), 23-10-2026)",
+  "resultados": [
+   "83-RESULTADO",
+   "83r-RESULTADO",
+   "83r1-RESULTADO",
+   "83r2-RESULTADO"
+  ]
+ },
+ {
+  "id": "84a",
+  "slug": "consola-marco",
+  "titulo": "Encargo 84a: 🧵 Encargos pasa a ser la consola del nodo (marco y navegación) (Claude (Diego), 24-10-2026)",
+  "resultados": [
+   "84a-RESULTADO",
+   "84ar-RESULTADO",
+   "84ar1-RESULTADO"
+  ]
+ },
+ {
+  "id": "84b",
+  "slug": "consola-red-luces",
+  "titulo": "Encargo 84b: portada «🕸️ Flujo» con la red de encargos y sus luces (Claude (Diego), 24-10-2026)",
+  "resultados": [
+   "84b-RESULTADO",
+   "84br-RESULTADO"
+  ]
+ },
+ {
+  "id": "85a",
+  "slug": "aiops-una-barra",
+  "titulo": "Encargo 85a: 🏭 AI Ops, una sola barra arriba y nombres de la industria con glosario (Claude (Diego), 24-10-2026)",
+  "resultados": [
+   "85a-RESULTADO",
+   "85ar-RESULTADO",
+   "85ar1-RESULTADO"
+  ]
+ },
+ {
+  "id": "85b",
+  "slug": "flow-alcance-encargo",
+  "titulo": "Encargo 85b: Flow con selector de alcance y el pipeline de un encargo activo (Claude (Diego), 24-10-2026)",
+  "resultados": [
+   "85b-RESULTADO",
+   "85br-RESULTADO",
+   "85br1-RESULTADO",
+   "85br2-RESULTADO"
+  ]
+ },
+ {
+  "id": "86",
+  "slug": "traces-ordenar-todas-las-columnas",
+  "titulo": "Encargo 86: Traces y la tabla de Flow ordenan por cualquier columna, en los dos sentidos (Claude (Diego), 24-10-2026)",
+  "resultados": [
+   "86-RESULTADO",
+   "86r-RESULTADO",
+   "86r1-RESULTADO"
+  ]
+ },
+ {
+  "id": "88a",
+  "slug": "spotify-receptores",
+  "titulo": "Encargo 88a: dos receptores Spotify Connect en la Pi, uno por perfil (Claude (Diego), 25-10-2026)",
+  "resultados": [
+   "88a-RESULTADO",
+   "88ar-RESULTADO",
+   "88ar1-RESULTADO",
+   "88ar2-RESULTADO",
+   "88ar3-RESULTADO"
+  ]
+ },
+ {
+  "id": "88b",
+  "slug": "spotify-intencion-bot",
+  "titulo": "Encargo 88b: «reproduce Oxytocin de Billie Eilish en Spotify» en Jaime y Pilar (Claude (Diego), 25-10-2026)",
+  "resultados": [
+   "88b-RESULTADO",
+   "88br-RESULTADO",
+   "88br1-RESULTADO"
+  ]
+ },
+ {
+  "id": "88c",
+  "slug": "spotify-arreglo-rev3",
+  "titulo": "Encargo 88c: arreglo de la 88a tras su revisión 3 (Claude (Diego), 25-10-2026)",
+  "resultados": [
+   "88c-RESULTADO",
+   "88cr-RESULTADO"
+  ]
+ },
+ {
+  "id": "90",
+  "slug": "uso-como-imagen",
+  "titulo": "Encargo 90: `/uso` como imagen (Claude (Diego) en la nube, 25-10-2026)",
+  "resultados": [
+   "90-RESULTADO",
+   "9092nr-RESULTADO"
+  ]
+ },
+ {
+  "id": "91",
+  "slug": "temblores",
+  "titulo": "Encargo 91: aviso de temblores (Claude (Diego) en la nube, 25-10-2026)",
+  "resultados": [
+   "91-RESULTADO",
+   "91nr-RESULTADO",
+   "91nr1-RESULTADO"
+  ]
+ },
+ {
+  "id": "91b",
+  "slug": "arreglos",
+  "titulo": "Encargo 91b: arreglos de la revisión de Codex al 91 (Claude (Diego) en la nube, 25-10-2026)",
+  "resultados": []
+ },
+ {
+  "id": "92",
+  "slug": "contador-uso-bots",
+  "titulo": "Encargo 92: contador de uso de los bots (Claude (Diego) en la nube, 25-10-2026)",
+  "resultados": [
+   "92-RESULTADO"
+  ]
+ },
+ {
+  "id": "92b",
+  "slug": "arreglos",
+  "titulo": "Encargo 92b: las dos medias de la revisión de Codex al 90+92 (Claude (Diego) en la nube, 25-10-2026)",
+  "resultados": []
+ },
+ {
+  "id": "93",
+  "slug": "guia-jaime-pilar",
+  "titulo": "Encargo 93: guía de uso de Jaime y Pilar al día (Claude (Diego) en la nube, 25-10-2026)",
+  "resultados": [
+   "93-RESULTADO",
+   "93nr-RESULTADO"
+  ]
+ },
+ {
+  "id": "94",
+  "slug": "auditor-de-rutas",
+  "titulo": "Encargo 94: 🔎 auditor de rutas de Jaime y Pilar (Claude (Diego) en la nube, 25-10-2026)",
+  "resultados": [
+   "94-RESULTADO"
+  ]
+ }
+]
