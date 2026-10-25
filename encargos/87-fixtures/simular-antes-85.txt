@@ -1,0 +1,9 @@
+85a · naturaleza: pagina
+  autor codex           gpt-5.6-terra medium     [normal]    4.1 min  +8.0 % 5 h (p75 25.0 %; ahora 10.0, tope 90)  +2.0 % sem (ahora 20.0, tope 75)  fresco
+  rev   claude_cami     claude-opus-5-5 medium   [normal]   10.8 min  +15.0 % 5 h (p75 17.0 %; ahora 10.0, tope 90)  +2.0 % sem (ahora 20.0, tope 75)  fresco  [débil]
+  fix   codex           gpt-reserve medium       [agil]    7.0 min  +1.5 % 5 h (p75 2.0 %; ahora 10.0, tope 90)  +0.0 % sem (ahora 20.0, tope 75)  fresco
+85b · naturaleza: pagina
+  autor codex           gpt-5.6-terra medium     [normal]    4.1 min  +8.0 % 5 h (p75 25.0 %; ahora 10.0, tope 90)  +2.0 % sem (ahora 20.0, tope 75)  fresco
+  rev   claude_cami     claude-opus-5-5 medium   [normal]   10.8 min  +15.0 % 5 h (p75 17.0 %; ahora 10.0, tope 90)  +2.0 % sem (ahora 20.0, tope 75)  fresco  [débil]
+  fix   codex           gpt-reserve medium       [agil]    7.0 min  +1.5 % 5 h (p75 2.0 %; ahora 10.0, tope 90)  +0.0 % sem (ahora 20.0, tope 75)  fresco
+⏱️ Duración de la cola (sin contar esperas): ~70.6 min, entre 30.8 y 102.0 (rechazo por revisión: 67%)

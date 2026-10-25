@@ -1,0 +1,34 @@
+nombre = "cola85"
+motivo = "Encargo 85: consola v2 en 🏭 AI Ops: 85a una sola barra con pestañas y nombres de la industria con glosario; 85b Flow con selector de alcance y pipeline del encargo activo."
+resumen = "AI Ops con una barra, términos de la industria con tooltip en español y Flow filtrable por encargo activo (hecho, corriendo y pronosticado)."
+esperar = []
+despliegue = "pedir"
+afinado = "completo"
+alcance = "completo"
+paciencia_h = 12
+aprobado_por = "usuario, 24-10-2026 20:55 America/Santiago, en el chat de Claude (Diego): aprobó la maqueta v2; pestañas Flow/Runs/Timeline/Traces/Logs/Alerts/Policies; menú 🏭 AI Ops; alcance completo en 2 etapas; reparto: Codex escribe y Claude (Cami) revisa (cuida el tope semanal de Claude (Cami))"
+pruebas = ["pi/test_cockpit_paginas.py"]
+
+
+[paginas]
+encargos = "cockpit-encargos"
+
+[[etapa]]
+id = "85a"
+encargo = "85a-aiops-una-barra.md"
+resumen = "Una barra arriba (pestañas Flow…Policies), sin módulos ni riel; glosario y tooltip; menú 🏭 AI Ops."
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "pagina"
+
+
+[[etapa]]
+id = "85b"
+encargo = "85b-flow-alcance-encargo.md"
+resumen = "Selector de alcance en Flow y pipeline del encargo en tres tramos (hecho, corriendo, pronosticado), en la URL."
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "pagina"
+

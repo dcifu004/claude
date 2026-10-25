@@ -1,0 +1,19 @@
+nombre = "cola82"
+motivo = "Encargo 82: respaldo al día (cierre de la 33b): rutas de la 78a en respaldo.sh e inventario de lo que no se respalda."
+resumen = "Agrega changedetection, prueba-servicios y searxng al respaldo, tolera rutas inexistentes y deja propuesto qué hacer con botv3."
+esperar = []
+despliegue = "nada"
+afinado = "completo"
+alcance = "minimo"
+paciencia_h = 12
+aprobado_por = "usuario, 23-10-2026 21:20 America/Santiago, pidió hacer la 33b (excepción a la pausa general); eligió Claude (Cami) como autora y Codex como revisor (reparto por defecto de seguridad); después la cola36b"
+pruebas = ["pi/test_escritura_root.py", "encargos/test_versiones.py"]
+
+[[etapa]]
+id = "82"
+encargo = "82-respaldo-al-dia.md"
+resumen = "RUTAS + changedetection/prueba-servicios/searxng, ruta inexistente no aborta, inventario de /opt/nodo/datos."
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "seguridad"

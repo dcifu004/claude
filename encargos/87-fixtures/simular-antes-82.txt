@@ -1,0 +1,5 @@
+82 · naturaleza: seguridad
+  autor claude_cami     claude-opus-5-5 high     [fuerte]   37.2 min  +43.5 % 5 h (p75 48.0 %; ahora 10.0, tope 90)  +5.5 % sem (ahora 20.0, tope 75)  fresco
+  rev   codex           gpt-5.6-terra xhigh      [maximo]   10.5 min  +15.0 % 5 h (p75 18.0 %; ahora 10.0, tope 90)  +2.5 % sem (ahora 20.0, tope 75)  fresco
+  fix   claude_cami     claude-opus-5-5 high     [fuerte]   22.6 min  +26.5 % 5 h (p75 33.0 %; ahora 10.0, tope 90)  +4.0 % sem (ahora 20.0, tope 75)  fresco
+⏱️ Duración de la cola (sin contar esperas): ~85.7 min, entre 48.7 y 114.9 (rechazo por revisión: 67%)
