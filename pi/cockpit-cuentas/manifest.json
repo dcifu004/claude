@@ -1,0 +1,16 @@
+{
+    "version": 0,
+    "name": "cuentas",
+    "requires": {
+        "cockpit": "300"
+    },
+    "tools": {
+        "index": {
+            "label": "💳 Cuentas",
+            "order": 3,
+            "keywords": [
+                { "matches": ["cuentas", "claude", "codex", "groq", "margen", "uso", "costo", "limite", "renovacion"] }
+            ]
+        }
+    }
+}

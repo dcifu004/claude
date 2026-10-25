@@ -1,0 +1,56 @@
+{
+ "_fixture": "REAL. Respuesta de api.tavily.com/search del 01-10-2026 a {query: 'dólar observado Chile hoy', topic: 'news', max_results: 5}, tal cual (sólo se agregó esta llave `_fixture`). Los 5 resultados son de junio, julio y septiembre y varios se titulan «hoy».",
+ "query": "dólar observado Chile hoy",
+ "follow_up_questions": null,
+ "answer": null,
+ "images": [],
+ "results": [
+  {
+   "url": "https://www.concierto.cl/2026/07/el-dolar-observado-vuelve-a-retroceder-mientras-la-cotizacion-de-mercado-recupera-terreno",
+   "title": "El dólar observado vuelve a retroceder, mientras la cotización de mercado recupera terreno — Radio Concierto Chile",
+   "content": "## ¿Cuál es el precio del dólar hoy en Chile?\n\nEl precio del dólar se ubicó en $923,58 durante este viernes 3 de julio.\n\nPor su parte, el dólar observado, publicado por el Banco Central, alcanzó los $921,70. Esto representa una caída de $5,65 frente a los $927,35 registrados el jueves 2 de julio.\n\nEl dólar observado corresponde al tipo de cambio oficial utilizado como referencia para diversos procesos tributarios, financieros y comerciales en Chile. [...] # El dólar observado vuelve a retroceder, mientras la cotización de mercado recupera terreno\n\nConsulta el precio del dólar hoy en Chile y revisa el valor del dólar observado para este 3 de julio, según la información publicada por el Banco Central.\n\nPrecio Del Dolar (2)\n\nEl dólar registró un nuevo movimiento este viernes 3 de julio, aunque la referencia oficial del Banco Central mostró una tendencia distinta a la observada en la cotización del mercado. [...] Mientras el precio de la moneda estadounidense volvió a ubicarse por encima de los $923, el dólar observado anotó una baja de $5,65 respecto de la jornada anterior. Con ello, el indicador oficial revirtió el avance registrado el 2 de julio y volvió a situarse por debajo de los $922.\n\nLa evolución del tipo de cambio continúa siendo seguida por empresas, inversionistas y personas que realizan operaciones en moneda extranjera, debido a su relevancia para distintos sectores de la economía.",
+   "score": 0.9348309,
+   "published_date": "Fri, 03 Jul 2026 15:01:58 GMT",
+   "raw_content": null,
+   "id": "611a3f-00"
+  },
+  {
+   "url": "https://www.concierto.cl/2026/06/dolar-en-chile-esta-es-la-cotizacion-para-este-26-de-junio",
+   "title": "Dólar en Chile: esta es la cotización para este 26 de junio — Radio Concierto Chile",
+   "content": "## ¿Cuál es el precio del dólar hoy en Chile?\n\nSegún los registros del Banco Central, el dólar observado se ubicó en $916,97 este 26 de junio.\n\nLa cifra representa una baja de $4,45 frente a los $921,42 registrados durante la jornada del jueves 25 de junio.\n\nEl valor oficial publicado por el Banco Central es utilizado como referencia para diversos trámites, operaciones comerciales y procesos tributarios que consideran la cotización de la moneda estadounidense. [...] # Dólar en Chile: esta es la cotización para este 26 de junio\n\nRevisa el precio del dólar hoy en Chile y conoce la cotización del dólar observado para este 26 de junio, según el Banco Central.\n\nPrecio Del Dolar\n\nLuego de varias jornadas consecutivas al alza, el dólar observado registró un retroceso este viernes 26 de junio, poniendo fin a la tendencia que había impulsado a la moneda estadounidense durante los últimos días. [...] ## ¿Por qué es importante seguir el dólar observado?\n\nEl dólar observado refleja el valor oficial de la moneda estadounidense en Chile y sirve como referencia para distintas actividades económicas y financieras.\n\nSu evolución puede influir en el costo de algunos bienes importado. Esto, además de tener incidencia en operaciones de comercio exterior, inversiones y pagos realizados en dólares.",
+   "score": 0.92980474,
+   "published_date": "Fri, 26 Jun 2026 14:00:29 GMT",
+   "raw_content": null,
+   "id": "3ec758-01"
+  },
+  {
+   "url": "https://www.concierto.cl/2026/07/dolar-en-chile-esta-es-la-cotizacion-para-este-6-de-julio",
+   "title": "Dólar en Chile: esta es la cotización para este 6 de julio — Radio Concierto Chile",
+   "content": "El comportamiento del tipo de cambio sigue siendo un dato de interés para empresas, inversionistas y personas que realizan operaciones en moneda extranjera o monitorean la evolución de los mercados.\n\n## ¿Cuál es el precio del dólar hoy en Chile?\n\nEl precio del dólar se ubicó en $922,74 este lunes 6 de julio.\n\nPor su parte, el dólar observado, informado por el Banco Central, alcanzó los $921,74, lo que representa una leve alza de $0,04 respecto a los $921,70 registrados el viernes 3 de julio. [...] De acuerdo con la información publicada por el Banco Central, el dólar observado registró un leve incremento de apenas $0,04 frente a la jornada anterior. Con ello, el indicador oficial mostró estabilidad al inicio de la semana, mientras el precio de la moneda estadounidense continuó sobre los $922. [...] # Dólar en Chile: esta es la cotización para este 6 de julio\n\nRevisa el precio del dólar hoy en Chile y conoce el valor del dólar observado para este 6 de julio, según los datos del Banco Central.\n\nUS Dollar Banknote\n\nEl dólar comenzó la semana con movimientos mínimos en el mercado cambiario chileno, manteniéndose prácticamente sin variaciones respecto al último registro oficial.",
+   "score": 0.9121316,
+   "published_date": "Mon, 06 Jul 2026 14:42:44 GMT",
+   "raw_content": null,
+   "id": "a451db-02"
+  },
+  {
+   "url": "https://www.pauta.cl/dato-en-pauta/2026/09/18/dolar-en-chile-precio-y-valor-de-la-divisa-hoy-viernes-18-de-septiembre.html",
+   "title": "Dólar hoy en Chile: precio este viernes 18 de septiembre",
+   "content": "La evolución de esta moneda frente al peso chileno es seguida diariamente en Chile debido a su impacto en distintos ámbitos de la economía, especialmente en las importaciones, exportaciones y en el precio de algunos bienes y servicios.\n\n## Dólar Observado\n\nEl Dólar Observado es el valor de referencia de la divisa estadounidense en Chile y corresponde al promedio ponderado de las operaciones de compra y venta de dólares realizadas en el mercado cambiario durante el día hábil bancario anterior. [...] Este indicador es publicado diariamente por el Banco Central de Chile. Revisa aquí el valor oficial del Dólar Observado.\n\n## ¿Qué es el dólar?\n\nEl dólar estadounidense es la moneda oficial de Estados Unidos y una de las principales divisas utilizadas en el comercio internacional.\n\nEn Chile, el valor del dólar frente al peso chileno es seguido diariamente por su importancia para la economía y su relación con las importaciones, exportaciones y distintos precios. [...] El dólar en Chile es uno de los indicadores económicos que seguirá el mercado durante este viernes 18 de septiembre. La cotización de la divisa estadounidense puede registrar variaciones durante la jornada de acuerdo con los movimientos de los mercados internacionales y locales.\n\nRevisa aquí el precio del dólar en vivo y su evolución durante la jornada.\n\n## ¿A cuánto está el dólar hoy en Chile?",
+   "score": 0.8991304,
+   "published_date": "Fri, 18 Sep 2026 02:00:00 GMT",
+   "raw_content": null,
+   "id": "7a33d4-03"
+  },
+  {
+   "url": "https://www.pauta.cl/dato-en-pauta/2026/09/11/dolar-en-chile-precio-y-valor-de-la-divisa-hoy-viernes11-de-septiembre.html",
+   "title": "Dólar hoy en Chile: precio este viernes 11 de septiembre",
+   "content": "La evolución de esta moneda frente al peso chileno es seguida diariamente en Chile debido a su impacto en distintos ámbitos de la economía, especialmente en las importaciones, exportaciones y en el precio de algunos bienes y servicios.\n\n## Dólar Observado\n\nEl Dólar Observado es el valor de referencia de la divisa estadounidense en Chile y corresponde al promedio ponderado de las operaciones de compra y venta de dólares realizadas en el mercado cambiario durante el día hábil bancario anterior. [...] Este indicador es publicado diariamente por el Banco Central de Chile. Revisa aquí el valor oficial del Dólar Observado.\n\n## ¿Qué es el dólar?\n\nEl dólar estadounidense es la moneda oficial de Estados Unidos y una de las principales divisas utilizadas en el comercio internacional.\n\nEn Chile, el valor del dólar frente al peso chileno es seguido diariamente por su importancia para la economía y su relación con las importaciones, exportaciones y distintos precios.",
+   "score": 0.89849097,
+   "published_date": "Fri, 11 Sep 2026 02:00:00 GMT",
+   "raw_content": null,
+   "id": "d6c96c-04"
+  }
+ ],
+ "response_time": 0.79,
+ "request_id": "732d3d83-cc5c-4588-89b0-8d23b7a914a5"
+}

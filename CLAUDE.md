@@ -1,30 +1,42 @@
-# Encargo 87 en la nube (Claude (Diego))
+# Encargos en la nube (Claude (Diego))
 
-Esta es una copia parcial de `11-Pi5` (proyecto del nodo Pi5 de Diego), hecha solo para el
-encargo 87. Fuera de este repositorio no hay nada: no hay Pi, ni `/opt/nodo`, ni Telegram, ni
-secretos. Responde y escribe en español de Chile.
+Este repositorio es una **copia parcial** de `11-Pi5`, el proyecto del nodo Pi5 de Diego. Se armó para
+trabajar encargos en la nube con el crédito de sesiones de claude.ai. Fuera de este repositorio no hay
+nada: no hay Pi, ni `/opt/nodo`, ni Telegram, ni secretos. Los correos están redactados
+(`diego@example.com`, `camila@example.com`). Responde y escribe en español de Chile.
 
-## Qué hacer
+## Qué encargo hacer
 
-1. Lee `encargos/87-revision-escalonada.md` (el encargo), `encargos/87-PLAN.md` (el plan) y
-   `encargos/87rplan-RESULTADO.md`. La revisión del plan lo **rechazó**.
-2. Corrige el plan según los hallazgos H1–H4 y deja la versión nueva en `encargos/87-PLAN.md`. Al
-   final, agrega una sección «Respuesta a 87rplan» que diga hallazgo por hallazgo qué se cambió.
-3. Implementa el plan corregido: `cierre_barato = true`, con alcance mínimo. Sin ese campo, la cola
-   tiene que portarse exactamente como hoy.
-4. Corre las pruebas de `encargos/cola-87.toml` (`pruebas = [...]`) con `python3 -B -m unittest`,
-   desde la raíz.
-5. Escribe `encargos/87-RESULTADO.md` con lo hecho, los archivos tocados, la salida de las pruebas
-   y los riesgos abiertos.
+El usuario dice cuál. Cada uno tiene su archivo:
 
-## Reglas
+| Encargo | Archivo |
+|---|---|
+| 87, cierre barato (y sus arreglos) | `encargos/87-revision-escalonada.md` + `encargos/87-PLAN.md` |
+| 90, `/uso` como imagen | `encargos-nube/90-uso-como-imagen.md` |
+| 91, temblores | `encargos-nube/91-temblores.md` |
+| 92, contador de uso de los bots | `encargos-nube/92-contador-uso-bots.md` |
+| 93, guía de Jaime y Pilar al día | `encargos-nube/93-guia-jaime-pilar.md` |
 
-- **No se modifican** `encargos/revision-plantilla-v2.md`, `encargos/historial.jsonl` ni
-  `encargos/modelos.toml` (salvo que el plan lo exija y lo justifique).
-- Las pruebas usan `tempfile` y repos git temporales. Ninguna prueba escribe en rutas fijas
-  (`/opt/nodo/...`) ni llama a la red.
-- `despliegue = "nada"`: no se pide despliegue ni se agregan unidades systemd.
-- Se quitó `test_buscar_web.py` porque tenía datos reales. No lo recrees.
-- No inventes resultados: si una prueba falla, deja la salida tal cual en el RESULTADO.
-- Después, la revisión cruzada (Codex o Claude (Cami)) corre en la Pi. Trabaja en una rama propia
-  y deja todo commiteado.
+## Reglas comunes
+
+- **Una rama por encargo**, con commit y push al terminar. Antes de implementar, sube un primer commit
+  con el plan (`encargos-nube/<id>-PLAN.md`), porque el contenedor se libera si queda inactivo.
+- Al final, deja `encargos-nube/<id>-RESULTADO.md`: lo hecho, los archivos tocados, la salida real de las
+  pruebas, las decisiones y los riesgos abiertos. **No inventes resultados**: si una prueba falla, va su
+  salida tal cual.
+- Las pruebas usan `tempfile` y datos de prueba. Ninguna escribe en `/opt/nodo/...` ni llama a la red
+  (la red sirve para **investigar** y para **guardar fixtures reales**, no dentro de las pruebas).
+- No se despliega nada: no hay `sudo`, ni `nodo-desplegar`, ni unidades activas. Las unidades systemd nuevas
+  quedan como archivos para que se revisen después.
+- **No toques** `encargos/cola-run.py` ni `encargos/test_*.py` salvo en el encargo 87.
+  `botv3/botv3.py` lo tocan el 90 y el 92: cambia solo lo necesario, en bloques chicos, para que se pueda
+  mezclar después.
+- Los bots se llaman Jaime (Diego) y Pilar (Camila). Las cuentas se escriben «Claude (Diego)»,
+  «Claude (Cami)» y «Codex».
+- Cuando el encargo termine, la revisión cruzada (Codex) y el despliegue se hacen en la Pi.
+
+## Cómo correr las pruebas
+
+Desde la raíz: `NODO_PRUEBAS=1 python3 -B -m unittest botv3/test_botv3.py` (o la suite que
+corresponda). Algunas suites fallan por cosas del entorno de esta copia (faltan archivos de la Pi).
+Anota la lista de fallas **antes y después** del cambio: tu cambio no puede agregar ninguna.

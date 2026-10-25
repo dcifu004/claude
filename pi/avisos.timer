@@ -1,0 +1,16 @@
+[Unit]
+Description=Revisa el estado del nodo y avisa por Telegram si algo cambio
+
+[Timer]
+# Diez minutos: el recolector corre cada 5, asi que nunca se avisa sobre datos
+# de mas de un ciclo, y una falla real se entera antes de que importe. Bajarlo
+# no mejora nada —estado.json no cambia mas seguido— y multiplica las llamadas
+# a Telegram.
+OnBootSec=3min
+OnUnitActiveSec=10min
+# Sin Persistent=true: si la Pi estuvo apagada, no interesa disparar una corrida
+# atrasada al arrancar. Lo que importa es el estado de AHORA, y OnBootSec ya lo
+# cubre.
+
+[Install]
+WantedBy=timers.target

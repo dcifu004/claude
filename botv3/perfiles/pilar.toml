@@ -1,0 +1,53 @@
+# Perfil `pilar` — Camila · bot @Pilar_v2bot (creado el 13-09-2026)
+#
+# El bot lo creo Camila en BotFather, asi que el token es suyo: puede regenerarlo
+# o borrar el bot y el servicio se cae sin aviso. Anotado, no resuelto.
+
+nombre = "Pilar"
+persona = "Camila"
+bot = "@Pilar_v2bot"
+
+# NINGUN vault. Y esta lista vacia NO es lo que lo hace cumplir: es una
+# declaracion, para que el bot no ofrezca lo que no puede dar y para componer el
+# prompt sin nombrar rutas que no debe conocer. Lo que de verdad lo impide son el
+# usuario Unix propio `botpilar` y los `InaccessiblePaths` de
+# botv3@pilar.service. El `if` puede tener un bug; el namespace no.
+vaults = []
+
+# `claude` entra porque camila@example.com TIENE plan pagado (confirmado el
+# 13-09-2026): sus preguntas no gastan la cuota de Diego. Es Claude como modelo
+# bueno para lo complejo, NO como lector de archivos — corre sobre un directorio
+# vacio y sin los vaults en su namespace.
+# `codex` queda fuera: corre con la cuenta de ChatGPT Plus de Diego y ya se agoto
+# una vez. Eso hace que la ruta `web` de Camila —que va por Codex— le gaste la
+# suscripcion; su respaldo es Claude, que ahora es cuenta propia.
+# `plantas` llega en la Fase 2, cuando la ruta exista.
+rutas = ["gpt", "web", "ha", "claude", "codex", "boleta"]
+
+# Quien paga cada ruta de agente, en orden (29-09-2026, pagina 🤖 → 💳 Cuentas).
+# Hoy todo va con la cuenta de Camila. Que `codex` no figure en `web` es lo que
+# impide que su busqueda le gaste la suscripcion de ChatGPT Plus a Diego: el
+# 13-09-2026 eso se deducia de `rutas`, fallo en produccion, y desde entonces se
+# declara y no se infiere. Agregar aca `codex` o `claude_diego` se puede desde la
+# pagina (decision de Diego del 29-09), y `aplicar-propuesta` lo marca AMPLIA
+# porque cambia quien paga.
+cuentas = { claude = ["claude_cami"], codex = ["claude_cami", "codex"], web = ["claude_cami"] }
+
+# Interina, y es la misma voz de Jaime. En la Fase 1 cada uno habla en su propio
+# chat de Telegram, asi que no hay confusion de identidad; cuando llegue el
+# microfono hay que elegirle una distinta (Fase 5 del diseño 15). Si el archivo no
+# existe, `sintetizar()` devuelve None y la respuesta llega sin audio: nunca se
+# pierde la respuesta por un fallo del TTS.
+voz = "/opt/piper/voces/es_MX-claude-high.onnx"
+
+# Clima y hora locales (encargo 69, 19-10-2026): «va a llover hoy», «clima», «hace frio
+# afuera» se contestan con Open-Meteo, sin llave, sin LLM y sin n8n, con cache de 30 min
+# en memoria. Solo este lugar: «clima en Calama» sigue el camino de siempre, y «que
+# temperatura hay en el living» sigue yendo a `ha`. lat y lon se validan como numeros
+# en rango; si la clave falta o es invalida, el perfil queda sin clima (la hora no la usa).
+clima = { lugar = "Las Condes", lat = -33.41, lon = -70.57 }
+
+# Mensajes y documentos de las IA (encargo 70, 19-10-2026): `mensaje --a pilar` deja el envio en
+# casa/para-pilar/ y este bot lo entrega SOLO con el ✅ de Diego (firma root de `nodo-desplegar
+# sugerir`, de un solo uso y dentro de 30 min). Sin esta llave el hilo no arranca; jaime no la lleva.
+recibe_de_ia = true

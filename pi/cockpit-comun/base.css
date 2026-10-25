@@ -1,0 +1,179 @@
+/*
+ * Base de página de las seis herramientas propias de Cockpit (encargo 18, documento 26):
+ * cuerpo, `main` con UN ancho máximo, barra compartida, cabecera, pestañas, tarjetas,
+ * botones, avisos, chips, insignias, barras de uso, punto de estado, tablas, campos y el
+ * diálogo de propuestas. Los colores vienen de tokens.css, que se carga antes.
+ *
+ * Cada página carga después su propia hoja, que sólo trae lo suyo y, cuando hace falta,
+ * un ajuste sobre algo de acá (va marcado como tal en esa hoja).
+ */
+:root { --ancho-pagina: 1100px; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+    background: var(--fondo);
+    color: var(--texto);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main {
+    max-width: var(--ancho-pagina);
+    margin: 0 auto;
+    padding: 20px 16px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 0 0 8px; }
+h3 { font-size: 14px; margin: 12px 0 6px; color: var(--tenue); font-weight: 600; }
+p { margin: 0 0 8px; }
+a { color: var(--acento); }
+code { font: 13px ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+       background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+.sub, .tenue { color: var(--tenue); font-size: 13.5px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* --- Barra compartida (la arma ../comun/barra.js en <nav id="barra">). Envuelve: en el
+   teléfono baja de línea, no corre la página hacia el lado. --- */
+.barra-nodo {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 6px 12px; padding-bottom: 10px; border-bottom: 1px solid var(--borde);
+}
+.barra-enlaces { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; min-width: 0; }
+.barra-nodo .barra-enlace {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px;
+    background: transparent; color: var(--texto); border-color: transparent; font-weight: 500;
+}
+.barra-nodo .barra-enlace.actual { background: var(--chip); border-color: var(--borde); font-weight: 600; }
+.barra-punto { color: var(--tenue); padding: 0 2px; }
+.barra-contador {
+    background: var(--ojo-fondo); color: var(--ojo); border-radius: 999px;
+    padding: 0 7px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.barra-contador[hidden] { display: none; }
+.barra-lado { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-left: auto; }
+
+/* --- Cabecera estándar: título y subtítulo corto. «leído hace X» y Actualizar van en la barra. --- */
+.cabeza { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cabeza .sub { margin: 0; }
+
+/* --- Pestañas --- */
+.pestanas { display: flex; gap: 6px; flex-wrap: wrap; }
+.pestanas button { background: transparent; color: var(--texto); border-color: var(--borde); font-weight: 500; }
+.pestanas button.activa { background: var(--acento); color: var(--acento-texto); border-color: transparent; font-weight: 600; }
+section[data-panel] { display: flex; flex-direction: column; gap: 12px; }
+section[data-panel][hidden] { display: none; }
+
+/* --- Botones --- */
+button {
+    font: inherit;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 7px 13px;
+    cursor: pointer;
+    background: var(--acento);
+    color: var(--acento-texto);
+    font-weight: 600;
+}
+button.secundario, button.mini {
+    background: transparent;
+    color: var(--texto);
+    border-color: var(--borde);
+    font-weight: 500;
+}
+button.mini { padding: 3px 9px; font-size: 13px; }
+button:disabled { opacity: .5; cursor: default; }
+
+/* --- Tarjetas y rejilla --- */
+.tarjeta {
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+}
+
+/* --- Avisos --- */
+.aviso { border-radius: 8px; padding: 10px 14px; font-size: 14px; }
+.aviso.rojo { background: var(--mal-fondo); color: var(--mal); }
+.aviso.ojo { background: var(--ojo-fondo); color: var(--ojo); }
+.aviso.ok { background: var(--ok-fondo); color: var(--ok); }
+.aviso.neutro { background: var(--chip); color: var(--tenue); }
+.aviso ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* --- Chips e insignias --- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--borde); border-radius: 999px;
+    padding: 4px 6px 4px 12px; font-size: 14px;
+}
+.chip.activa { background: var(--ok-fondo); border-color: transparent; }
+/* Chip de dato (sin botón adentro): relleno parejo. Con .ojo o .mal avisa. */
+.chip.dato { padding: 3px 10px; font-size: 13px; }
+.chip.ojo { background: var(--ojo-fondo); color: var(--ojo); border-color: transparent; }
+.chip.mal { background: var(--mal-fondo); color: var(--mal); border-color: transparent; }
+
+.insignia {
+    margin-left: auto; font-size: 11.5px; font-weight: 600; color: var(--ojo);
+    background: var(--ojo-fondo); border-radius: 999px; padding: 2px 8px;
+}
+
+/* --- Barra de uso: los anchos llegan por data-ancho y CSSOM (el CSP bloquea style=). --- */
+.barra-ciclo { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--chip); }
+.barra-ciclo .usado { background: var(--ok); }
+.barra-ciclo .ocioso { background: var(--chip); }
+.barra-ciclo.justo .usado { background: var(--ojo); }
+.barra-ciclo.lleno .usado { background: var(--mal); }
+
+/* --- Punto de estado: verde por defecto; ámbar, rojo o gris con su clase. --- */
+.punto { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--ok); margin-right: 7px; }
+.punto.ojo { background: var(--ojo); }
+.punto.mal { background: var(--mal); }
+.punto.gris { background: var(--tenue); }
+
+.estado { font-weight: 600; white-space: nowrap; }
+.estado.ok { color: var(--ok); }
+.estado.mal { color: var(--mal); }
+.estado.tenue { color: var(--tenue); font-weight: 500; }
+
+/* --- Tablas y listas «dato → valor» --- */
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+th { color: var(--tenue); font-weight: 600; font-size: 12.5px; }
+td.num { font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+
+.dato { display: grid; grid-template-columns: 150px 1fr; gap: 4px 10px; font-size: 14px; }
+.dato dt { color: var(--tenue); }
+.dato dd { margin: 0; word-break: break-word; }
+
+details summary { cursor: pointer; }
+
+/* --- Campos --- */
+input[type=text], select, input.numero {
+    font: inherit; border-radius: 7px;
+    border: 1px solid var(--borde); background: var(--fondo); color: var(--texto);
+}
+input[type=text] { padding: 6px 9px; }
+select { padding: 5px 8px; }
+input.numero { width: 80px; padding: 4px 8px; }
+.controles-voz { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+.controles-voz input[type=text] { flex: 1; min-width: 200px; }
+.controles-voz.separado { margin-top: 8px; }
+
+/* --- Diálogo de propuestas (lo arma ../comun/comun.js con id="dialogo") --- */
+#dialogo {
+    border: 1px solid var(--borde); border-radius: 12px; padding: 18px;
+    background: var(--tarjeta); color: var(--texto); max-width: 520px; width: calc(100% - 32px);
+}
+#dialogo::backdrop { background: rgba(0, 0, 0, .45); }
+#dialogo label { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--tenue); margin-top: 10px; }
+.fila-botones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.antes-despues { font-size: 14px; }
+.antes-despues div { margin: 4px 0; }

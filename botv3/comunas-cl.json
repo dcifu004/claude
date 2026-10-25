@@ -1,0 +1,2076 @@
+{
+ "fuente": "listado juanbrujo/chile-regiones-comunas + límites comunales de OpenStreetMap (Nominatim), 21-10-2026. © colaboradores de OpenStreetMap, ODbL.",
+ "comunas": [
+  {
+   "comuna": "Arica",
+   "region": "Arica y Parinacota",
+   "lat": -18.48,
+   "lon": -70.32
+  },
+  {
+   "comuna": "Camarones",
+   "region": "Arica y Parinacota",
+   "lat": -18.96,
+   "lon": -69.72
+  },
+  {
+   "comuna": "Putre",
+   "region": "Arica y Parinacota",
+   "lat": -18.2,
+   "lon": -69.56
+  },
+  {
+   "comuna": "General Lagos",
+   "region": "Arica y Parinacota",
+   "lat": -17.83,
+   "lon": -69.55
+  },
+  {
+   "comuna": "Iquique",
+   "region": "Tarapacá",
+   "lat": -20.21,
+   "lon": -70.15
+  },
+  {
+   "comuna": "Alto Hospicio",
+   "region": "Tarapacá",
+   "lat": -20.27,
+   "lon": -70.1
+  },
+  {
+   "comuna": "Pozo Almonte",
+   "region": "Tarapacá",
+   "lat": -20.26,
+   "lon": -69.79
+  },
+  {
+   "comuna": "Camiña",
+   "region": "Tarapacá",
+   "lat": -19.31,
+   "lon": -69.43
+  },
+  {
+   "comuna": "Colchane",
+   "region": "Tarapacá",
+   "lat": -19.28,
+   "lon": -68.64
+  },
+  {
+   "comuna": "Huara",
+   "region": "Tarapacá",
+   "lat": -20.0,
+   "lon": -69.77
+  },
+  {
+   "comuna": "Pica",
+   "region": "Tarapacá",
+   "lat": -20.49,
+   "lon": -69.33
+  },
+  {
+   "comuna": "Antofagasta",
+   "region": "Antofagasta",
+   "lat": -23.65,
+   "lon": -70.4
+  },
+  {
+   "comuna": "Mejillones",
+   "region": "Antofagasta",
+   "lat": -23.1,
+   "lon": -70.45
+  },
+  {
+   "comuna": "Sierra Gorda",
+   "region": "Antofagasta",
+   "lat": -22.89,
+   "lon": -69.32
+  },
+  {
+   "comuna": "Taltal",
+   "region": "Antofagasta",
+   "lat": -25.41,
+   "lon": -70.49
+  },
+  {
+   "comuna": "Calama",
+   "region": "Antofagasta",
+   "lat": -22.46,
+   "lon": -68.93
+  },
+  {
+   "comuna": "Ollagüe",
+   "region": "Antofagasta",
+   "lat": -21.22,
+   "lon": -68.25
+  },
+  {
+   "comuna": "San Pedro de Atacama",
+   "region": "Antofagasta",
+   "lat": -22.91,
+   "lon": -68.2
+  },
+  {
+   "comuna": "Tocopilla",
+   "region": "Antofagasta",
+   "lat": -22.09,
+   "lon": -70.2
+  },
+  {
+   "comuna": "María Elena",
+   "region": "Antofagasta",
+   "lat": -22.35,
+   "lon": -69.66
+  },
+  {
+   "comuna": "Copiapó",
+   "region": "Atacama",
+   "lat": -27.37,
+   "lon": -70.33
+  },
+  {
+   "comuna": "Caldera",
+   "region": "Atacama",
+   "lat": -27.07,
+   "lon": -70.82
+  },
+  {
+   "comuna": "Tierra Amarilla",
+   "region": "Atacama",
+   "lat": -27.47,
+   "lon": -70.26
+  },
+  {
+   "comuna": "Chañaral",
+   "region": "Atacama",
+   "lat": -26.35,
+   "lon": -70.62
+  },
+  {
+   "comuna": "Diego de Almagro",
+   "region": "Atacama",
+   "lat": -26.39,
+   "lon": -70.05
+  },
+  {
+   "comuna": "Vallenar",
+   "region": "Atacama",
+   "lat": -28.58,
+   "lon": -70.76
+  },
+  {
+   "comuna": "Alto del Carmen",
+   "region": "Atacama",
+   "lat": -28.76,
+   "lon": -70.49
+  },
+  {
+   "comuna": "Freirina",
+   "region": "Atacama",
+   "lat": -28.51,
+   "lon": -71.08
+  },
+  {
+   "comuna": "Huasco",
+   "region": "Atacama",
+   "lat": -28.47,
+   "lon": -71.22
+  },
+  {
+   "comuna": "La Serena",
+   "region": "Coquimbo",
+   "lat": -29.9,
+   "lon": -71.25
+  },
+  {
+   "comuna": "Coquimbo",
+   "region": "Coquimbo",
+   "lat": -29.95,
+   "lon": -71.34
+  },
+  {
+   "comuna": "Andacollo",
+   "region": "Coquimbo",
+   "lat": -30.23,
+   "lon": -71.08
+  },
+  {
+   "comuna": "La Higuera",
+   "region": "Coquimbo",
+   "lat": -29.51,
+   "lon": -71.2
+  },
+  {
+   "comuna": "Paiguano",
+   "region": "Coquimbo",
+   "lat": -30.03,
+   "lon": -70.52
+  },
+  {
+   "comuna": "Vicuña",
+   "region": "Coquimbo",
+   "lat": -30.03,
+   "lon": -70.71
+  },
+  {
+   "comuna": "Illapel",
+   "region": "Coquimbo",
+   "lat": -31.63,
+   "lon": -71.17
+  },
+  {
+   "comuna": "Canela",
+   "region": "Coquimbo",
+   "lat": -31.46,
+   "lon": -71.43
+  },
+  {
+   "comuna": "Los Vilos",
+   "region": "Coquimbo",
+   "lat": -31.91,
+   "lon": -71.51
+  },
+  {
+   "comuna": "Salamanca",
+   "region": "Coquimbo",
+   "lat": -31.78,
+   "lon": -70.96
+  },
+  {
+   "comuna": "Ovalle",
+   "region": "Coquimbo",
+   "lat": -30.6,
+   "lon": -71.2
+  },
+  {
+   "comuna": "Combarbalá",
+   "region": "Coquimbo",
+   "lat": -31.18,
+   "lon": -71.0
+  },
+  {
+   "comuna": "Monte Patria",
+   "region": "Coquimbo",
+   "lat": -30.69,
+   "lon": -70.96
+  },
+  {
+   "comuna": "Punitaqui",
+   "region": "Coquimbo",
+   "lat": -30.83,
+   "lon": -71.26
+  },
+  {
+   "comuna": "Río Hurtado",
+   "region": "Coquimbo",
+   "lat": -30.45,
+   "lon": -70.68
+  },
+  {
+   "comuna": "Valparaíso",
+   "region": "Valparaíso",
+   "lat": -33.05,
+   "lon": -71.62
+  },
+  {
+   "comuna": "Casablanca",
+   "region": "Valparaíso",
+   "lat": -33.32,
+   "lon": -71.41
+  },
+  {
+   "comuna": "Concón",
+   "region": "Valparaíso",
+   "lat": -32.92,
+   "lon": -71.52
+  },
+  {
+   "comuna": "Juan Fernández",
+   "region": "Valparaíso",
+   "lat": -33.64,
+   "lon": -78.83
+  },
+  {
+   "comuna": "Puchuncaví",
+   "region": "Valparaíso",
+   "lat": -32.73,
+   "lon": -71.42
+  },
+  {
+   "comuna": "Quintero",
+   "region": "Valparaíso",
+   "lat": -32.78,
+   "lon": -71.53
+  },
+  {
+   "comuna": "Viña del Mar",
+   "region": "Valparaíso",
+   "lat": -33.02,
+   "lon": -71.55
+  },
+  {
+   "comuna": "Isla de Pascua",
+   "region": "Valparaíso",
+   "lat": -27.13,
+   "lon": -109.35
+  },
+  {
+   "comuna": "Los Andes",
+   "region": "Valparaíso",
+   "lat": -32.83,
+   "lon": -70.6
+  },
+  {
+   "comuna": "Calle Larga",
+   "region": "Valparaíso",
+   "lat": -32.86,
+   "lon": -70.63
+  },
+  {
+   "comuna": "Rinconada",
+   "region": "Valparaíso",
+   "lat": -32.84,
+   "lon": -70.69
+  },
+  {
+   "comuna": "San Esteban",
+   "region": "Valparaíso",
+   "lat": -32.8,
+   "lon": -70.58
+  },
+  {
+   "comuna": "La Ligua",
+   "region": "Valparaíso",
+   "lat": -32.45,
+   "lon": -71.23
+  },
+  {
+   "comuna": "Cabildo",
+   "region": "Valparaíso",
+   "lat": -32.43,
+   "lon": -71.07
+  },
+  {
+   "comuna": "Papudo",
+   "region": "Valparaíso",
+   "lat": -32.51,
+   "lon": -71.45
+  },
+  {
+   "comuna": "Petorca",
+   "region": "Valparaíso",
+   "lat": -32.25,
+   "lon": -70.93
+  },
+  {
+   "comuna": "Zapallar",
+   "region": "Valparaíso",
+   "lat": -32.55,
+   "lon": -71.46
+  },
+  {
+   "comuna": "Quillota",
+   "region": "Valparaíso",
+   "lat": -32.88,
+   "lon": -71.25
+  },
+  {
+   "comuna": "Hijuelas",
+   "region": "Valparaíso",
+   "lat": -32.8,
+   "lon": -71.15
+  },
+  {
+   "comuna": "La Cruz",
+   "region": "Valparaíso",
+   "lat": -32.83,
+   "lon": -71.23
+  },
+  {
+   "comuna": "Nogales",
+   "region": "Valparaíso",
+   "lat": -32.74,
+   "lon": -71.2
+  },
+  {
+   "comuna": "San Antonio",
+   "region": "Valparaíso",
+   "lat": -33.58,
+   "lon": -71.61
+  },
+  {
+   "comuna": "Algarrobo",
+   "region": "Valparaíso",
+   "lat": -33.37,
+   "lon": -71.67
+  },
+  {
+   "comuna": "Cartagena",
+   "region": "Valparaíso",
+   "lat": -33.55,
+   "lon": -71.6
+  },
+  {
+   "comuna": "El Quisco",
+   "region": "Valparaíso",
+   "lat": -33.4,
+   "lon": -71.69
+  },
+  {
+   "comuna": "El Tabo",
+   "region": "Valparaíso",
+   "lat": -33.45,
+   "lon": -71.67
+  },
+  {
+   "comuna": "Santo Domingo",
+   "region": "Valparaíso",
+   "lat": -33.79,
+   "lon": -71.68
+  },
+  {
+   "comuna": "San Felipe",
+   "region": "Valparaíso",
+   "lat": -32.75,
+   "lon": -70.73
+  },
+  {
+   "comuna": "Catemu",
+   "region": "Valparaíso",
+   "lat": -32.78,
+   "lon": -70.96
+  },
+  {
+   "comuna": "Panquehue",
+   "region": "Valparaíso",
+   "lat": -32.77,
+   "lon": -70.84
+  },
+  {
+   "comuna": "Putaendo",
+   "region": "Valparaíso",
+   "lat": -32.63,
+   "lon": -70.72
+  },
+  {
+   "comuna": "Santa María",
+   "region": "Valparaíso",
+   "lat": -32.75,
+   "lon": -70.66
+  },
+  {
+   "comuna": "Quilpué",
+   "region": "Valparaíso",
+   "lat": -33.05,
+   "lon": -71.44
+  },
+  {
+   "comuna": "Limache",
+   "region": "Valparaíso",
+   "lat": -33.0,
+   "lon": -71.27
+  },
+  {
+   "comuna": "Olmué",
+   "region": "Valparaíso",
+   "lat": -33.0,
+   "lon": -71.19
+  },
+  {
+   "comuna": "Villa Alemana",
+   "region": "Valparaíso",
+   "lat": -33.04,
+   "lon": -71.37
+  },
+  {
+   "comuna": "Rancagua",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.17,
+   "lon": -70.74
+  },
+  {
+   "comuna": "Codegua",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.04,
+   "lon": -70.66
+  },
+  {
+   "comuna": "Coinco",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.27,
+   "lon": -70.95
+  },
+  {
+   "comuna": "Coltauco",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.29,
+   "lon": -71.08
+  },
+  {
+   "comuna": "Doñihue",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.23,
+   "lon": -70.96
+  },
+  {
+   "comuna": "Graneros",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.06,
+   "lon": -70.73
+  },
+  {
+   "comuna": "Las Cabras",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.29,
+   "lon": -71.31
+  },
+  {
+   "comuna": "Machalí",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.18,
+   "lon": -70.65
+  },
+  {
+   "comuna": "Malloa",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.44,
+   "lon": -70.94
+  },
+  {
+   "comuna": "Mostazal",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -33.95,
+   "lon": -70.6
+  },
+  {
+   "comuna": "Olivar",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.21,
+   "lon": -70.82
+  },
+  {
+   "comuna": "Peumo",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.4,
+   "lon": -71.17
+  },
+  {
+   "comuna": "Pichidegua",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.36,
+   "lon": -71.28
+  },
+  {
+   "comuna": "Quinta de Tilcoco",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.35,
+   "lon": -70.96
+  },
+  {
+   "comuna": "Rengo",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.41,
+   "lon": -70.86
+  },
+  {
+   "comuna": "Requínoa",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.28,
+   "lon": -70.82
+  },
+  {
+   "comuna": "Pichilemu",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.39,
+   "lon": -72.0
+  },
+  {
+   "comuna": "La Estrella",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.21,
+   "lon": -71.65
+  },
+  {
+   "comuna": "Litueche",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.12,
+   "lon": -71.73
+  },
+  {
+   "comuna": "Marchihue",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.37,
+   "lon": -71.64
+  },
+  {
+   "comuna": "Navidad",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -33.95,
+   "lon": -71.83
+  },
+  {
+   "comuna": "Paredones",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.65,
+   "lon": -71.9
+  },
+  {
+   "comuna": "San Fernando",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.58,
+   "lon": -70.99
+  },
+  {
+   "comuna": "Chépica",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.73,
+   "lon": -71.27
+  },
+  {
+   "comuna": "Chimbarongo",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.71,
+   "lon": -71.04
+  },
+  {
+   "comuna": "Lolol",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.73,
+   "lon": -71.64
+  },
+  {
+   "comuna": "Nancagua",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.65,
+   "lon": -71.2
+  },
+  {
+   "comuna": "Palmilla",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.6,
+   "lon": -71.36
+  },
+  {
+   "comuna": "Peralillo",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.48,
+   "lon": -71.48
+  },
+  {
+   "comuna": "Placilla",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.64,
+   "lon": -71.12
+  },
+  {
+   "comuna": "Pumanque",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.6,
+   "lon": -71.65
+  },
+  {
+   "comuna": "Santa Cruz",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.64,
+   "lon": -71.37
+  },
+  {
+   "comuna": "Talca",
+   "region": "Región del Maule",
+   "lat": -35.43,
+   "lon": -71.67
+  },
+  {
+   "comuna": "Constitución",
+   "region": "Región del Maule",
+   "lat": -35.33,
+   "lon": -72.41
+  },
+  {
+   "comuna": "Curepto",
+   "region": "Región del Maule",
+   "lat": -35.09,
+   "lon": -72.02
+  },
+  {
+   "comuna": "Empedrado",
+   "region": "Región del Maule",
+   "lat": -35.59,
+   "lon": -72.28
+  },
+  {
+   "comuna": "Maule",
+   "region": "Región del Maule",
+   "lat": -35.52,
+   "lon": -71.69
+  },
+  {
+   "comuna": "Pelarco",
+   "region": "Región del Maule",
+   "lat": -35.38,
+   "lon": -71.45
+  },
+  {
+   "comuna": "Pencahue",
+   "region": "Región del Maule",
+   "lat": -35.4,
+   "lon": -71.8
+  },
+  {
+   "comuna": "Río Claro",
+   "region": "Región del Maule",
+   "lat": -35.29,
+   "lon": -71.26
+  },
+  {
+   "comuna": "San Clemente",
+   "region": "Región del Maule",
+   "lat": -35.54,
+   "lon": -71.49
+  },
+  {
+   "comuna": "San Rafael",
+   "region": "Región del Maule",
+   "lat": -35.31,
+   "lon": -71.52
+  },
+  {
+   "comuna": "Cauquenes",
+   "region": "Región del Maule",
+   "lat": -35.97,
+   "lon": -72.32
+  },
+  {
+   "comuna": "Chanco",
+   "region": "Región del Maule",
+   "lat": -35.73,
+   "lon": -72.53
+  },
+  {
+   "comuna": "Pelluhue",
+   "region": "Región del Maule",
+   "lat": -35.82,
+   "lon": -72.58
+  },
+  {
+   "comuna": "Curicó",
+   "region": "Región del Maule",
+   "lat": -34.99,
+   "lon": -71.24
+  },
+  {
+   "comuna": "Hualañé",
+   "region": "Región del Maule",
+   "lat": -34.98,
+   "lon": -71.8
+  },
+  {
+   "comuna": "Licantén",
+   "region": "Región del Maule",
+   "lat": -34.99,
+   "lon": -71.98
+  },
+  {
+   "comuna": "Molina",
+   "region": "Región del Maule",
+   "lat": -35.11,
+   "lon": -71.28
+  },
+  {
+   "comuna": "Rauco",
+   "region": "Región del Maule",
+   "lat": -34.92,
+   "lon": -71.32
+  },
+  {
+   "comuna": "Romeral",
+   "region": "Región del Maule",
+   "lat": -34.96,
+   "lon": -71.13
+  },
+  {
+   "comuna": "Sagrada Familia",
+   "region": "Región del Maule",
+   "lat": -35.0,
+   "lon": -71.38
+  },
+  {
+   "comuna": "Teno",
+   "region": "Región del Maule",
+   "lat": -34.87,
+   "lon": -71.16
+  },
+  {
+   "comuna": "Vichuquén",
+   "region": "Región del Maule",
+   "lat": -34.88,
+   "lon": -71.99
+  },
+  {
+   "comuna": "Linares",
+   "region": "Región del Maule",
+   "lat": -35.85,
+   "lon": -71.6
+  },
+  {
+   "comuna": "Colbún",
+   "region": "Región del Maule",
+   "lat": -35.7,
+   "lon": -71.41
+  },
+  {
+   "comuna": "Longaví",
+   "region": "Región del Maule",
+   "lat": -35.97,
+   "lon": -71.68
+  },
+  {
+   "comuna": "Parral",
+   "region": "Región del Maule",
+   "lat": -36.14,
+   "lon": -71.82
+  },
+  {
+   "comuna": "Retiro",
+   "region": "Región del Maule",
+   "lat": -36.06,
+   "lon": -71.77
+  },
+  {
+   "comuna": "San Javier",
+   "region": "Región del Maule",
+   "lat": -35.59,
+   "lon": -71.74
+  },
+  {
+   "comuna": "Villa Alegre",
+   "region": "Región del Maule",
+   "lat": -35.68,
+   "lon": -71.74
+  },
+  {
+   "comuna": "Yerbas Buenas",
+   "region": "Región del Maule",
+   "lat": -35.75,
+   "lon": -71.58
+  },
+  {
+   "comuna": "Cobquecura",
+   "region": "Región de Ñuble",
+   "lat": -36.13,
+   "lon": -72.79
+  },
+  {
+   "comuna": "Coelemu",
+   "region": "Región de Ñuble",
+   "lat": -36.49,
+   "lon": -72.7
+  },
+  {
+   "comuna": "Ninhue",
+   "region": "Región de Ñuble",
+   "lat": -36.39,
+   "lon": -72.4
+  },
+  {
+   "comuna": "Portezuelo",
+   "region": "Región de Ñuble",
+   "lat": -36.53,
+   "lon": -72.43
+  },
+  {
+   "comuna": "Quirihue",
+   "region": "Región de Ñuble",
+   "lat": -36.28,
+   "lon": -72.54
+  },
+  {
+   "comuna": "Ránquil",
+   "region": "Región de Ñuble",
+   "lat": -36.64,
+   "lon": -72.6
+  },
+  {
+   "comuna": "Treguaco",
+   "region": "Región de Ñuble",
+   "lat": -36.43,
+   "lon": -72.62
+  },
+  {
+   "comuna": "Bulnes",
+   "region": "Región de Ñuble",
+   "lat": -36.74,
+   "lon": -72.3
+  },
+  {
+   "comuna": "Chillán Viejo",
+   "region": "Región de Ñuble",
+   "lat": -36.62,
+   "lon": -72.13
+  },
+  {
+   "comuna": "Chillán",
+   "region": "Región de Ñuble",
+   "lat": -36.61,
+   "lon": -72.1
+  },
+  {
+   "comuna": "El Carmen",
+   "region": "Región de Ñuble",
+   "lat": -36.9,
+   "lon": -72.02
+  },
+  {
+   "comuna": "Pemuco",
+   "region": "Región de Ñuble",
+   "lat": -36.98,
+   "lon": -72.1
+  },
+  {
+   "comuna": "Pinto",
+   "region": "Región de Ñuble",
+   "lat": -36.7,
+   "lon": -71.89
+  },
+  {
+   "comuna": "Quillón",
+   "region": "Región de Ñuble",
+   "lat": -36.81,
+   "lon": -72.51
+  },
+  {
+   "comuna": "San Ignacio",
+   "region": "Región de Ñuble",
+   "lat": -36.8,
+   "lon": -72.03
+  },
+  {
+   "comuna": "Yungay",
+   "region": "Región de Ñuble",
+   "lat": -37.12,
+   "lon": -72.02
+  },
+  {
+   "comuna": "Coihueco",
+   "region": "Región de Ñuble",
+   "lat": -36.63,
+   "lon": -71.83
+  },
+  {
+   "comuna": "Ñiquén",
+   "region": "Región de Ñuble",
+   "lat": -36.28,
+   "lon": -71.95
+  },
+  {
+   "comuna": "San Carlos",
+   "region": "Región de Ñuble",
+   "lat": -36.38,
+   "lon": -72.02
+  },
+  {
+   "comuna": "San Fabián",
+   "region": "Región de Ñuble",
+   "lat": -36.65,
+   "lon": -71.21
+  },
+  {
+   "comuna": "San Nicolás",
+   "region": "Región de Ñuble",
+   "lat": -36.49,
+   "lon": -72.21
+  },
+  {
+   "comuna": "Concepción",
+   "region": "Región del Biobío",
+   "lat": -36.83,
+   "lon": -73.05
+  },
+  {
+   "comuna": "Coronel",
+   "region": "Región del Biobío",
+   "lat": -37.02,
+   "lon": -73.16
+  },
+  {
+   "comuna": "Chiguayante",
+   "region": "Región del Biobío",
+   "lat": -36.93,
+   "lon": -73.02
+  },
+  {
+   "comuna": "Florida",
+   "region": "Región del Biobío",
+   "lat": -36.83,
+   "lon": -72.66
+  },
+  {
+   "comuna": "Hualqui",
+   "region": "Región del Biobío",
+   "lat": -36.98,
+   "lon": -72.94
+  },
+  {
+   "comuna": "Lota",
+   "region": "Región del Biobío",
+   "lat": -37.09,
+   "lon": -73.16
+  },
+  {
+   "comuna": "Penco",
+   "region": "Región del Biobío",
+   "lat": -36.74,
+   "lon": -72.99
+  },
+  {
+   "comuna": "San Pedro de la Paz",
+   "region": "Región del Biobío",
+   "lat": -36.84,
+   "lon": -73.1
+  },
+  {
+   "comuna": "Santa Juana",
+   "region": "Región del Biobío",
+   "lat": -37.17,
+   "lon": -72.94
+  },
+  {
+   "comuna": "Talcahuano",
+   "region": "Región del Biobío",
+   "lat": -36.71,
+   "lon": -73.11
+  },
+  {
+   "comuna": "Tomé",
+   "region": "Región del Biobío",
+   "lat": -36.62,
+   "lon": -72.96
+  },
+  {
+   "comuna": "Hualpén",
+   "region": "Región del Biobío",
+   "lat": -36.79,
+   "lon": -73.09
+  },
+  {
+   "comuna": "Lebu",
+   "region": "Región del Biobío",
+   "lat": -37.61,
+   "lon": -73.66
+  },
+  {
+   "comuna": "Arauco",
+   "region": "Región del Biobío",
+   "lat": -37.25,
+   "lon": -73.32
+  },
+  {
+   "comuna": "Cañete",
+   "region": "Región del Biobío",
+   "lat": -37.8,
+   "lon": -73.4
+  },
+  {
+   "comuna": "Contulmo",
+   "region": "Región del Biobío",
+   "lat": -38.02,
+   "lon": -73.23
+  },
+  {
+   "comuna": "Curanilahue",
+   "region": "Región del Biobío",
+   "lat": -37.48,
+   "lon": -73.35
+  },
+  {
+   "comuna": "Los Álamos",
+   "region": "Región del Biobío",
+   "lat": -37.63,
+   "lon": -73.46
+  },
+  {
+   "comuna": "Tirúa",
+   "region": "Región del Biobío",
+   "lat": -38.34,
+   "lon": -73.49
+  },
+  {
+   "comuna": "Los Ángeles",
+   "region": "Región del Biobío",
+   "lat": -37.47,
+   "lon": -72.35
+  },
+  {
+   "comuna": "Antuco",
+   "region": "Región del Biobío",
+   "lat": -37.33,
+   "lon": -71.68
+  },
+  {
+   "comuna": "Cabrero",
+   "region": "Región del Biobío",
+   "lat": -37.04,
+   "lon": -72.4
+  },
+  {
+   "comuna": "Laja",
+   "region": "Región del Biobío",
+   "lat": -37.28,
+   "lon": -72.71
+  },
+  {
+   "comuna": "Mulchén",
+   "region": "Región del Biobío",
+   "lat": -37.72,
+   "lon": -72.24
+  },
+  {
+   "comuna": "Nacimiento",
+   "region": "Región del Biobío",
+   "lat": -37.5,
+   "lon": -72.67
+  },
+  {
+   "comuna": "Negrete",
+   "region": "Región del Biobío",
+   "lat": -37.59,
+   "lon": -72.53
+  },
+  {
+   "comuna": "Quilaco",
+   "region": "Región del Biobío",
+   "lat": -37.68,
+   "lon": -72.01
+  },
+  {
+   "comuna": "Quilleco",
+   "region": "Región del Biobío",
+   "lat": -37.47,
+   "lon": -71.98
+  },
+  {
+   "comuna": "San Rosendo",
+   "region": "Región del Biobío",
+   "lat": -37.26,
+   "lon": -72.72
+  },
+  {
+   "comuna": "Santa Bárbara",
+   "region": "Región del Biobío",
+   "lat": -37.67,
+   "lon": -72.02
+  },
+  {
+   "comuna": "Tucapel",
+   "region": "Región del Biobío",
+   "lat": -37.29,
+   "lon": -71.95
+  },
+  {
+   "comuna": "Yumbel",
+   "region": "Región del Biobío",
+   "lat": -37.1,
+   "lon": -72.56
+  },
+  {
+   "comuna": "Alto Biobío",
+   "region": "Región del Biobío",
+   "lat": -37.84,
+   "lon": -71.41
+  },
+  {
+   "comuna": "Temuco",
+   "region": "Región de la Araucanía",
+   "lat": -38.74,
+   "lon": -72.59
+  },
+  {
+   "comuna": "Carahue",
+   "region": "Región de la Araucanía",
+   "lat": -38.71,
+   "lon": -73.17
+  },
+  {
+   "comuna": "Cunco",
+   "region": "Región de la Araucanía",
+   "lat": -38.93,
+   "lon": -72.03
+  },
+  {
+   "comuna": "Curarrehue",
+   "region": "Región de la Araucanía",
+   "lat": -39.36,
+   "lon": -71.59
+  },
+  {
+   "comuna": "Freire",
+   "region": "Región de la Araucanía",
+   "lat": -38.95,
+   "lon": -72.63
+  },
+  {
+   "comuna": "Galvarino",
+   "region": "Región de la Araucanía",
+   "lat": -38.41,
+   "lon": -72.78
+  },
+  {
+   "comuna": "Gorbea",
+   "region": "Región de la Araucanía",
+   "lat": -39.1,
+   "lon": -72.68
+  },
+  {
+   "comuna": "Lautaro",
+   "region": "Región de la Araucanía",
+   "lat": -38.53,
+   "lon": -72.44
+  },
+  {
+   "comuna": "Loncoche",
+   "region": "Región de la Araucanía",
+   "lat": -39.37,
+   "lon": -72.63
+  },
+  {
+   "comuna": "Melipeuco",
+   "region": "Región de la Araucanía",
+   "lat": -38.85,
+   "lon": -71.7
+  },
+  {
+   "comuna": "Nueva Imperial",
+   "region": "Región de la Araucanía",
+   "lat": -38.75,
+   "lon": -72.95
+  },
+  {
+   "comuna": "Padre las Casas",
+   "region": "Región de la Araucanía",
+   "lat": -38.77,
+   "lon": -72.6
+  },
+  {
+   "comuna": "Perquenco",
+   "region": "Región de la Araucanía",
+   "lat": -38.42,
+   "lon": -72.38
+  },
+  {
+   "comuna": "Pitrufquén",
+   "region": "Región de la Araucanía",
+   "lat": -38.99,
+   "lon": -72.64
+  },
+  {
+   "comuna": "Pucón",
+   "region": "Región de la Araucanía",
+   "lat": -39.27,
+   "lon": -71.98
+  },
+  {
+   "comuna": "Saavedra",
+   "region": "Región de la Araucanía",
+   "lat": -38.83,
+   "lon": -73.28
+  },
+  {
+   "comuna": "Teodoro Schmidt",
+   "region": "Región de la Araucanía",
+   "lat": -39.0,
+   "lon": -73.09
+  },
+  {
+   "comuna": "Toltén",
+   "region": "Región de la Araucanía",
+   "lat": -39.21,
+   "lon": -73.05
+  },
+  {
+   "comuna": "Vilcún",
+   "region": "Región de la Araucanía",
+   "lat": -38.67,
+   "lon": -72.22
+  },
+  {
+   "comuna": "Villarrica",
+   "region": "Región de la Araucanía",
+   "lat": -39.28,
+   "lon": -72.23
+  },
+  {
+   "comuna": "Cholchol",
+   "region": "Región de la Araucanía",
+   "lat": -38.6,
+   "lon": -72.85
+  },
+  {
+   "comuna": "Angol",
+   "region": "Región de la Araucanía",
+   "lat": -37.8,
+   "lon": -72.71
+  },
+  {
+   "comuna": "Collipulli",
+   "region": "Región de la Araucanía",
+   "lat": -37.96,
+   "lon": -72.44
+  },
+  {
+   "comuna": "Curacautín",
+   "region": "Región de la Araucanía",
+   "lat": -38.44,
+   "lon": -71.89
+  },
+  {
+   "comuna": "Ercilla",
+   "region": "Región de la Araucanía",
+   "lat": -38.06,
+   "lon": -72.38
+  },
+  {
+   "comuna": "Lonquimay",
+   "region": "Región de la Araucanía",
+   "lat": -38.45,
+   "lon": -71.37
+  },
+  {
+   "comuna": "Los Sauces",
+   "region": "Región de la Araucanía",
+   "lat": -37.98,
+   "lon": -72.83
+  },
+  {
+   "comuna": "Lumaco",
+   "region": "Región de la Araucanía",
+   "lat": -38.17,
+   "lon": -72.91
+  },
+  {
+   "comuna": "Purén",
+   "region": "Región de la Araucanía",
+   "lat": -38.03,
+   "lon": -73.07
+  },
+  {
+   "comuna": "Renaico",
+   "region": "Región de la Araucanía",
+   "lat": -37.67,
+   "lon": -72.58
+  },
+  {
+   "comuna": "Traiguén",
+   "region": "Región de la Araucanía",
+   "lat": -38.25,
+   "lon": -72.67
+  },
+  {
+   "comuna": "Victoria",
+   "region": "Región de la Araucanía",
+   "lat": -38.23,
+   "lon": -72.33
+  },
+  {
+   "comuna": "Valdivia",
+   "region": "Región de Los Ríos",
+   "lat": -39.81,
+   "lon": -73.25
+  },
+  {
+   "comuna": "Corral",
+   "region": "Región de Los Ríos",
+   "lat": -39.89,
+   "lon": -73.43
+  },
+  {
+   "comuna": "Lanco",
+   "region": "Región de Los Ríos",
+   "lat": -39.45,
+   "lon": -72.78
+  },
+  {
+   "comuna": "Los Lagos",
+   "region": "Región de Los Ríos",
+   "lat": -39.86,
+   "lon": -72.81
+  },
+  {
+   "comuna": "Máfil",
+   "region": "Región de Los Ríos",
+   "lat": -39.67,
+   "lon": -72.95
+  },
+  {
+   "comuna": "Mariquina",
+   "region": "Región de Los Ríos",
+   "lat": -39.5,
+   "lon": -73.04
+  },
+  {
+   "comuna": "Paillaco",
+   "region": "Región de Los Ríos",
+   "lat": -40.07,
+   "lon": -72.87
+  },
+  {
+   "comuna": "Panguipulli",
+   "region": "Región de Los Ríos",
+   "lat": -39.64,
+   "lon": -72.33
+  },
+  {
+   "comuna": "La Unión",
+   "region": "Región de Los Ríos",
+   "lat": -40.17,
+   "lon": -73.3
+  },
+  {
+   "comuna": "Futrono",
+   "region": "Región de Los Ríos",
+   "lat": -40.13,
+   "lon": -72.38
+  },
+  {
+   "comuna": "Lago Ranco",
+   "region": "Región de Los Ríos",
+   "lat": -40.32,
+   "lon": -72.48
+  },
+  {
+   "comuna": "Río Bueno",
+   "region": "Región de Los Ríos",
+   "lat": -40.33,
+   "lon": -72.96
+  },
+  {
+   "comuna": "Puerto Montt",
+   "region": "Región de Los Lagos",
+   "lat": -41.47,
+   "lon": -72.94
+  },
+  {
+   "comuna": "Calbuco",
+   "region": "Región de Los Lagos",
+   "lat": -41.77,
+   "lon": -73.13
+  },
+  {
+   "comuna": "Cochamó",
+   "region": "Región de Los Lagos",
+   "lat": -41.49,
+   "lon": -72.31
+  },
+  {
+   "comuna": "Fresia",
+   "region": "Región de Los Lagos",
+   "lat": -41.15,
+   "lon": -73.42
+  },
+  {
+   "comuna": "Frutillar",
+   "region": "Región de Los Lagos",
+   "lat": -41.13,
+   "lon": -73.06
+  },
+  {
+   "comuna": "Los Muermos",
+   "region": "Región de Los Lagos",
+   "lat": -41.4,
+   "lon": -73.46
+  },
+  {
+   "comuna": "Llanquihue",
+   "region": "Región de Los Lagos",
+   "lat": -41.26,
+   "lon": -73.0
+  },
+  {
+   "comuna": "Maullín",
+   "region": "Región de Los Lagos",
+   "lat": -41.62,
+   "lon": -73.6
+  },
+  {
+   "comuna": "Puerto Varas",
+   "region": "Región de Los Lagos",
+   "lat": -41.32,
+   "lon": -72.98
+  },
+  {
+   "comuna": "Castro",
+   "region": "Región de Los Lagos",
+   "lat": -42.52,
+   "lon": -73.67
+  },
+  {
+   "comuna": "Ancud",
+   "region": "Región de Los Lagos",
+   "lat": -41.87,
+   "lon": -73.83
+  },
+  {
+   "comuna": "Chonchi",
+   "region": "Región de Los Lagos",
+   "lat": -42.62,
+   "lon": -73.77
+  },
+  {
+   "comuna": "Curaco de Vélez",
+   "region": "Región de Los Lagos",
+   "lat": -42.44,
+   "lon": -73.6
+  },
+  {
+   "comuna": "Dalcahue",
+   "region": "Región de Los Lagos",
+   "lat": -42.32,
+   "lon": -73.76
+  },
+  {
+   "comuna": "Puqueldón",
+   "region": "Región de Los Lagos",
+   "lat": -42.6,
+   "lon": -73.68
+  },
+  {
+   "comuna": "Queilén",
+   "region": "Región de Los Lagos",
+   "lat": -42.89,
+   "lon": -73.47
+  },
+  {
+   "comuna": "Quellón",
+   "region": "Región de Los Lagos",
+   "lat": -43.12,
+   "lon": -73.62
+  },
+  {
+   "comuna": "Quemchi",
+   "region": "Región de Los Lagos",
+   "lat": -42.14,
+   "lon": -73.47
+  },
+  {
+   "comuna": "Quinchao",
+   "region": "Región de Los Lagos",
+   "lat": -42.53,
+   "lon": -73.27
+  },
+  {
+   "comuna": "Osorno",
+   "region": "Región de Los Lagos",
+   "lat": -40.57,
+   "lon": -73.14
+  },
+  {
+   "comuna": "Puerto Octay",
+   "region": "Región de Los Lagos",
+   "lat": -40.97,
+   "lon": -72.88
+  },
+  {
+   "comuna": "Purranque",
+   "region": "Región de Los Lagos",
+   "lat": -40.91,
+   "lon": -73.16
+  },
+  {
+   "comuna": "Puyehue",
+   "region": "Región de Los Lagos",
+   "lat": -40.71,
+   "lon": -72.39
+  },
+  {
+   "comuna": "Río Negro",
+   "region": "Región de Los Lagos",
+   "lat": -40.8,
+   "lon": -73.22
+  },
+  {
+   "comuna": "San Juan de la Costa",
+   "region": "Región de Los Lagos",
+   "lat": -40.49,
+   "lon": -73.54
+  },
+  {
+   "comuna": "San Pablo",
+   "region": "Región de Los Lagos",
+   "lat": -40.41,
+   "lon": -73.01
+  },
+  {
+   "comuna": "Chaitén",
+   "region": "Región de Los Lagos",
+   "lat": -42.92,
+   "lon": -72.71
+  },
+  {
+   "comuna": "Futaleufú",
+   "region": "Región de Los Lagos",
+   "lat": -43.19,
+   "lon": -71.87
+  },
+  {
+   "comuna": "Hualaihué",
+   "region": "Región de Los Lagos",
+   "lat": -42.19,
+   "lon": -72.34
+  },
+  {
+   "comuna": "Palena",
+   "region": "Región de Los Lagos",
+   "lat": -43.62,
+   "lon": -71.8
+  },
+  {
+   "comuna": "Coihaique",
+   "region": "Región Aisén del Gral. Carlos Ibáñez del Campo",
+   "lat": -45.57,
+   "lon": -72.07
+  },
+  {
+   "comuna": "Lago Verde",
+   "region": "Región Aisén del Gral. Carlos Ibáñez del Campo",
+   "lat": -44.24,
+   "lon": -71.85
+  },
+  {
+   "comuna": "Aisén",
+   "region": "Región Aisén del Gral. Carlos Ibáñez del Campo",
+   "lat": -45.41,
+   "lon": -72.7
+  },
+  {
+   "comuna": "Cisnes",
+   "region": "Región Aisén del Gral. Carlos Ibáñez del Campo",
+   "lat": -44.73,
+   "lon": -72.68
+  },
+  {
+   "comuna": "Guaitecas",
+   "region": "Región Aisén del Gral. Carlos Ibáñez del Campo",
+   "lat": -43.92,
+   "lon": -73.91
+  },
+  {
+   "comuna": "Cochrane",
+   "region": "Región Aisén del Gral. Carlos Ibáñez del Campo",
+   "lat": -47.25,
+   "lon": -72.57
+  },
+  {
+   "comuna": "O’Higgins",
+   "region": "Región Aisén del Gral. Carlos Ibáñez del Campo",
+   "lat": -48.47,
+   "lon": -72.82
+  },
+  {
+   "comuna": "Tortel",
+   "region": "Región Aisén del Gral. Carlos Ibáñez del Campo",
+   "lat": -47.8,
+   "lon": -73.54
+  },
+  {
+   "comuna": "Chile Chico",
+   "region": "Región Aisén del Gral. Carlos Ibáñez del Campo",
+   "lat": -46.54,
+   "lon": -71.72
+  },
+  {
+   "comuna": "Río Ibáñez",
+   "region": "Región Aisén del Gral. Carlos Ibáñez del Campo",
+   "lat": -46.29,
+   "lon": -71.94
+  },
+  {
+   "comuna": "Punta Arenas",
+   "region": "Región de Magallanes y de la Antártica Chilena",
+   "lat": -53.67,
+   "lon": -72.13
+  },
+  {
+   "comuna": "Laguna Blanca",
+   "region": "Región de Magallanes y de la Antártica Chilena",
+   "lat": -52.43,
+   "lon": -71.41
+  },
+  {
+   "comuna": "Río Verde",
+   "region": "Región de Magallanes y de la Antártica Chilena",
+   "lat": -52.95,
+   "lon": -72.65
+  },
+  {
+   "comuna": "San Gregorio",
+   "region": "Región de Magallanes y de la Antártica Chilena",
+   "lat": -52.4,
+   "lon": -70.17
+  },
+  {
+   "comuna": "Cabo de Hornos (Ex Navarino)",
+   "region": "Región de Magallanes y de la Antártica Chilena",
+   "lat": -55.16,
+   "lon": -68.72
+  },
+  {
+   "comuna": "Porvenir",
+   "region": "Región de Magallanes y de la Antártica Chilena",
+   "lat": -53.3,
+   "lon": -70.37
+  },
+  {
+   "comuna": "Primavera",
+   "region": "Región de Magallanes y de la Antártica Chilena",
+   "lat": -52.71,
+   "lon": -69.29
+  },
+  {
+   "comuna": "Timaukel",
+   "region": "Región de Magallanes y de la Antártica Chilena",
+   "lat": -53.64,
+   "lon": -69.65
+  },
+  {
+   "comuna": "Natales",
+   "region": "Región de Magallanes y de la Antártica Chilena",
+   "lat": -51.73,
+   "lon": -72.47
+  },
+  {
+   "comuna": "Torres del Paine",
+   "region": "Región de Magallanes y de la Antártica Chilena",
+   "lat": -51.08,
+   "lon": -72.93
+  },
+  {
+   "comuna": "Cerrillos",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.5,
+   "lon": -70.72
+  },
+  {
+   "comuna": "Cerro Navia",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.43,
+   "lon": -70.75
+  },
+  {
+   "comuna": "Conchalí",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.38,
+   "lon": -70.67
+  },
+  {
+   "comuna": "El Bosque",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.56,
+   "lon": -70.67
+  },
+  {
+   "comuna": "Estación Central",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.45,
+   "lon": -70.69
+  },
+  {
+   "comuna": "Huechuraba",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.37,
+   "lon": -70.64
+  },
+  {
+   "comuna": "Independencia",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.42,
+   "lon": -70.66
+  },
+  {
+   "comuna": "La Cisterna",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.53,
+   "lon": -70.66
+  },
+  {
+   "comuna": "La Florida",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.52,
+   "lon": -70.6
+  },
+  {
+   "comuna": "La Granja",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.54,
+   "lon": -70.63
+  },
+  {
+   "comuna": "La Pintana",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.58,
+   "lon": -70.63
+  },
+  {
+   "comuna": "La Reina",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.44,
+   "lon": -70.54
+  },
+  {
+   "comuna": "Las Condes",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.41,
+   "lon": -70.57
+  },
+  {
+   "comuna": "Lo Barnechea",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.36,
+   "lon": -70.51
+  },
+  {
+   "comuna": "Lo Espejo",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.53,
+   "lon": -70.69
+  },
+  {
+   "comuna": "Lo Prado",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.45,
+   "lon": -70.72
+  },
+  {
+   "comuna": "Macul",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.48,
+   "lon": -70.6
+  },
+  {
+   "comuna": "Maipú",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.51,
+   "lon": -70.76
+  },
+  {
+   "comuna": "Ñuñoa",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.45,
+   "lon": -70.59
+  },
+  {
+   "comuna": "Pedro Aguirre Cerda",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.49,
+   "lon": -70.68
+  },
+  {
+   "comuna": "Peñalolén",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.48,
+   "lon": -70.54
+  },
+  {
+   "comuna": "Providencia",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.43,
+   "lon": -70.61
+  },
+  {
+   "comuna": "Pudahuel",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.42,
+   "lon": -70.86
+  },
+  {
+   "comuna": "Quilicura",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.36,
+   "lon": -70.71
+  },
+  {
+   "comuna": "Quinta Normal",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.43,
+   "lon": -70.7
+  },
+  {
+   "comuna": "Recoleta",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.4,
+   "lon": -70.64
+  },
+  {
+   "comuna": "Renca",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.4,
+   "lon": -70.73
+  },
+  {
+   "comuna": "Santiago",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.44,
+   "lon": -70.65
+  },
+  {
+   "comuna": "San Joaquín",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.49,
+   "lon": -70.63
+  },
+  {
+   "comuna": "San Miguel",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.49,
+   "lon": -70.65
+  },
+  {
+   "comuna": "San Ramón",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.54,
+   "lon": -70.64
+  },
+  {
+   "comuna": "Vitacura",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.39,
+   "lon": -70.58
+  },
+  {
+   "comuna": "Puente Alto",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.61,
+   "lon": -70.58
+  },
+  {
+   "comuna": "Pirque",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.63,
+   "lon": -70.57
+  },
+  {
+   "comuna": "San José de Maipo",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.64,
+   "lon": -70.35
+  },
+  {
+   "comuna": "Colina",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.2,
+   "lon": -70.67
+  },
+  {
+   "comuna": "Lampa",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.29,
+   "lon": -70.87
+  },
+  {
+   "comuna": "Tiltil",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.09,
+   "lon": -70.93
+  },
+  {
+   "comuna": "San Bernardo",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.59,
+   "lon": -70.7
+  },
+  {
+   "comuna": "Buin",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.73,
+   "lon": -70.74
+  },
+  {
+   "comuna": "Calera de Tango",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.63,
+   "lon": -70.76
+  },
+  {
+   "comuna": "Paine",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.81,
+   "lon": -70.74
+  },
+  {
+   "comuna": "Melipilla",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.69,
+   "lon": -71.21
+  },
+  {
+   "comuna": "Alhué",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -34.04,
+   "lon": -71.08
+  },
+  {
+   "comuna": "Curacaví",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.4,
+   "lon": -71.13
+  },
+  {
+   "comuna": "María Pinto",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.52,
+   "lon": -71.12
+  },
+  {
+   "comuna": "San Pedro",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.89,
+   "lon": -71.46
+  },
+  {
+   "comuna": "Talagante",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.66,
+   "lon": -70.93
+  },
+  {
+   "comuna": "El Monte",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.67,
+   "lon": -71.03
+  },
+  {
+   "comuna": "Isla de Maipo",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.75,
+   "lon": -70.9
+  },
+  {
+   "comuna": "Padre Hurtado",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.57,
+   "lon": -70.8
+  },
+  {
+   "comuna": "Peñaflor",
+   "region": "Región Metropolitana de Santiago",
+   "lat": -33.61,
+   "lon": -70.88
+  },
+  {
+   "comuna": "Calera",
+   "region": "Valparaíso",
+   "lat": -32.79,
+   "lon": -71.2
+  },
+  {
+   "comuna": "Llaillay",
+   "region": "Valparaíso",
+   "lat": -32.84,
+   "lon": -70.95
+  },
+  {
+   "comuna": "San Vicente",
+   "region": "Región del Libertador Gral. Bernardo O’Higgins",
+   "lat": -34.44,
+   "lon": -71.08
+  }
+ ],
+ "notas": "Coordenadas del límite comunal de OSM; en 6 comunas rurales grandes se usó el pueblo cabecera (San Pedro de Atacama, Cisnes, Río Ibáñez, Tortel, Timaukel, Aisén). Calera, Llaillay y San Vicente agregadas con su límite comunal. Antártica queda fuera (sin límite en OSM y fuera del rango de latitud del bot)."
+}

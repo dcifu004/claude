@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cuentas</title>
+    <!-- tokens, base, tema, el(), la barra y comun.js son del paquete `comun`: una sola fuente. -->
+    <link href="../comun/tokens.css" rel="stylesheet" />
+    <link href="../comun/base.css" rel="stylesheet" />
+    <link href="cuentas.css" rel="stylesheet" />
+    <script src="../base1/cockpit.js"></script>
+    <script src="../comun/tema.js"></script>
+</head>
+<body>
+    <main>
+        <!-- La barra trae «leído hace X» (#leido) y el botón Actualizar (#actualizar). -->
+        <nav id="barra" data-pagina="cuentas"></nav>
+
+        <header class="cabeza">
+            <div>
+                <h1>💳 Cuentas</h1>
+                <p class="sub">Quién tiene margen, quién contesta cada ruta y cuánto cuesta. Acá se
+                   <strong>proponen</strong> cambios; se aplican por SSH con
+                   <code>sudo aplicar-propuesta</code>.</p>
+            </div>
+        </header>
+
+        <div id="error" class="aviso rojo" hidden></div>
+
+        <!-- Las propuestas se listan sólo en 🤖 Asistentes (encargo 18): acá, cuántas hay y el enlace. -->
+        <div id="propuestas-contador" class="aviso neutro"></div>
+
+        <!-- Fijo arriba, en todas las pestañas. -->
+        <section class="tarjeta" id="margen"><h2>⏳ ¿Quién tiene margen?</h2>
+            <p class="tenue">cargando…</p></section>
+
+        <nav class="pestanas" id="paneles">
+            <button data-p="rutas" class="activa">🧭 Rutas</button>
+            <button data-p="proveedores">🆓 Proveedores</button>
+            <button data-p="uso">💳 Uso y costo</button>
+            <button data-p="renovacion">🗓️ Registro</button>
+        </nav>
+
+        <section class="tarjeta" id="matriz" data-pestana="rutas"><h2>🧭 Quién contesta cada ruta</h2>
+            <p class="tenue">cargando…</p></section>
+
+        <section class="tarjeta" id="proveedores" data-pestana="proveedores" hidden><h2>🆓 Proveedores gratis</h2>
+            <p class="tenue">cargando…</p></section>
+
+        <section class="tarjeta" id="cuentas-uso" data-pestana="uso" hidden><h2>💳 Cuentas y proveedores: uso y costo</h2>
+            <p class="tenue">cargando…</p></section>
+
+        <section class="tarjeta" id="rendimiento" data-pestana="uso" hidden><h2>⚙️ Rendimiento por motor</h2>
+            <p class="tenue">cargando…</p></section>
+
+        <section class="tarjeta" id="pcs" data-pestana="uso" hidden><h2>🖥️ Uso desde los PC</h2>
+            <p class="tenue">cargando…</p></section>
+
+        <section class="tarjeta" id="registro" data-pestana="renovacion" hidden><h2>🗓️ Precio, renovación y topes</h2>
+            <p class="tenue">cargando…</p></section>
+    </main>
+
+    <script src="../comun/dom.js"></script>
+    <script src="../comun/barra.js"></script>
+    <script src="../comun/comun.js"></script>
+    <script src="cuentas.js"></script>
+</body>
+</html>

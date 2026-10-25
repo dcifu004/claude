@@ -1,0 +1,51 @@
+[Unit]
+Description=Empuja las alertas del nodo a Telegram
+After=network-online.target
+Wants=network-online.target
+# SIN RequiresMountsFor a proposito: tiene que correr TAMBIEN con el volumen
+# cifrado cerrado, que es justo cuando hay algo que avisar y cuando ni
+# estado.service ni n8n ni los bots estan vivos. Igual que estado-nodo.service.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/avisos
+# El bot es @Dcs_v5bot (el username va escrito: su antecesor @Dcs_v4bot no lo
+# tenia anotado en ningun lado y se borro por error el 19-09-2026, dejando al
+# nodo nueve horas sin avisos). El token vive fuera del cifrado por lo mismo que
+# el script: si el disco se roba, ese token solo sirve para mandar avisos falsos,
+# no para leer vaults ni capturas. Los tokens de captura y consultas siguen
+# adentro.
+EnvironmentFile=/etc/nodo/avisos.env
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectClock=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0077
+
+# Lo unico escribible, y son dos archivos: avisos-vistos.json (de que ya aviso) y
+# avisos-salud.json (si el propio emisor sigue vivo, que lo lee estado.py como
+# segundo camino). Van fuera del cifrado, sin eso no podria recordar ni reportar
+# nada con el volumen cerrado.
+ReadWritePaths=/var/lib/nodo
+# Encargo 23b: cada aviso enviado deja una linea en el registro unico, que vive
+# DENTRO del cifrado. Con «-» la ruta se ignora si no existe: con el volumen
+# cerrado no hay archivo, la unidad arranca igual y el script deja la linea en
+# /var/lib/nodo hasta poder volcarla. Solo ese archivo, no la carpeta: es el minimo
+# (no se puede crear ni renombrar nada en /opt/nodo/datos). Esa carpeta es de la cuenta
+# sin privilegios, asi que avisos.py ademas lo abre sin seguir symlinks y solo si es un
+# archivo comun, con un solo nombre y de dcifu004 (encargo 23g, hallazgo 23b-2).
+ReadWritePaths=-/opt/nodo/datos/avisos.jsonl
+# El registro es dcifu004:dcifu004 0664 (lo crean las colas y la pestaña 🔔
+# Avisos). Sin capacidades, root no escribe un archivo ajeno: entra por el grupo.
+SupplementaryGroups=dcifu004
+StateDirectory=nodo
+
+[Install]
+WantedBy=multi-user.target

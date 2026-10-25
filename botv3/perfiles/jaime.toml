@@ -1,0 +1,93 @@
+# Perfil `jaime` — Diego · bot @Dcs_v3bot
+#
+# Reproduce EXACTAMENTE lo que el bot hacía antes de que existieran los perfiles.
+# Este archivo es produccion, no un ejemplo: lo que cambie aca cambia en el bot
+# que usas todos los dias.
+#
+# TOML y no YAML, aunque el diseño 15 decia `.yaml`: `tomllib` es stdlib desde
+# Python 3.11 (la Pi tiene 3.13, el notebook 3.12) y acepta comentarios, que en
+# este proyecto son la mitad del valor de un archivo. PyYAML seria una dependencia
+# nueva sobre un Debian con PEP 668 — justo lo que este bot evito desde el primer
+# dia, cuando se verifico que `requests` ya venia con el sistema.
+
+nombre = "Jaime"
+persona = "Diego"
+bot = "@Dcs_v3bot"
+
+# Que vaults ve. Esta lista MANDA sobre el viejo BOTV3_ALLOW_WORK_VAULT: una sola
+# fuente de verdad. La autorizacion laboral vive en
+# `11 - Autorizacion y acceso laboral Dcs_v3bot`.
+vaults = ["personal", "trabajo"]
+
+# Drive montado con rclone en `ro` dentro del LUKS (19-09-2026). Misma forma que
+# `vaults` porque es la misma clase de cosa: material gobernado, legible, citable
+# con prefijo propio (`drive_personal/`, `drive_cyd/`) y que NUNCA sale por el
+# parlante. Declararlo aca no lo monta: si el mount no esta, el bot avisa en el
+# log y contesta igual con el resto de las fuentes.
+#
+# `cyd` es una decision de politica y no un ajuste: mete Drive corporativo a un
+# dispositivo personal donde corre un bot expuesto a internet. Queda registrada en
+# `17 - Drive en la Pi`, junto a la regla que la acota — se monta un SUBARBOL
+# nombrado, nunca la raiz del Shared Drive, y los derivados con RUT y
+# remuneraciones quedan fuera del subarbol que ve el bot.
+# 24-09-2026: `cyd` sale hasta que TI de CyD de el visto bueno. El Workspace no
+# bloquea la app (el login llego a la pantalla de permisos), pero se paro antes de
+# aceptar. Para retomar: token + remote `cyd`, y volver a agregarlo aca y en el drop-in.
+drive = ["personal"]
+
+# N2 — el bot intersecta la ruta que devuelve el clasificador de n8n con esta
+# lista. n8n recibe el perfil como dato, pero no decide el permiso.
+#
+# `codex` SALIO el 19-09-2026, y lo que salio es la ruta que LEIA LOS VAULTS, no
+# Codex: sigue siendo el motor de la ruta `web` (ver `web_codex` mas abajo).
+# El motivo es la cuota. Codex corre con la suscripcion de ChatGPT Plus de Diego
+# —no con una API key— y ya se agoto una vez en un solo dia de corridas; gastarla
+# en leer archivos deja sin buscador al bot y sin Codex al trabajo interactivo.
+# Leer vaults se paga con la cuenta de Claude, que es la que esta para eso.
+# Consecuencia que hay que tener a la vista: se pierde el SEGUNDO lector de
+# vaults. Cuando `claude` falle o se agote, las preguntas sobre archivos no tienen
+# a quien caer — antes existia `codex` como respaldo de hecho, aunque nadie lo
+# hubiera declarado asi. Para revertir, devolver "codex" a esta lista y volver a
+# apuntar la rama tecnica del clasificador de n8n a `codex`.
+# ⇒ REVERTIDO el 24-09-2026 por decision de Diego: "codex" volvio a esta lista con
+# una propuesta desde la pagina 🤖 de Cockpit (documento 20), y la rama tecnica de
+# n8n apunta a `codex` SOLO para los perfiles de PERFILES_CON_CODEX (hoy jaime).
+# Vuelve el costo de arriba: gasta la cuota de ChatGPT Plus, y la ruta `codex` NO
+# tiene respaldo: si la cuota se agota, la pregunta tecnica falla con error hasta que
+# se reponga (reformularla hacia "mis archivos" la manda a `claude`). Y Codex sigue
+# SIN Drive, a proposito: ver el comentario de invoke_agent en botv3.py.
+# `google` (24-09-2026): agenda y correo de diego@example.com por google-puente.
+# Consultar es directo; crear evento o borrador pide confirmar con boton. Enviar no
+# existe. Quitarla de aca apaga la ruta sin tocar el puente.
+rutas = ["claude", "web", "gpt", "sql", "ha", "google", "codex", "boleta"]
+
+# Voz de Piper para responder notas de voz. es_MX-claude-high y no la rioplatense:
+# 61 MB contra 109 MB, y lo que manda la latencia es el tamaño del modelo.
+voz = "/opt/piper/voces/es_ES-davefx-medium.onnx"
+
+# Agenda dicha en voz alta (encargo 68, decision del 19-10, nota 34). `google` es
+# gobernada y no se dice; con esto, «que tengo manana» dictado dice SOLO cuantos
+# eventos hay y la hora y el titulo del primero, y de correo solo cuantos. El lugar,
+# los demas eventos y los correos van al chat. En false (o sin la llave) dice
+# «Te lo mando al chat.». No cambia nada de `voz_habla_vault`.
+voz_habla_agenda = true
+
+# Clima y hora locales (encargo 69, 19-10-2026): «va a llover hoy», «clima», «hace frio
+# afuera» se contestan con Open-Meteo, sin llave, sin LLM y sin n8n, con cache de 30 min
+# en memoria. Solo este lugar: «clima en Calama» sigue el camino de siempre, y «que
+# temperatura hay en el living» sigue yendo a `ha`. lat y lon se validan como numeros
+# en rango; si la clave falta o es invalida, el perfil queda sin clima (la hora no la usa).
+clima = { lugar = "Las Condes", lat = -33.41, lon = -70.57 }
+
+# Quien paga cada ruta de agente, en orden: la primera contesta y las demas son
+# el respaldo si falla o se agota (29-09-2026, pagina 🤖 → 💳 Cuentas). Reemplaza a
+# `web_codex = true` y `claude_config_web`, que decian lo mismo en dos llaves:
+#  - `web` por Codex primero: fecho 3 de 3 titulares contra 2 de 3 de Claude, y
+#    gasta ChatGPT Plus y no la cuota de Claude. Respaldo, Claude de Camila
+#    (camila@example.com), para no gastar la de Diego en busquedas.
+#  - `claude` y `codex` LEEN LOS VAULTS, vault_trabajo incluido. Poner aca la
+#    cuenta de Camila es posible desde el 29-09-2026 (decision de Diego), pero el
+#    contenido de CyD quedaria en el historial de otra persona: `aplicar-propuesta`
+#    lo marca AMPLIA y lo advierte.
+# Cada cuenta es un directorio con su login en STATE_DIR/cuentas/<id>.
+cuentas = { claude = ["claude_diego"], codex = ["codex"], web = ["codex", "claude_cami"] }

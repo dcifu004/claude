@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "message", "sources", "command_suggestion", "command_context"],
+  "properties": {
+    "kind": {"const": "answer"},
+    "message": {"type": "string", "minLength": 1},
+    "sources": {"type": "array", "maxItems": 12, "items": {"type": "string"}},
+    "command_suggestion": {"type": "string", "maxLength": 1200},
+    "command_context": {"type": "string", "maxLength": 1200}
+  }
+}

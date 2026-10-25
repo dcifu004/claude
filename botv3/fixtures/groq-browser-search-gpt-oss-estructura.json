@@ -1,0 +1,24 @@
+{
+  "_fixture": "Estructura mínima para la variante GPT-OSS de browser_search; no es una respuesta de red. La captura real está pendiente porque el sandbox no resolvió api.groq.com el 22-10-2026.",
+  "model": "openai/gpt-oss-120b",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "La máxima en Santiago es 19 °C【6†L381-L384】.",
+        "executed_tools": [
+          {
+            "type": "browser_search",
+            "results": [
+              {"url": "https://www.meteochile.gob.cl/"},
+              {"url": "https://climatologia.meteochile.gob.cl/"}
+            ]
+          },
+          {"type": "browser.open", "url": "https://www.meteochile.gob.cl/"},
+          {"type": "browser.find", "arguments": "máxima"}
+        ]
+      }
+    }
+  ],
+  "usage": {"prompt_tokens": 100, "completion_tokens": 600, "total_tokens": 58920}
+}

@@ -1,0 +1,51 @@
+{
+ "_fixture": "REAL. Respuesta de api.tavily.com/search del 01-10-2026 a {query: 'horario metro de Santiago domingo', topic: 'general', max_results: 5}, tal cual (sólo se agregó esta llave `_fixture`). Con topic general ningún resultado trae published_date.",
+ "query": "horario metro de Santiago domingo",
+ "follow_up_questions": null,
+ "answer": null,
+ "images": [],
+ "results": [
+  {
+   "url": "https://www.metro.cl/el-viaje/horarios-y-tarifas",
+   "title": "Horarios y Tarifas - El Viaje - Metro de Santiago",
+   "content": "Horarios\n\n|  |  |  |\n --- \n| Día Laboral | Sábado | Domingo y festivos |\n| 6:00 a 23:00 hrs. | 6:30 a 23:00 hrs. | 7:30 a 23:00 hrs. |\n\nTen presente que al ingresar a Metro al acercarse el horario de término del servicio, podrías no alcanzar todas las combinaciones debido a que han finalizado sus horarios de funcionamiento.\n\nTarifas\n\nTarifario  \nFare list (Local Currency) [...] | Domingo y festivos / Sunday and holidays | 07:30 - 23:00 |\n| La tarifa integrada permite dos transbordos sin costo adicional en la misma dirección y sin repetición de recorridos de buses. Esto durante 2 horas desde el inicio del primer viaje. Más información aquí.  Integrated fare allows 2 transfers with different bus services in the same direction with no additional cost within a 2-hours time window from the beginning of the trip. More information here. | [...] | Los horarios de servicio de venta en boleterías son los mismos del funcionamiento de Metro, excepto los domingos y festivos que cierran a las 22:30 hrs. / Ticket sales service hours are the same as those of Metro, except on Sundays and Holidays when the ticket offices close at 22:30.  Tarjeta bip!    Valor: $1.550 (No incluye carga inicial). bip! card price: $1,550 (Does not include initial top up).  Carga inicial en boleterías y máquinas: $750. Initial top up in ticket offices and",
+   "score": 0.90771407,
+   "raw_content": null,
+   "id": "344210-00"
+  },
+  {
+   "url": "https://www.instagram.com/metrodesantiago?hl=en",
+   "title": "Metro de Santiago (@metrodesantiago)",
+   "content": "06 a 23 hrs. / Sáb: 06:30 a 23 hrs. / Dom: 07:30 a 23 hrs. Follow average train in Chile 🚇🇨🇱 average train in Chile … 07:30 a 23:00 horas.",
+   "score": 0.85967577,
+   "raw_content": null,
+   "id": "a6eafc-01"
+  },
+  {
+   "url": "http://www.metroserviciosturisticos.com/horarios",
+   "title": "Metro Servicios Turisticos - HORARIO DE SALIDAS",
+   "content": "|  |  |  |\n --- \n| Hora | Partida | Destino |\n| 07:00 a. m. | Santo Domingo | Santiago/Puerto Plata/Sosúa |\n| 09:00 a. m. | Santo Domingo | Santiago/Puerto Plata |\n| 11:00 a. m. | Santo Domingo | Santiago/Puerto Plata/Sosúa |\n| 12:30 p. m. | Santo Domingo | Santiago |\n| 02:00 p. m. | Santo Domingo | Santiago/Puerto Plata/Sosúa |\n| 04:00 p. m. | Santo Domingo | Santiago/Puerto Plata/Sosúa |\n| 07:00 p. m. | Santo Domingo | Santiago/Puerto Plata |\n\n### Santo Domingo - Domingos y días feriados [...] |  |  |  |\n --- \n| Hora | Partida | Destino |\n| 07:00 a. m. | Santiago | Santo Domingo |\n| 08:40 a. m. | Santiago | Santo Domingo |\n| 09:20 a. m. | Santiago | Puerto Plata / Sosúa |\n| 10:40 a. m. | Santiago | Santo Domingo |\n| 11:20 a. m. | Santiago | Puerto Plata / Sosúa |\n| 12:40 p. m. | Santiago | Santo Domingo |\n| 01:20 p. m. | Santiago | Puerto Plata / Sosúa |\n| 02:30 p. m. | Santiago | Santo Domingo |\n| 03:40 p. m. | Santiago | Santo Domingo | [...] | Terminal Santiago |\n| Hora | Partida | Destino |\n| 06:00 a. m. | Santiago (De lunes a viernes) | Santo Domingo |\n| 08:40 a. m. | Santiago | Santo Domingo |\n| 09:15 a. m. | Santiago | Puerto Plata / Sosúa |\n| 10:40 a. m. | Santiago | Santo Domingo |\n| 11:20 a. m. | Santiago | Puerto Plata |\n| 12:40 p. m. | Santiago | Santo Domingo |\n| 01:15 p. m. | Santiago | Puerto Plata/ Sosúa |\n| 02:30 p. m. | Santiago | Santo Domingo |\n| 03:40 p. m. | Santiago | Santo Domingo |",
+   "score": 0.8533396,
+   "raw_content": null,
+   "id": "aea6dd-02"
+  },
+  {
+   "url": "https://www.red.cl/mapas-y-horarios/metro",
+   "title": "Metro - Red Movilidad",
+   "content": "600 730 0073 /\n 800 73 0073\n\n Facebook\n Twitter\n Instagram\n Youtube\n TikTok\n\nLogotipo de Red Metropolitana de Movilidad     Logotipo de Red Metropolitana de Movilidad  \n\nVer mis favoritos\nNoticiasÍcono de noticiasAbrir menú\n\n# Metro\n\nLunes a Viernes: de 06:00 a 23:00 / Sábado: de 06:30 a 23:00 / Domingo y Festivos: de 07:30 a 23:00\n\nAl ingresar a la red de Metro a las 23:00 h. alcanzas a tomar el último tren que pasa por la estación en que estás entrando. [...] ## Línea 1\n\n San Pablo L1\n Neptuno\n Pajaritos\n Las rejas\n Ecuador\n San Alberto Hurtado\n Universidad de Santiago\n Estación Central\n U.L.A.\n República\n Los Héroes L1\n La Moneda\n Universidad de Chile L1\n Santa Lucía\n Universidad Católica\n Baquedano L1\n Salvador\n Manuel Montt\n Pedro de Valdivia\n Los Leones L1\n Tobalaba L1\n El Golf\n Alcántara\n Escuela Militar\n Manquehue\n Hernando de Magallanes\n Los Dominicos\n\n## Línea 2 [...] ## Línea 5\n\n Plaza de Maipú\n Santiago Bueras\n Del Sol\n Monte Tabor\n Las Parcelas\n Laguna Sur\n Barrancas\n Pudahuel\n San Pablo L5\n Lo Prado\n Blanqueado\n Gruta de Lourdes\n Quinta Normal\n Cumming\n Santa Ana L5\n Plaza de Armas L5\n Bellas Artes\n Baquedano L5\n Parque Bustamante\n Santa Isabel\n Irarrázaval L5\n Ñuble L5\n Rodrigo de Araya\n Carlos Valdovinos\n Camino Agrícola\n San Joaquín\n Pedrero\n Mirador\n Bellavista de La Florida\n Vicente Valdés L5\n\n## Línea 6",
+   "score": 0.6326168,
+   "raw_content": null,
+   "id": "a4c433-03"
+  },
+  {
+   "url": "https://www.metro.cl",
+   "title": "Metro de Santiago",
+   "content": "La Red en tiempo real\n\nLínea  \ndisponible\n\nLínea  \ndisponible\n\nLínea  \ndisponible\n\nLínea  \ndisponible\n\nLínea  \ndisponible\n\nLínea  \ndisponible\n\nLínea  \ndisponible\n\n\n\nPlanifica tu viaje\n\nAccesibilidad\n\nHorarios\n\nCanales Atención\n\n Descarga la app Metro de Santiago Oficial  Nuestra Oficina de Atención al Cliente de Los Leones L6 permanece cerrada\n\nBanner Banner\n\nBanner Banner\n\nBanner Banner\n\nLo último en Metro\n\n...\n\n##### Viaja sin filas\n\nPaga con tu tarjeta de débito, crédito, prepago o celular [...] Más información \n\n...\n\n##### Con más de 1.350 postulaciones de todo Chile: la Ruta del Encuentro se consolida como el mayor concurso nacional de arte público\n\nMás información \n\nVer todas las noticias \n\nDestacamos\n\nHola, ¿quieres un regalo de nuestro Bazar Metro?\n\nConoce nuestras obras de Metroarte\n\nMuverte es más simple\n\nPausa Play\n\n...\n\n...\n\n...\n\nMetroConecta\n\n...\n\n##### Metro entra al Top 20 de las empresas con mayor capacidad para atraer y fidelizar talento en Chile\n\nMás información \n\n... [...] ...\n\n##### La empresa de transporte más valorada por la ciudadanía: Metro recibe reconocimiento de Total Brands\n\nMás información \n\n...\n\n##### Línea A: avanzamos en la futura conexión de Metro con el aeropuerto\n\nMás información \n\n### Ayúdanos a mejorar",
+   "score": 0.19530267,
+   "raw_content": null,
+   "id": "820b50-04"
+  }
+ ],
+ "response_time": 1.16,
+ "request_id": "66acc41e-15c3-4a04-b63f-676f9727ab3d"
+}

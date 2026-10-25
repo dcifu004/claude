@@ -1,0 +1,77 @@
+{
+  "query": "feriados Chile 2026",
+  "number_of_results": 6,
+  "results": [
+    {
+      "title": "Feriados legales en Chile durante 2026",
+      "url": "https://www.bcn.cl/leychile/consulta/feriados-2026",
+      "content": "Calendario y normas aplicables a los feriados legales.",
+      "engine": "brave",
+      "engines": ["brave"],
+      "parsed_url": ["https", "www.bcn.cl", "/leychile/consulta/feriados-2026", "", "", ""],
+      "score": 2.4,
+      "category": "general",
+      "publishedDate": "2026-01-01T00:00:00+00:00"
+    },
+    {
+      "title": "Calendario de feriados 2026",
+      "url": "https://www.feriados.cl/calendario-2026",
+      "content": "Fechas de feriados nacionales.",
+      "engine": "bing",
+      "engines": ["bing"],
+      "parsed_url": ["https", "www.feriados.cl", "/calendario-2026", "", "", ""],
+      "score": 1.8,
+      "category": "general",
+      "publishedDate": null
+    },
+    {
+      "title": "Feriados irrenunciables",
+      "url": "https://www.dt.gob.cl/portal/1626/w3-article-60776.html",
+      "content": "Información de la Dirección del Trabajo.",
+      "engine": "brave",
+      "engines": ["brave", "bing"],
+      "parsed_url": ["https", "www.dt.gob.cl", "/portal/1626/w3-article-60776.html", "", "", ""],
+      "score": 1.6,
+      "category": "general",
+      "publishedDate": "2026-09-18T03:15:00+00:00"
+    },
+    {
+      "title": "Calendario oficial 2026",
+      "url": "https://www.gob.cl/noticias/calendario-2026/",
+      "content": "Información pública del calendario.",
+      "engine": "mojeek",
+      "engines": ["mojeek"],
+      "parsed_url": ["https", "www.gob.cl", "/noticias/calendario-2026/", "", "", ""],
+      "score": 1.2,
+      "category": "general",
+      "publishedDate": null
+    },
+    {
+      "title": "Días festivos de Chile",
+      "url": "https://www.timeanddate.com/holidays/chile/2026",
+      "content": "Listado de días festivos.",
+      "engine": "duckduckgo",
+      "engines": ["duckduckgo"],
+      "parsed_url": ["https", "www.timeanddate.com", "/holidays/chile/2026", "", "", ""],
+      "score": 1.1,
+      "category": "general",
+      "publishedDate": "2025-12-20T00:00:00+00:00"
+    },
+    {
+      "title": "Este sexto resultado no se muestra",
+      "url": "https://example.org/sexto",
+      "content": "Resultado fuera del límite de presentación.",
+      "engine": "brave",
+      "engines": ["brave"],
+      "parsed_url": ["https", "example.org", "/sexto", "", "", ""],
+      "score": 1.0,
+      "category": "general",
+      "publishedDate": null
+    }
+  ],
+  "answers": [],
+  "corrections": [],
+  "infoboxes": [],
+  "suggestions": [],
+  "unresponsive_engines": []
+}

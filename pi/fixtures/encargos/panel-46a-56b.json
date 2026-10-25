@@ -1,0 +1,1093 @@
+{
+ "despacho": {
+  "estado": "abierto",
+  "desde": null,
+  "motivo": "",
+  "autorizadas": [],
+  "por": "",
+  "aviso": ""
+ },
+ "pasado": {
+  "desde": null,
+  "encargos": 39,
+  "primero": "19",
+  "ultimo": "48b",
+  "total": {
+   "nombre": "TOTAL",
+   "encargos": 39,
+   "fases": 164,
+   "aprobados": 14,
+   "revisados": 38,
+   "min": 1326,
+   "min_ret": 619,
+   "ret_min_pct": 47,
+   "ret_usd_pct": 39,
+   "ret_tok_pct": 52,
+   "usd_por_encargo": 4.69,
+   "tok_k_por_encargo": 317,
+   "error_pct": 43
+  },
+  "naturaleza": [
+   {
+    "nombre": "bot",
+    "encargos": 13,
+    "fases": 59,
+    "aprobados": 4,
+    "revisados": 13,
+    "min": 456,
+    "min_ret": 238,
+    "ret_min_pct": 52,
+    "ret_usd_pct": 44,
+    "ret_tok_pct": 60,
+    "usd_por_encargo": 5.29,
+    "tok_k_por_encargo": 334,
+    "error_pct": 41
+   },
+   {
+    "nombre": "diseno",
+    "encargos": 2,
+    "fases": 12,
+    "aprobados": 0,
+    "revisados": 2,
+    "min": 122,
+    "min_ret": 63,
+    "ret_min_pct": 52,
+    "ret_usd_pct": 33,
+    "ret_tok_pct": 67,
+    "usd_por_encargo": 6.91,
+    "tok_k_por_encargo": 465,
+    "error_pct": 62
+   },
+   {
+    "nombre": "investigacion",
+    "encargos": 2,
+    "fases": 4,
+    "aprobados": 2,
+    "revisados": 2,
+    "min": 46,
+    "min_ret": 0,
+    "ret_min_pct": 0,
+    "ret_usd_pct": 0,
+    "ret_tok_pct": 0,
+    "usd_por_encargo": 3.52,
+    "tok_k_por_encargo": 161,
+    "error_pct": 16
+   },
+   {
+    "nombre": "menor",
+    "encargos": 3,
+    "fases": 14,
+    "aprobados": 1,
+    "revisados": 3,
+    "min": 45,
+    "min_ret": 22,
+    "ret_min_pct": 50,
+    "ret_usd_pct": 41,
+    "ret_tok_pct": 51,
+    "usd_por_encargo": 0.58,
+    "tok_k_por_encargo": 229,
+    "error_pct": 49
+   },
+   {
+    "nombre": "pagina",
+    "encargos": 7,
+    "fases": 27,
+    "aprobados": 3,
+    "revisados": 7,
+    "min": 117,
+    "min_ret": 34,
+    "ret_min_pct": 29,
+    "ret_usd_pct": 10,
+    "ret_tok_pct": 45,
+    "usd_por_encargo": 2.42,
+    "tok_k_por_encargo": 244,
+    "error_pct": 25
+   },
+   {
+    "nombre": "seguridad",
+    "encargos": 10,
+    "fases": 42,
+    "aprobados": 3,
+    "revisados": 9,
+    "min": 515,
+    "min_ret": 253,
+    "ret_min_pct": 49,
+    "ret_usd_pct": 46,
+    "ret_tok_pct": 50,
+    "usd_por_encargo": 7.1,
+    "tok_k_por_encargo": 398,
+    "error_pct": 64
+   },
+   {
+    "nombre": "sin dato",
+    "encargos": 2,
+    "fases": 6,
+    "aprobados": 1,
+    "revisados": 2,
+    "min": 26,
+    "min_ret": 9,
+    "ret_min_pct": 35,
+    "ret_usd_pct": 30,
+    "ret_tok_pct": 29,
+    "usd_por_encargo": 1.9,
+    "tok_k_por_encargo": 203,
+    "error_pct": 25
+   }
+  ],
+  "combos": [
+   {
+    "motor": "claude",
+    "modelo": "opus-5-5",
+    "esfuerzo": "high",
+    "rol": "autor",
+    "fases": 6,
+    "min_por_fase": 32.2,
+    "usd_por_fase": 7.22,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "codex",
+    "modelo": "gpt-5.6-terra",
+    "esfuerzo": "medium",
+    "rol": "rev",
+    "fases": 23,
+    "min_por_fase": 6.1,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 125
+   },
+   {
+    "motor": "codex",
+    "modelo": "gpt-5.6-terra",
+    "esfuerzo": "high",
+    "rol": "rev",
+    "fases": 18,
+    "min_por_fase": 6.9,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 172
+   },
+   {
+    "motor": "claude",
+    "modelo": "opus-5-5",
+    "esfuerzo": "medium",
+    "rol": "fix",
+    "fases": 10,
+    "min_por_fase": 11.7,
+    "usd_por_fase": 2.37,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "claude",
+    "modelo": "sonnet-5-5",
+    "esfuerzo": "medium",
+    "rol": "autor",
+    "fases": 15,
+    "min_por_fase": 7.5,
+    "usd_por_fase": 1.9,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "claude",
+    "modelo": "opus-5-5",
+    "esfuerzo": "high",
+    "rol": "fix",
+    "fases": 4,
+    "min_por_fase": 24.6,
+    "usd_por_fase": 5.26,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "claude",
+    "modelo": "opus-5-5",
+    "esfuerzo": "medium",
+    "rol": "autor",
+    "fases": 8,
+    "min_por_fase": 11.6,
+    "usd_por_fase": 3.17,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "codex",
+    "modelo": "gpt-5.6-terra",
+    "esfuerzo": "xhigh",
+    "rol": "rev",
+    "fases": 8,
+    "min_por_fase": 10.4,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 225
+   },
+   {
+    "motor": "claude",
+    "modelo": "sonnet-5-5",
+    "esfuerzo": "medium",
+    "rol": "fix",
+    "fases": 17,
+    "min_por_fase": 4.1,
+    "usd_por_fase": 0.46,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "codex",
+    "modelo": "gpt-reserve",
+    "esfuerzo": "medium",
+    "rol": "rev",
+    "fases": 19,
+    "min_por_fase": 3.4,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 110
+   },
+   {
+    "motor": "claude",
+    "modelo": "opus-5-5",
+    "esfuerzo": "high",
+    "rol": "rev",
+    "fases": 5,
+    "min_por_fase": 9.7,
+    "usd_por_fase": 3.25,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "claude",
+    "modelo": "opus-5-5",
+    "esfuerzo": "xhigh",
+    "rol": "rev",
+    "fases": 2,
+    "min_por_fase": 13.9,
+    "usd_por_fase": 4.9,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "codex",
+    "modelo": "gpt-reserve",
+    "esfuerzo": "medium",
+    "rol": "fix",
+    "fases": 4,
+    "min_por_fase": 6.9,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 168
+   },
+   {
+    "motor": "codex",
+    "modelo": "gpt-5.6-terra",
+    "esfuerzo": "high",
+    "rol": "autor",
+    "fases": 1,
+    "min_por_fase": 22.4,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 453
+   },
+   {
+    "motor": "codex",
+    "modelo": "gpt-5.6-terra",
+    "esfuerzo": "medium",
+    "rol": "fix",
+    "fases": 3,
+    "min_por_fase": 6.2,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 124
+   },
+   {
+    "motor": "codex",
+    "modelo": "gpt-5.6-terra",
+    "esfuerzo": "medium",
+    "rol": "autor",
+    "fases": 3,
+    "min_por_fase": 5.1,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 111
+   },
+   {
+    "motor": "codex",
+    "modelo": "gpt-reserve",
+    "esfuerzo": "medium",
+    "rol": "autor",
+    "fases": 2,
+    "min_por_fase": 6.9,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 142
+   },
+   {
+    "motor": "claude",
+    "modelo": "haiku-4-5",
+    "esfuerzo": "—",
+    "rol": "fix",
+    "fases": 4,
+    "min_por_fase": 2.9,
+    "usd_por_fase": 0.18,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "claude",
+    "modelo": "sin dato",
+    "esfuerzo": "—",
+    "rol": "rev",
+    "fases": 3,
+    "min_por_fase": 3.7,
+    "usd_por_fase": 1.27,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "claude",
+    "modelo": "sonnet-5-5",
+    "esfuerzo": "medium",
+    "rol": "rev",
+    "fases": 4,
+    "min_por_fase": 2.4,
+    "usd_por_fase": 0.56,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "codex",
+    "modelo": "sin dato",
+    "esfuerzo": "—",
+    "rol": "autor",
+    "fases": 2,
+    "min_por_fase": 4.5,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 145
+   },
+   {
+    "motor": "claude",
+    "modelo": "haiku-4-5",
+    "esfuerzo": "—",
+    "rol": "autor",
+    "fases": 2,
+    "min_por_fase": 3.4,
+    "usd_por_fase": 0.27,
+    "tok_k_por_fase": null
+   },
+   {
+    "motor": "codex",
+    "modelo": "sin dato",
+    "esfuerzo": "—",
+    "rol": "fix",
+    "fases": 1,
+    "min_por_fase": 5.8,
+    "usd_por_fase": null,
+    "tok_k_por_fase": 116
+   }
+  ],
+  "afinado": [
+   {
+    "nombre": "sin dato",
+    "encargos": 39,
+    "fases": 164,
+    "aprobados": 14,
+    "revisados": 38,
+    "min": 1326,
+    "min_ret": 619,
+    "ret_min_pct": 47,
+    "ret_usd_pct": 39,
+    "ret_tok_pct": 52,
+    "usd_por_encargo": 4.69,
+    "tok_k_por_encargo": 317,
+    "error_pct": 43
+   }
+  ],
+  "experimento": [
+   {
+    "nombre": "ninguno",
+    "encargos": 2,
+    "fases": 6,
+    "aprobados": 0,
+    "revisados": 1,
+    "min": 57,
+    "min_ret": 23,
+    "ret_min_pct": 40,
+    "ret_usd_pct": 56,
+    "ret_tok_pct": 31,
+    "usd_por_encargo": 3.64,
+    "tok_k_por_encargo": 408,
+    "error_pct": 19
+   },
+   {
+    "nombre": "sin dato",
+    "encargos": 37,
+    "fases": 158,
+    "aprobados": 14,
+    "revisados": 37,
+    "min": 1269,
+    "min_ret": 597,
+    "ret_min_pct": 47,
+    "ret_usd_pct": 38,
+    "ret_tok_pct": 53,
+    "usd_por_encargo": 4.75,
+    "tok_k_por_encargo": 312,
+    "error_pct": 44
+   }
+  ],
+  "caros": [
+   {
+    "id": "36",
+    "min": 139,
+    "usd": 21.42,
+    "tok_k": 733,
+    "revisiones": 3
+   },
+   {
+    "id": "23d",
+    "min": 88,
+    "usd": 11.69,
+    "tok_k": 583,
+    "revisiones": 3
+   },
+   {
+    "id": "39b",
+    "min": 83,
+    "usd": 12.81,
+    "tok_k": 606,
+    "revisiones": 3
+   },
+   {
+    "id": "35",
+    "min": 81,
+    "usd": 9.95,
+    "tok_k": 649,
+    "revisiones": 3
+   },
+   {
+    "id": "23c",
+    "min": 65,
+    "usd": 13.75,
+    "tok_k": 540,
+    "revisiones": 3
+   }
+  ],
+  "saltadas": 0,
+  "sin_manifiesto": [
+   "19",
+   "20",
+   "21",
+   "22",
+   "22b",
+   "22c",
+   "23a",
+   "23b",
+   "23c",
+   "23d",
+   "23e",
+   "23g",
+   "23h",
+   "24",
+   "26b",
+   "27",
+   "27b",
+   "27c",
+   "28",
+   "29",
+   "31",
+   "32b",
+   "32c",
+   "33",
+   "33b",
+   "34",
+   "35",
+   "36",
+   "37",
+   "38",
+   "39a",
+   "39b",
+   "40",
+   "47a",
+   "47b",
+   "48",
+   "48b"
+  ],
+  "ilegibles": []
+ },
+ "modelos": {
+  "niveles": {
+   "claude": {
+    "maximo": {
+     "modelo": "claude-opus-5-5",
+     "esfuerzo": "xhigh"
+    },
+    "fuerte": {
+     "modelo": "claude-opus-5-5",
+     "esfuerzo": "high"
+    },
+    "normal": {
+     "modelo": "claude-opus-5-5",
+     "esfuerzo": "medium"
+    },
+    "agil": {
+     "modelo": "claude-sonnet-5-5",
+     "esfuerzo": "medium"
+    },
+    "liviano": {
+     "modelo": "claude-haiku-4-5",
+     "esfuerzo": ""
+    }
+   },
+   "codex": {
+    "maximo": {
+     "modelo": "gpt-5.6-terra",
+     "esfuerzo": "xhigh"
+    },
+    "fuerte": {
+     "modelo": "gpt-5.6-terra",
+     "esfuerzo": "high"
+    },
+    "normal": {
+     "modelo": "gpt-5.6-terra",
+     "esfuerzo": "medium"
+    },
+    "agil": {
+     "modelo": "gpt-reserve",
+     "esfuerzo": "medium"
+    },
+    "liviano": {
+     "modelo": "gpt-5.6-luna",
+     "esfuerzo": "low"
+    }
+   }
+  },
+  "naturaleza": {
+   "seguridad": {
+    "autor": "fuerte",
+    "rev": "maximo",
+    "fix": "fuerte"
+   },
+   "diseno": {
+    "autor": "maximo",
+    "rev": "fuerte",
+    "fix": "fuerte"
+   },
+   "bot": {
+    "autor": "normal",
+    "rev": "fuerte",
+    "fix": "normal"
+   },
+   "pagina": {
+    "autor": "normal",
+    "rev": "normal",
+    "fix": "agil"
+   },
+   "investigacion": {
+    "autor": "agil",
+    "rev": "normal",
+    "fix": "agil"
+   },
+   "menor": {
+    "autor": "liviano",
+    "rev": "agil",
+    "fix": "liviano"
+   }
+  },
+  "reparto": {
+   "seguridad": {
+    "autor": "claude_cami",
+    "revisor": "codex"
+   },
+   "diseno": {
+    "autor": "claude_cami",
+    "revisor": "codex"
+   },
+   "bot": {
+    "autor": "claude_cami",
+    "revisor": "codex"
+   },
+   "pagina": {
+    "autor": "claude_cami",
+    "revisor": "codex"
+   },
+   "investigacion": {
+    "autor": "claude_cami",
+    "revisor": "codex"
+   },
+   "menor": {
+    "autor": "claude_cami",
+    "revisor": "codex"
+   }
+  },
+  "autorizacion": {
+   "modelos": [
+    "claude-fable-5-1",
+    "gpt-6-astra"
+   ],
+   "patrones": [
+    "fable",
+    "mythos",
+    "astra"
+   ],
+   "espera_max_min": 30
+  },
+  "factor_modelo": {
+   "claude-opus-5-5": 1.0,
+   "claude-sonnet-5-5": 0.61,
+   "claude-haiku-4-5": 0.25
+  }
+ },
+ "catalogo": {
+  "claude": {
+   "claude-fable-5-1": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ],
+   "claude-opus-5-5": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ],
+   "claude-sonnet-5-5": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ],
+   "claude-haiku-4-5": []
+  },
+  "codex": {
+   "gpt-6-astra": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+    "ultra"
+   ],
+   "gpt-reserve": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ],
+   "gpt-5.6-sol": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+    "ultra"
+   ],
+   "gpt-5.6-terra": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+    "ultra"
+   ],
+   "gpt-5.6-luna": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ],
+   "gpt-5.5": [
+    "low",
+    "medium",
+    "high",
+    "xhigh"
+   ],
+   "codex-auto-review": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ]
+  }
+ },
+ "pronosticos": {
+  "claude-fable-5-1": {
+   "cuenta": "claude_cami",
+   "rol": "autor",
+   "pct_5h": 16.5,
+   "pct_sem": 1.5,
+   "min": 11.7,
+   "debil": true,
+   "por_factor": 1.0,
+   "etiqueta": "débil, sin factor"
+  },
+  "claude-opus-5-5": {
+   "cuenta": "claude_cami",
+   "rol": "autor",
+   "pct_5h": 22.5,
+   "pct_sem": 2.5,
+   "min": 18.4,
+   "debil": false,
+   "por_factor": null,
+   "etiqueta": ""
+  },
+  "claude-sonnet-5-5": {
+   "cuenta": "claude_cami",
+   "rol": "autor",
+   "pct_5h": 3.5,
+   "pct_sem": 1.0,
+   "min": 3.5,
+   "debil": false,
+   "por_factor": null,
+   "etiqueta": ""
+  },
+  "claude-haiku-4-5": {
+   "cuenta": "claude_cami",
+   "rol": "autor",
+   "pct_5h": 4.1,
+   "pct_sem": 0.4,
+   "min": 11.7,
+   "debil": true,
+   "por_factor": 0.25,
+   "etiqueta": "débil, factor 0,25"
+  },
+  "gpt-6-astra": {
+   "cuenta": "codex",
+   "rol": "autor",
+   "pct_5h": 6.5,
+   "pct_sem": 1.5,
+   "min": 5.2,
+   "debil": false,
+   "por_factor": null,
+   "etiqueta": "sin factor"
+  },
+  "gpt-reserve": {
+   "cuenta": "codex",
+   "rol": "autor",
+   "pct_5h": 6.5,
+   "pct_sem": 1.5,
+   "min": 5.2,
+   "debil": false,
+   "por_factor": null,
+   "etiqueta": "sin factor"
+  },
+  "gpt-5.6-sol": {
+   "cuenta": "codex",
+   "rol": "autor",
+   "pct_5h": 6.5,
+   "pct_sem": 1.5,
+   "min": 5.2,
+   "debil": false,
+   "por_factor": null,
+   "etiqueta": "sin factor"
+  },
+  "gpt-5.6-terra": {
+   "cuenta": "codex",
+   "rol": "autor",
+   "pct_5h": 16.5,
+   "pct_sem": 3.0,
+   "min": 5.8,
+   "debil": false,
+   "por_factor": null,
+   "etiqueta": ""
+  },
+  "gpt-5.6-luna": {
+   "cuenta": "codex",
+   "rol": "autor",
+   "pct_5h": 6.5,
+   "pct_sem": 1.5,
+   "min": 5.2,
+   "debil": false,
+   "por_factor": null,
+   "etiqueta": "sin factor"
+  },
+  "gpt-5.5": {
+   "cuenta": "codex",
+   "rol": "autor",
+   "pct_5h": 6.5,
+   "pct_sem": 1.5,
+   "min": 5.2,
+   "debil": false,
+   "por_factor": null,
+   "etiqueta": "sin factor"
+  },
+  "codex-auto-review": {
+   "cuenta": "codex",
+   "rol": "autor",
+   "pct_5h": 6.5,
+   "pct_sem": 1.5,
+   "min": 5.2,
+   "debil": false,
+   "por_factor": null,
+   "etiqueta": "sin factor"
+  }
+ },
+ "reglas": [
+  {
+   "cuenta": "claude_cami",
+   "nombre": "Claude (Cami)",
+   "colas": [
+    "cola43r"
+   ],
+   "fuente": "uso.json",
+   "debil": false,
+   "ventanas": [
+    {
+     "ventana": "semanal",
+     "actual": 81.0,
+     "pronostico": 5.2,
+     "tope": 75,
+     "alcanza": false
+    },
+    {
+     "ventana": "5h",
+     "actual": 47.0,
+     "pronostico": 36.7,
+     "tope": 90,
+     "alcanza": true
+    }
+   ],
+   "alcanza": false,
+   "texto": "Claude (Cami) (cola43r): 5 h ahora 47 % + 36,7 % = 83,7 % ≤ tope 90 %: alcanza · sem ahora 81 % + 5,2 % = 86,2 % > tope 75 %: no alcanza",
+   "celdas": {
+    "cola43r": {
+     "pct_5h": 36.7,
+     "pct_5h_min": 21.0,
+     "pct_5h_max": 49.0,
+     "pct_sem": 5.2,
+     "pct_sem_min": 3.0,
+     "pct_sem_max": 7.0,
+     "proxima_5h": 0.0,
+     "debil": false
+    }
+   },
+   "proxima_5h": 0.0,
+   "renueva_5h": "2026-10-12T00:49:59+00:00",
+   "renueva_sem": "2026-10-12T00:59:59+00:00"
+  },
+  {
+   "cuenta": "codex",
+   "nombre": "Codex",
+   "colas": [
+    "cola43r"
+   ],
+   "fuente": "uso.json",
+   "debil": false,
+   "ventanas": [
+    {
+     "ventana": "semanal",
+     "actual": 11.0,
+     "pronostico": 4.2,
+     "tope": 75,
+     "alcanza": true
+    },
+    {
+     "ventana": "5h",
+     "actual": 69.0,
+     "pronostico": 0.0,
+     "tope": 90,
+     "alcanza": true
+    }
+   ],
+   "alcanza": true,
+   "texto": "Codex (cola43r): 5 h ahora 69 % + 0 % = 69 % ≤ tope 90 %: alcanza · sem ahora 11 % + 4,2 % = 15,2 % ≤ tope 75 %: alcanza · ↻ 33,9 % en la próxima ventana",
+   "celdas": {
+    "cola43r": {
+     "pct_5h": 0.0,
+     "pct_5h_min": 0.0,
+     "pct_5h_max": 0.0,
+     "pct_sem": 4.2,
+     "pct_sem_min": 2.0,
+     "pct_sem_max": 6.0,
+     "proxima_5h": 33.9,
+     "debil": false
+    }
+   },
+   "proxima_5h": 33.9,
+   "renueva_5h": "2026-10-11T21:21:56-03:00",
+   "renueva_sem": "2026-10-18T16:21:56-03:00"
+  }
+ ],
+ "colas_fuera": [
+  {
+   "cola": "cola41",
+   "estado": "pausada_sin_timer",
+   "motivo": "Claude (Cami) sin margen para rev: semanal 75 % + 2.0 % > tope 75 %",
+   "fase": "41:rev3",
+   "fases_restantes": [
+    {
+     "etapa": "41",
+     "fase": "rev3",
+     "rol": "rev",
+     "cuenta": "claude_cami",
+     "modelo": "claude-opus-5-5",
+     "min": 10.8,
+     "pct_5h": 17.0,
+     "pct_sem": 2.0,
+     "prob": 1.0,
+     "inicio_esperado": "2026-10-11T18:55:30-03:00",
+     "debil": false
+    }
+   ],
+   "debil": false
+  },
+  {
+   "cola": "cola42",
+   "estado": "pausada_sin_timer",
+   "motivo": "Claude (Cami) sin margen para rev: semanal 75 % + 2.0 % > tope 75 %",
+   "fase": "42:rev1",
+   "fases_restantes": [
+    {
+     "etapa": "42",
+     "fase": "rev1",
+     "rol": "rev",
+     "cuenta": "claude_cami",
+     "modelo": "claude-opus-5-5",
+     "min": 10.8,
+     "pct_5h": 17.0,
+     "pct_sem": 2.0,
+     "prob": 1.0,
+     "inicio_esperado": "2026-10-11T18:55:30-03:00",
+     "debil": true
+    },
+    {
+     "etapa": "42",
+     "fase": "fix1",
+     "rol": "fix",
+     "cuenta": "codex",
+     "modelo": "gpt-5.6-terra",
+     "min": 6.1,
+     "pct_5h": 11.0,
+     "pct_sem": 1.0,
+     "prob": 0.67,
+     "inicio_esperado": "2026-10-11T19:06:18-03:00",
+     "debil": true
+    },
+    {
+     "etapa": "42",
+     "fase": "rev2",
+     "rol": "rev",
+     "cuenta": "claude_cami",
+     "modelo": "claude-opus-5-5",
+     "min": 10.8,
+     "pct_5h": 17.0,
+     "pct_sem": 2.0,
+     "prob": 0.67,
+     "inicio_esperado": "2026-10-11T19:10:23-03:00",
+     "debil": true
+    },
+    {
+     "etapa": "42",
+     "fase": "fix2",
+     "rol": "fix",
+     "cuenta": "codex",
+     "modelo": "gpt-5.6-terra",
+     "min": 6.1,
+     "pct_5h": 11.0,
+     "pct_sem": 1.0,
+     "prob": 0.4489,
+     "inicio_esperado": "2026-10-11T19:17:37-03:00",
+     "debil": true
+    },
+    {
+     "etapa": "42",
+     "fase": "rev3",
+     "rol": "rev",
+     "cuenta": "claude_cami",
+     "modelo": "claude-opus-5-5",
+     "min": 10.8,
+     "pct_5h": 17.0,
+     "pct_sem": 2.0,
+     "prob": 0.4489,
+     "inicio_esperado": "2026-10-11T19:20:21-03:00",
+     "debil": true
+    }
+   ],
+   "debil": false
+  },
+  {
+   "cola": "cola46",
+   "estado": "pausada_sin_timer",
+   "motivo": "Claude (Cami) sin margen para autor: semanal 75 % + 4.0 % > tope 75 % (no se pudo proyectar: la etapa 46 no está en el manifiesto)",
+   "fase": "46:autor",
+   "fases_restantes": [],
+   "debil": true
+  }
+ ],
+ "capacidad_por_vencer": {
+  "claude_cami": {
+   "cuenta": "claude_cami",
+   "nombre": "Claude (Cami)",
+   "capacidad": 0.0,
+   "por_ventanas": 5.6,
+   "renueva": "2026-10-12T00:59:59+00:00",
+   "debil": false,
+   "colas_que_caben": []
+  },
+  "claude_diego": {
+   "cuenta": "claude_diego",
+   "nombre": "Claude (Diego)",
+   "capacidad": 47.0,
+   "por_ventanas": 241.2,
+   "renueva": "2026-10-17T07:00:00+00:00",
+   "debil": false,
+   "colas_que_caben": []
+  },
+  "codex": {
+   "cuenta": "codex",
+   "nombre": "Codex",
+   "capacidad": 64.0,
+   "por_ventanas": 507.2,
+   "renueva": "2026-10-18T16:21:56-03:00",
+   "debil": false,
+   "colas_que_caben": [
+    "cola42"
+   ]
+  }
+ },
+ "momento": "2026-10-11T18:55:30-03:00",
+ "colas": {
+  "cola41": {
+   "acciones": [
+    "reanudar"
+   ],
+   "pausa_pedida": false,
+   "no_reanuda": "",
+   "timers": []
+  },
+  "cola42": {
+   "acciones": [
+    "reanudar"
+   ],
+   "pausa_pedida": false,
+   "no_reanuda": "",
+   "timers": []
+  },
+  "cola43r": {
+   "acciones": [
+    "reanudar"
+   ],
+   "pausa_pedida": false,
+   "no_reanuda": "",
+   "timers": [
+    {
+     "unidad": "",
+     "proxima": "2026-10-11T21:15:30-03:00",
+     "vencido": false
+    }
+   ]
+  },
+  "cola46": {
+   "acciones": [],
+   "pausa_pedida": false,
+   "no_reanuda": "su vivo no deja una fase del manifiesto desde donde seguir",
+   "timers": []
+  }
+ },
+ "cuentas": {
+  "claude_cami": {
+   "nombre": "Claude (Cami)",
+   "motor": "claude",
+   "renueva_5h": "2026-10-12T00:49:59+00:00",
+   "renueva_sem": "2026-10-12T00:59:59+00:00"
+  },
+  "claude_diego": {
+   "nombre": "Claude (Diego)",
+   "motor": "claude",
+   "renueva_5h": "2026-10-12T00:30:00+00:00",
+   "renueva_sem": "2026-10-17T07:00:00+00:00"
+  },
+  "codex": {
+   "nombre": "Codex",
+   "motor": "codex",
+   "renueva_5h": "2026-10-11T21:21:56-03:00",
+   "renueva_sem": "2026-10-18T16:21:56-03:00"
+  }
+ }
+}

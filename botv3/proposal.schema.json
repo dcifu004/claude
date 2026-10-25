@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "message", "sources", "command_suggestion", "command_context"],
+  "properties": {
+    "kind": {"type": "string", "enum": ["answer"]},
+    "message": {"type": "string"},
+    "sources": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {"type": "string"}
+    },
+    "command_suggestion": {"type": "string"},
+    "command_context": {"type": "string"}
+  }
+}

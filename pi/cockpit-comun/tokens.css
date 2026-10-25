@@ -1,0 +1,45 @@
+/*
+ * Paleta clara y oscura de las páginas propias de Cockpit (encargo 18, documento 26).
+ * ÚNICA fuente: antes estaba copiada en sistema.css, nodo.css, luces.css, noticias.css y
+ * bots/comun.css, con estos mismos valores. Ninguna página vuelve a definir estos
+ * nombres (hay una prueba: pi/test_cockpit_paginas.py). Lo que es de una sola página
+ * (la tira de LEDs, la paleta de los gráficos de noticias, el fondo de la terminal de
+ * 👾) sigue en su hoja, con otros nombres.
+ * El tema lo elige ../comun/tema.js, que pone data-theme en <html>.
+ */
+:root {
+    --fondo: #f5f5f4;
+    --tarjeta: #ffffff;
+    --borde: #e2e2df;
+    --texto: #1c1c1a;
+    --tenue: #6b6b66;
+    --acento: #2f6fdb;
+    --acento-texto: #ffffff;
+    --ok: #2e9b5a;
+    --ok-fondo: #e6f4ec;
+    --mal: #c93b3b;
+    --mal-fondo: #fbe9e9;
+    --ojo: #a86a00;
+    --ojo-fondo: #fdf3df;
+    --chip: #efefec;
+    --terminal: #1b1b1a;
+    --terminal-texto: #e8e6df;
+}
+:root[data-theme="dark"] {
+    --fondo: #151514;
+    --tarjeta: #1f1f1e;
+    --borde: #33332f;
+    --texto: #ecebe6;
+    --tenue: #9d9c95;
+    --acento: #5b8ff0;
+    --acento-texto: #0d0d0c;
+    --ok: #4cc27c;
+    --ok-fondo: #173123;
+    --mal: #ec6a6a;
+    --mal-fondo: #3a1c1c;
+    --ojo: #e5a93a;
+    --ojo-fondo: #3a2c12;
+    --chip: #2a2a28;
+    --terminal: #0d0d0c;
+    --terminal-texto: #e8e6df;
+}

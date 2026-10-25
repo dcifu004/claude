@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de uso de Jaime y Pilar</title>
+<style>
+:root{--bg:#f7f6f2;--card:#fff;--tx:#1f2328;--mu:#5c6370;--ln:#e3e1da;--ac:#2f6f5e;--chip:#eef4f1;--warn:#8a5a00}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--card:#1f2226;--tx:#e8e6e1;--mu:#a0a6ad;--ln:#30343a;--ac:#7cc4ad;--chip:#23302c;--warn:#e0b25c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.sub{color:var(--mu);margin:0 0 16px}
+.regla{background:var(--card);border:1px solid var(--ln);border-left:4px solid var(--ac);border-radius:10px;padding:12px 14px;margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:14px;margin:0 0 12px}
+.card h2{font-size:1.1rem;margin:0 0 8px}
+.row{margin:6px 0}
+.lbl{display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}
+code{background:var(--chip);padding:1px 6px;border-radius:6px;font-size:.92em}
+.quien{display:inline-block;font-size:.78rem;padding:2px 8px;border-radius:99px;background:var(--chip);color:var(--ac);margin-left:6px;vertical-align:middle}
+.solo{color:var(--warn)}
+ul{margin:6px 0 0;padding-left:20px}
+footer{color:var(--mu);font-size:.85rem;margin-top:20px}
+</style>
+</head>
+<body>
+<main>
+<h1>Guía de uso de Jaime y Pilar</h1>
+<p class="sub">Qué se le puede pedir a cada bot, con comando y con voz · versión 23-10-2026</p>
+
+<div class="regla"><strong>Regla general:</strong> los comandos «/» <strong>se escriben</strong>. Por voz se usa la frase natural: lo dictado nunca se ejecuta como comando. Hoy la voz es la nota de voz de Telegram; con el parlante de la sala, serán las mismas frases con «Hola Jaime» o «Hola Pilar» al principio.<br><br><strong>Jaime</strong> = bot de Diego · <strong>Pilar</strong> = bot de Camila (sin agenda ni correo).</div>
+
+<div class="card"><h2>🏠 Menú <span class="quien">Jaime y Pilar</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/menu</code></div>
+<div class="row"><span class="lbl">Por voz</span>— (son botones)</div>
+<div class="row"><span class="lbl">Alcance</span>Botones para Compras, Gastos, Google (sólo Jaime), Temporizadores, Órdenes, Buscar, Clima, Estado, Uso, Remote Control (sólo Jaime) y Ayuda. Cada botón hace lo mismo que su comando.</div></div>
+
+<div class="card"><h2>🛒 Compras <span class="quien">Jaime y Pilar</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/compras</code> · <code>/compras agrega…</code> · <code>/compras saca…</code> · <code>/compras listo</code></div>
+<div class="row"><span class="lbl">Por voz</span>«falta leche» · «agrégame pan y huevos» · «qué hay en la lista» · «saca el pan»</div>
+<div class="row"><span class="lbl">Ejemplos</span>«se acabó el café» · «mándale la lista a Camila»</div>
+<div class="row"><span class="lbl">Alcance</span>Lista compartida de la casa. Agregar es directo, incluso por voz; sacar, terminar, vaciar y deshacer piden un botón. Por voz lee hasta 5 ítems. Todo local, sin IA.</div></div>
+
+<div class="card"><h2>💳 Gastos <span class="quien">Jaime y Pilar</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/gastos</code> (saldo + ➕ Anotar / 🧾 Últimos) · <code>/gastos 15000 feria, 50/50</code></div>
+<div class="row"><span class="lbl">Por voz</span>«gasté 15 lucas en la feria» · «anota un gasto de quince mil en el súper, paga Cami»</div>
+<div class="row"><span class="lbl">Ejemplos</span>«pagué mil quinientos de estacionamiento» · <code>/gastos 8000 farmacia, fecha 18/10</code></div>
+<div class="row"><span class="lbl">Alcance</span>Paga Diego por defecto en Jaime y Cami en Pilar. <strong>Siempre termina en ✅ Anotar.</strong> Por voz sólo dice «te dejé el gasto para confirmar en el chat»: montos y saldo nunca se dicen. Sin monto no es gasto («anota leche» va a compras). Tope: $10.000.000.</div></div>
+
+<div class="card"><h2>📅 Agenda <span class="quien solo">sólo Jaime</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/google</code> (Hoy · Mañana · Semana · Próximo · ➕ Evento) · <code>/google &lt;pedido&gt;</code></div>
+<div class="row"><span class="lbl">Por voz</span>«qué tengo mañana» · «cuál es mi próxima reunión» · «a qué hora es la reunión con Pedro» · «agenda dentista el jueves a las 4»</div>
+<div class="row"><span class="lbl">Ejemplos</span>«tengo algo el viernes» · «cuándo es el dentista»</div>
+<div class="row"><span class="lbl">Alcance</span>Consultar es instantáneo y sin IA. Crear evento o borrador pide ✅. Por voz dice cuántos eventos hay, y la hora y el título del primero; el resto va al chat. No mueve ni borra eventos.</div></div>
+
+<div class="card"><h2>✉️ Correo <span class="quien solo">sólo Jaime</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/google</code> → ✉️ No leídos · 📝 Borrador</div>
+<div class="row"><span class="lbl">Por voz</span>«tengo correos nuevos» · «me escribió Juan»</div>
+<div class="row"><span class="lbl">Alcance</span>Remitente, asunto y extracto; no lee el cuerpo. Por voz sólo dice cuántos. Enviar no existe: sólo borradores con ✅.</div></div>
+
+<div class="card"><h2>🔎 Buscar <span class="quien">Jaime y Pilar</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/buscar &lt;consulta&gt;</code> · <code>/menu</code> → 🔎 Buscar</div>
+<div class="row"><span class="lbl">Por voz</span>— (se escribe)</div>
+<div class="row"><span class="lbl">Ejemplo</span><code>/buscar feriados Chile 2026</code></div>
+<div class="row"><span class="lbl">Alcance</span>Busca con SearXNG local, sin IA ni acceso a vaults. Muestra hasta 5 resultados con título, dominio, fecha si existe y enlace. Si el buscador está apagado lo avisa; el contador no guarda la consulta.</div></div>
+
+<div class="card"><h2>🌦️ Clima <span class="quien">Jaime y Pilar</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/menu</code> → 🌦️ Clima</div>
+<div class="row"><span class="lbl">Por voz</span>«va a llover hoy» · «cómo va a estar mañana» · «hace frío afuera» · «va a llover mañana en Puerto Montt» · «cambia la comuna del clima a Ñuñoa»</div>
+<div class="row"><span class="lbl">Ejemplos</span>«qué temperatura va a hacer mañana» · «el pronóstico de la semana» · «clima en Ñuñoa» · «restablece la comuna del clima»</div>
+<div class="row"><span class="lbl">Alcance</span>Las Condes o la comuna que elijan, sin IA. Otra comuna una vez: «clima en Ñuñoa» (texto; no cambia nada; sólo nombres exactos de la tabla local de 345 comunas, nada de lo dicho sale a internet). Cambiar la comuna fija: por frase o con «📍 Comuna» bajo la imagen (compartir la ubicación, escribir la comuna o volver a Las Condes), siempre con ✅; un nombre a medias muestra hasta 6 para elegir. De la ubicación se guarda sólo la comuna más cercana y el punto redondeado (≈ 1 km). La imagen, el pie, las frases y el aviso usan la comuna elegida, por bot. El botón manda una imagen de hoy, mañana y pasado con cuándo llueve (horarios aproximados); si no se puede, el texto de «clima hoy». Debajo, «⏰ Programar aviso»: la misma imagen llega sola a esa hora (L–V 7:30 · S–D 10:00, todos los días 8:00 u otro horario escrito; los feriados, con el de fin de semana), nunca por el parlante. Se cambia o pausa desde la misma imagen o con «pausa el aviso del clima». Las frases siguen en texto. La semana va al chat. «temperatura del living» sigue yendo a Home Assistant; «clima en Buenos Aires», a la ruta de siempre.</div></div>
+
+<div class="card"><h2>🕐 Hora y fecha <span class="quien">Jaime y Pilar</span></h2>
+<div class="row"><span class="lbl">Por voz</span>«qué hora es» → «Son las 7 y 20 de la tarde» · «qué día es hoy»</div>
+<div class="row"><span class="lbl">Alcance</span>Instantáneo y local.</div></div>
+
+<div class="card"><h2>📱 Remote Control <span class="quien solo">sólo Jaime</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/remoto</code></div>
+<div class="row"><span class="lbl">Por voz</span>—</div>
+<div class="row"><span class="lbl">Alcance</span>Abre una sesión de Claude en la Pi para verla en la app de Claude → Code del teléfono. Tiene permiso <code>acceptEdits</code>, vence sola a las 8 h y se puede cerrar antes con ⏹ Cerrar ahora. El bot sólo pide la acción; no ejecuta Claude ni servicios.</div></div>
+
+<div class="card"><h2>⏰ Temporizadores <span class="quien">Jaime y Pilar</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/temporizadores</code> · <code>/timer 10 min tallarines</code> · <code>/alarmas</code></div>
+<div class="row"><span class="lbl">Por voz</span>«temporizador de 10 minutos para los tallarines» · «cuánto le queda» · «cancela el de los huevos»</div>
+<div class="row"><span class="lbl">Ejemplos</span>«avísame en 20 minutos» · «alarma a las 7 de la mañana» · «agrega 5 minutos»</div>
+<div class="row"><span class="lbl">Alcance</span>Cada bot ve sólo los suyos. Cancelar no pide confirmación. Hoy el aviso llega por Telegram; con el parlante, va a sonar. Máximo 10 activos, de 5 s a 24 h.</div></div>
+
+<div class="card"><h2>🔁 Órdenes que se repiten <span class="quien">Jaime y Pilar</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/ordenes</code></div>
+<div class="row"><span class="lbl">Por voz</span>«despiértame de lunes a viernes a las 6:30» · «cada domingo recuérdame regar»</div>
+<div class="row"><span class="lbl">Ejemplos</span>«pausa la alarma de los lunes» · «cada 2 horas recuérdame tomar agua»</div>
+<div class="row"><span class="lbl">Alcance</span>Por voz, crear pide ✅; escrita, trae ↩️ Deshacer. Pausar y borrar se pueden deshacer durante una hora. Los avisos del clima salen acá con 🌦️.</div></div>
+
+<div class="card"><h2>🩺 Estado · 💳 Uso · 🧠 Memoria · ❓ Ayuda</h2>
+<div class="row"><span class="lbl">Estado</span><code>/estado</code> · «cómo está la Pi» (por voz, versión corta)</div>
+<div class="row"><span class="lbl">Uso</span><code>/uso</code> · cuota de Claude y Codex, sólo escrito</div>
+<div class="row"><span class="lbl">Memoria</span>«guardar en memoria que la llave de paso está bajo el lavaplatos» → se guarda sólo con ✅</div>
+<div class="row"><span class="lbl">Ayuda</span><code>/ayuda</code> · <code>/acciones</code></div></div>
+
+<div class="card"><h2>💬 Pregunta libre <span class="quien">Jaime y Pilar</span></h2>
+<div class="row"><span class="lbl">Comando</span><code>/cami</code> · <code>/codex</code> · <code>/diego &lt;pregunta&gt;</code></div>
+<div class="row"><span class="lbl">Por voz</span>cualquier otra pregunta, o «pregúntale a Codex…»</div>
+<div class="row"><span class="lbl">Alcance</span>Las respuestas rápidas se dicen por voz; las que leen archivos o la web van siempre al chat.</div></div>
+
+<div class="card"><h2>📨 Mensajes de las IA <span class="quien">Jaime y Pilar</span></h2>
+<div class="row"><span class="lbl">Quién</span>Claude o Codex, con <code>mensaje</code>; no se pide por chat ni por voz</div>
+<div class="row"><span class="lbl">A Jaime</span>Directo: «🤖 Claude (Diego): …»</div>
+<div class="row"><span class="lbl">A Pilar</span>Sólo con ✅ de Diego: la vista previa llega a Jaime («📨 Para Pilar, de …») y el botón ✅ a @Dcs_v5bot. Sin ✅ no sale nada y vence en 30 min.</div>
+<div class="row"><span class="lbl">Alcance</span>Documentos sólo desde <code>vault_personal</code> (pdf, png, jpg, webp, md, txt, html; hasta 20 MB), nunca del vault laboral. Pilar no ejecuta nada de lo que llega: lo publica.</div></div>
+
+<div class="card"><h2>Lo que no está todavía</h2>
+<ul><li>Agenda y correo en Pilar.</li><li>Mover o borrar eventos.</li><li>Avisos antes de una reunión.</li><li>«Repite», «cancela» y «qué puedes hacer» por voz.</li><li>Parlante y micrófono de sala.</li></ul></div>
+
+<footer>Guía viva: se actualiza cada vez que el bot gana o cambia una función.</footer>
+</main>
+</body>
+</html>

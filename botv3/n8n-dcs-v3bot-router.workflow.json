@@ -1,0 +1,234 @@
+{
+  "name": "Dcs_v3bot - clasificador interno",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dcs-v3bot-router",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "botv3-webhook",
+      "name": "Webhook interno autenticado",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "dcs-v3bot-router",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR_ANTES_DE_ACTIVAR",
+          "name": "Dcs_v3bot interno"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Modelos de la ruta general. Groq retira modelos sin aviso: si esta ruta\n// empieza a devolver 404 o 'model_decommissioned', listar los vigentes con\n//   curl -s -H \"Authorization: Bearer $GROQ_API_KEY\" https://api.groq.com/openai/v1/models\n// y cambiarlos SOLO aca. No hay otro lugar donde esten escritos.\n//\n// NO usar groq/compound ni compound-mini aunque digan traer buscador web: medido\n// el 12-09-2026, **casi nunca buscan** en el tier gratis — 4 de 5 preguntas de\n// actualidad (incluido \"a cuanto esta el dolar hoy\") contestaron sin ejecutar\n// ninguna herramienta, y la unica que intento buscar murio con HTTP 413\n// \"Request Entity Too Large\" teniendo 66.264 de 70.000 tokens libres: al buscar\n// mete el contenido de las paginas en el contexto y el tier gratis lo rechaza.\n// Un buscador que no busca y ademas falla es peor que no tenerlo. La respuesta\n// al dato desactualizado es que el modelo lo DECLARE — eso vive en el system\n// prompt del nodo HTTP, no aca.\nconst GROQ_MODEL = 'openai/gpt-oss-120b';\n\nconst answer = (message) => [{ json: {\n  mode: 'answer',\n  payload: { kind: 'answer', message, sources: [], command_suggestion: '', command_context: '' }\n}}];\n\n// Una entrada invalida se RECHAZA con un answer explicito, no con throw: un\n// throw corta el flujo antes del nodo Respond y n8n contesta 200 con cuerpo\n// VACIO, que es el peor modo de falla (el bot lo puede mostrar como respuesta\n// en blanco). Verificado el 12-09-2026. Rechazar no es degradar: no se ejecuta\n// ninguna ruta y la ejecucion queda igual registrada en n8n.\nconst input = $json.body ?? $json;\nconst source = String(input.source ?? '').trim().toLowerCase();\nconst prompt = String(input.prompt ?? '').trim();\n// El bot manda su perfil como DATO. No decide permisos —el bot intersecta la\n// ruta con las suyas—, solo preferencias de ruta. Ver la rama tecnica.\nconst perfil = String(input.perfil ?? '').trim().toLowerCase();\n// Perfiles cuyo TOML tiene `codex` en `rutas` (24-09-2026). Tiene que calzar con\n// botv3/perfiles/*.toml; un desfase se degrada en el bot, no abre nada.\nconst PERFILES_CON_CODEX = new Set(['jaime']);\nconst allowed = new Set(['auto', 'sql', 'ha', 'gpt']);\nif (!allowed.has(source)) return answer('Ruta no permitida. El router solo acepta auto, sql, ha o gpt.');\nif (!prompt) return answer('La consulta llego vacia.');\nif (prompt.length > 4000) return answer('La consulta supera el limite de 4000 caracteres.');\n\nconst pending = {\n  sql: 'La ruta PostgreSQL esta clasificada, pero falta habilitar su catalogo de consultas SELECT.',\n  ha: 'La ruta Home Assistant esta clasificada, pero falta habilitar el proxy de consultas GET.'\n};\n\n// El vocativo no es contenido: \"Pilar, que hora es\" no es una pregunta SOBRE\n// Pilar. Se saca ANTES de clasificar, porque los nombres de los dos asistentes\n// estan en PROPIO: sin esto, cada vez que Camila llama a su bot por el nombre\n// la consulta se iria a la ruta claude, que para su perfil no lee archivos.\n// Lenta y para nada, y en el caso mas frecuente de todos.\nconst text = prompt.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()\n  .replace(/^[\\s\\u00bf\\u00a1\"'\\u00ab(-]*(hola|hey|oye|ok|buenas)?[\\s,]*(pilar|jaime)\\b[\\s,:.!?\\u00bf-]*/, '');\n// El `\\u00bf` de apertura NO es cosmetico y costo una consulta real (20-09-2026):\n// `^\\s*` no lo salta, asi que \"\\u00bfPilar, que peliculas hay?\" conserva el vocativo,\n// caza `pilar` en PROPIO y termina en la ruta claude. El canal donde pasa SIEMPRE\n// es la voz: Whisper puntua lo que transcribe, o sea que cada nota de voz en que\n// Camila llama a su bot por el nombre se iba a un agente sin archivos y sin\n// buscador, a esperar 45 s para que le contestara que no tiene internet. Se saltan\n// tambien comillas y parentesis de apertura, por el mismo motivo.\n\n// Ruta explicita distinta de auto: se responde sin clasificar.\nif (source !== 'auto') {\n  if (source === 'gpt') return [{ json: { mode: 'groq', model: GROQ_MODEL, prompt } }];\n  return answer(pending[source]);\n}\n\n// Un nombre de archivo con extension tecnica es una pregunta sobre el nodo aunque\n// no traiga ninguna palabra clave: \"que hace respaldo.sh\" se iba a `gpt` —Groq\n// opinando sobre un archivo que no puede ver— el 24-09-2026. Se exige el punto\n// pegado a un nombre, asi \"sh\" o \"md\" sueltos no cazan.\nconst ARCHIVO = /\\b[a-z0-9_@-]+\\.(sh|py|mjs|js|ts|json|toml|ya?ml|conf|service|timer|path|mount|env|sql|ini|cfg|log|csv|md|gs|ps1)\\b/;\n// Palabras de Calendar y Gmail. `inbox` NO va: en este nodo es la carpeta de\n// capturas del vault, no la bandeja de Gmail.\nconst AGENDA_CORREO = /\\b(agenda|agendar|agendame|agendalo|agendala|calendario|evento|eventos|reunion|reuniones|cita|citas|correo|correos|mail|mails|email|emails|gmail|borrador|borradores|bandeja de entrada)\\b/;\nlet route;\n// `temperatura` tambien vive en las preguntas de clima, y esta rama corre ANTES\n// que NECESITA_WEB: sin la guarda, \"que temperatura va a hacer manana\" termina\n// en Home Assistant. Si la frase trae marca de afuera o de futuro no es el sensor\n// del living. \"que temperatura hay en el living\" sigue yendo a ha.\nconst CLIMA_AFUERA = /\\b(clima|pronostico|llover|lluvia|afuera|manana)\\b/;\nif (!CLIMA_AFUERA.test(text) && /\\b(home assistant|sensor|sensores|temperatura|humedad|riego|domotica|entidad|entidades|huerto)\\b/.test(text)) {\n  route = 'ha';\n} else if (/\\b(postgres|postgresql|base de datos|tabla|tablas|registro(?! civil)|registros|filas?|consulta sql|tarifa|tarifas)\\b/.test(text) || /\\b(cuantos?|promedio|sumar|total)\\b.*\\b(datos|registros|filas|tarifas)\\b/.test(text)) {\n  route = 'sql';\n} else if (/\\b(chatgpt|openai|gpt|groq)\\b/.test(text)) {\n  route = 'gpt';\n} else if (AGENDA_CORREO.test(text)) {\n  // Agenda y correo (24-09-2026): la resuelve el bot hablando con google-puente.\n  // Va ANTES que PROPIO y que NECESITA_WEB: \"mi agenda de manana\" trae posesivo y\n  // trae \"manana\", y no es ni el vault ni internet. Si la frase no era de agenda\n  // (\"eventos en Santiago este finde\"), el bot la deriva a web por su cuenta.\n  route = 'google';\n} else if (/\\b(codex)\\b/.test(text) || ARCHIVO.test(text) || /\\b(codigo|script|python|bug|error|git|repositorio|systemd|docker|implementar|programar|configuracion tecnica)\\b/.test(text)) {\n  // Esta rama apuntaba a `codex` hasta el 19-09-2026, cuando Codex dejo de ser\n  // ruta de lectura de vaults y quedo solo como motor de la ruta `web`. Se\n  // REMAPEA a `claude` y no se borra: son preguntas tecnicas sobre los propios\n  // archivos —systemd, docker, el codigo del bot— y necesitan un agente que los\n  // lea. Borrar la rama las mandaria a PROPIO cuando la frase trae una palabra\n  // propia y a `gpt` cuando no, que es el peor caso: Groq opinando sobre un\n  // archivo que no puede ver. Sigue corriendo ANTES que PROPIO a proposito:\n  // \"arregla el error de systemd\" no trae posesivo y igual hay que leer el nodo.\n  // VOLVIO el 24-09-2026, por decision de Diego desde la pagina 🤖 de Cockpit,\n  // pero SOLO para los perfiles con `codex` en sus rutas. El clasificador es uno\n  // para todos los bots: mandarle `codex` a un perfil sin esa ruta lo degradaria\n  // a `gpt` en el bot, o sea Groq opinando sobre archivos que no ve. Sin perfil\n  // (una version vieja del bot) sigue siendo `claude`.\n  route = PERFILES_CON_CODEX.has(perfil) ? 'codex' : 'claude';\n} else {\n  // El fallback NO puede ser claude. El conocimiento general es infinito y no se\n  // puede enumerar; el dominio personal si, y es chico. Entonces se detecta lo\n  // propio y todo lo demas va a la ruta general. Al reves (fallback a claude)\n  // cada pregunta enciclopedica gastaba una llamada de agente para contestar\n  // \"eso no es mi alcance\" — verificado el 12-09-2026 con \"cuantos habitantes\n  // hay en chile en 1993?\". Los dos errores posibles se recuperan reformulando,\n  // pero este es el que pasa seguido.\n  // Al agregar un proyecto o un perfil nuevo, su nombre va en PROPIO.\n  const PROPIO = /\\b(mi|mis|mio|mia|mios|mias)\\b|\\b(nota|notas|archivo|archivos|documento|documentos|apunte|apuntes|vault|vaults|drive|carpeta|inbox|captura|capturas|memoria|frontmatter)\\b|\\b(proyecto|proyectos|arnes|arneses|licitacion|licitaciones|propuesta|propuestas|contrato|contratos|informe|minuta)\\b|\\b(pi5|gop|huerto|macetero|maceteros|cluster|quinque|rinco|nahuel|calama|cyd|camila|obsidian|syncthing|archify|nodo|pilar|jaime)\\b/;\n  // Datos que caducan -> ruta web. Quien busca depende del PERFIL: jaime va por\n  // Codex (cuota de ChatGPT Plus) con Claude de respaldo; un perfil sin `codex`\n  // en sus rutas va directo a Claude con su propia cuenta. Va DESPUES de PROPIO a\n  // proposito: \"la ultima nota de mi proyecto\" tiene \"ultima\" pero se responde\n  // leyendo el vault, no buscando en internet. Lo propio siempre gana.\n// La lista se amplio el 13-09-2026 con terminos domesticos (manana, horario,\n// abre/cierra, feriado, turno, semana) porque el error frecuente de un\n// asistente de casa es \"a que hora abre el mall manana\", que se iba a Groq y\n// contestaba de memoria. El costo de un falso positivo es una respuesta mas\n// lenta pero con fuentes; el de un falso negativo es un dato viejo dicho con\n// seguridad. La asimetria manda: ante la duda, buscar.\n// Ampliada otra vez el 20-09-2026 con el vocabulario de cine y streaming, y hay\n// dos lecciones que no se ven leyendo la lista: `pelicula` estaba pero `peliculas`\n// NO —con \\b el plural no caza, y la forma natural de preguntar es en plural—, y\n// `actual` no cubre `actualidad`. Al sumar un termino, sumar su plural.\n  const NECESITA_WEB = /\\b(hoy|ayer|ahora|actual|actuales|actualmente|vigente|ultimo|ultima|ultimos|ultimas|reciente|recientes|noticia|noticias|precio|precios|dolar|uf|utm|clima|pronostico|cotizacion|resultado|gano|eleccion|elecciones|presidente|ministro|alcalde|manana|semana|horario|horarios|abre|abren|cierra|cierran|feriado|feriados|turno|cierre|cierres|atiende|atienden|abierto|abierta|restaurante|restaurantes|restoran|restorant|telefono|direccion|donde queda|llover|lluvia|viento|nieve|alerta|pasaje|pasajes|vuelo|vuelos|aeropuerto|metro|micro|trafico|peaje|farmacia|farmacias|supermercado|mall|tienda|sucursal|banco|hotel|delivery|entradas|cartelera|cine|peliculas?|estrenos?|series?|temporada|streaming|netflix|plataformas?|actualidad|concierto|partido|estadio|funcion|vence|vencimiento|tramite|tramites|patente|registro civil|permiso de circulacion|bitcoin|euro|ipc|bolsa|sueldo minimo|stock|disponible|oferta|ofertas|cuanto cuesta|cuanto vale|cuanto sale|20(2[5-9]|3[0-9]))\\b/;\n  if (PROPIO.test(text)) route = 'claude';\n  else if (NECESITA_WEB.test(text)) route = 'web';\n  else route = 'gpt';\n}\n\n// En modo auto se devuelve SIEMPRE la decision, nunca la respuesta final, aunque\n// la ruta sea gpt y se pudiera resolver aca mismo. El bot espera {route} y con\n// cualquier otra forma corta con \"n8n devolvio una ruta no permitida\" (pasado el\n// 12-09-2026 con \"Capital de uruguay\"). Ese segundo viaje es lo que permite que\n// el bot muestre \"Ruta: X\" y que Groq se invoque por un unico camino: source=gpt.\nreturn [{ json: { mode: 'decision', payload: { route } } }];"
+      },
+      "id": "classify-request",
+      "name": "Validar y clasificar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "es-groq",
+              "leftValue": "={{ $json.mode }}",
+              "rightValue": "groq",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "route-switch",
+      "name": "Necesita Groq?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: $json.model, temperature: 0.3, max_tokens: 800, messages: [ { role: 'system', content: 'Sos la ruta de conocimiento general de un bot personal de consultas. Responde en espanol de Chile, directo y breve (maximo 8 lineas), en texto plano sin markdown. No tenes acceso a internet, ni a archivos, notas, vaults o bases de datos del usuario: si la pregunta necesita un documento suyo, decilo en una linea y no inventes su contenido. REGLA IMPORTANTE: cuando la respuesta dependa de datos que cambian con el tiempo — precios, autoridades y cargos, resultados, noticias, clima, poblacion, versiones de software — deci en la primera linea hasta cuando llegan tus datos y avisa que pueden estar desactualizados, y sugeri donde verificarlo. Nunca presentes un dato que caduca como si fuera actual. Nunca pidas ni repitas claves, tokens ni datos personales.' }, { role: 'user', content: $json.prompt } ] }) }}",
+        "options": {
+          "timeout": 25000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "groq-call",
+      "name": "Groq - conocimiento general",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        -120
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR_ANTES_DE_ACTIVAR",
+          "name": "Groq API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Groq responde con el esquema de OpenAI. Cualquier forma inesperada se\n// convierte en un answer explicito: el bot NUNCA debe recibir un 200 vacio.\nconst r = $json ?? {};\nconst texto = r?.choices?.[0]?.message?.content;\nconst err = r?.error?.message;\n\nlet message;\nif (typeof texto === 'string' && texto.trim()) {\n  message = texto.trim();\n} else if (err) {\n  message = 'La ruta de conocimiento general fallo: ' + String(err).slice(0, 300);\n} else {\n  message = 'La ruta de conocimiento general no devolvio texto. Proba de nuevo o usa /claude.';\n}\n\nreturn [{ json: {\n  kind: 'answer',\n  message,\n  sources: [],\n  command_suggestion: '',\n  command_context: ''\n}}];"
+      },
+      "id": "groq-format",
+      "name": "Formatear respuesta Groq",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $json.payload }];"
+      },
+      "id": "passthrough",
+      "name": "Decision o pendiente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond",
+      "name": "Responder al bot",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1300,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook interno autenticado": {
+      "main": [
+        [
+          {
+            "node": "Validar y clasificar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar y clasificar": {
+      "main": [
+        [
+          {
+            "node": "Necesita Groq?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Necesita Groq?": {
+      "main": [
+        [
+          {
+            "node": "Groq - conocimiento general",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Decision o pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq - conocimiento general": {
+      "main": [
+        [
+          {
+            "node": "Formatear respuesta Groq",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear respuesta Groq": {
+      "main": [
+        [
+          {
+            "node": "Responder al bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision o pendiente": {
+      "main": [
+        [
+          {
+            "node": "Responder al bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "versionId": "e17c4b90-3a2f-4d61-9c08-5b2f1a7e6d34"
+}

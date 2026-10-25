@@ -1,0 +1,88 @@
+[Unit]
+# Unidad plantilla: un perfil por instancia. `botv3@pilar` lee el perfil `pilar`.
+# Jaime sigue en su `botv3.service` dedicado hasta que esta plantilla se pruebe en
+# produccion con Camila — una etapa a la vez. Migrarlo es la Fase 1b.
+Description=Bot de consultas de solo lectura del nodo (perfil %i)
+After=network-online.target
+Wants=network-online.target
+RequiresMountsFor=/opt/nodo/datos
+
+[Service]
+Type=simple
+
+# UN USUARIO UNIX POR PERFIL, y esto NO es simetria decorativa. Las dos instancias
+# corriendo como el mismo usuario no quedan aisladas: con ProtectSystem=strict lo
+# que no esta en ReadWritePaths queda de SOLO LECTURA, no invisible, asi que la
+# instancia de Camila podria LEER el estado de la de Diego — memoria.md,
+# casa-jaime.md y sobre todo claude-config, que guarda la credencial de su cuenta
+# de Claude. Con usuario propio el aislamiento queda en permisos Unix Y en
+# systemd: dos capas independientes.
+# Un perfil nuevo sin su usuario `bot<perfil>` NO arranca, que es como tiene que
+# fallar: cerrado y ruidoso.
+User=bot%i
+Group=bot%i
+
+WorkingDirectory=/opt/botv3
+# systemd (PID 1) lee este archivo ANTES de armar el namespace, asi que el token
+# llega aunque `secretos/` este en InaccessiblePaths y aunque el usuario del
+# servicio no tenga permiso para leerlo. Por eso `bot%i` no necesita estar en el
+# grupo `captura`: si lo estuviera, podria leer tambien el captura.env del bot
+# personal, con su token y la GROQ_API_KEY.
+EnvironmentFile=/opt/nodo/datos/secretos/botv3-%i.env
+Environment=BOTV3_PERFIL=%i
+ExecStart=/usr/bin/python3 /opt/botv3/botv3.py
+Restart=always
+RestartSec=10
+TimeoutStopSec=20
+StandardOutput=journal
+StandardError=journal
+
+# FALTAN A PROPOSITO TRES DIRECTIVAS, NO LAS REPONGAS SIN LEER ESTO:
+# ProtectKernelTunables, ProtectKernelLogs y ProtectHostname. Las tres montan
+# algo ENCIMA de /proc, y el kernel prohibe montar un /proc nuevo dentro de un
+# user namespace cuando el /proc visible tiene partes tapadas. Codex envuelve
+# cada comando que ejecuta en bubblewrap con su propio PID namespace, asi que con
+# cualquiera de las tres puestas falla con "bwrap: Can't mount proc on /proc" y
+# el adaptador codex queda inutil. Claude no usa bwrap y anda igual: el sintoma
+# es UN adaptador roto, no el servicio caido.
+# OJO: cada una sola puede pasar la prueba; lo que rompe es la COMBINACION.
+#   systemd-run -p <directiva> --wait -- bwrap --unshare-pid --ro-bind / / --proc /proc true
+# Lo unico que se perdia de verdad era leer el log del kernel, compensado para
+# todo el nodo con kernel.dmesg_restrict=1 en /etc/sysctl.d/99-nodo-dmesg.conf.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectClock=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+UMask=0077
+
+# Estado propio de la instancia. Los directorios de los perfiles son HERMANOS y
+# no anidados a proposito: si `botv3-pilar` colgara de `botv3`, enmascarar el
+# directorio del otro perfil taparia tambien el ReadWritePaths propio.
+ReadWritePaths=/opt/nodo/datos/botv3-%i
+
+# casa.md es la memoria de hogar COMPARTIDA y de solo lectura. Vive fuera de los
+# vaults en su propia carpeta Syncthing, y esa ubicacion es la unica razon por la
+# que puede llegar a Groq: moverla adentro de un vault la vuelve inadmisible.
+ReadOnlyPaths=/opt/nodo/datos/nodo-memoria
+
+# Por defecto la plantilla NO ve ningun vault, ningun Drive y no ve el estado del
+# bot de Jaime. Un perfil que deba leerlos lo abre en su propio drop-in; asi el
+# default es el caso cerrado y hay que pedir permiso explicitamente, no acordarse
+# de quitarlo.
+#
+# `/opt/nodo/datos/drive` entra el 19-09-2026 con los mounts de rclone. Son DOS
+# capas y conviene saber que existen las dos: esta linea, y que los mounts se
+# crean sin `allow_other`, o sea que a nivel de FUSE solo los puede leer el
+# usuario que los monto (dcifu004). Un perfil con usuario propio —`botpilar`— no
+# los alcanza ni aunque esta linea se borre por accidente.
+InaccessiblePaths=-/home -/run/docker.sock -/var/run/docker.sock -/opt/nodo/datos/secretos -/opt/nodo/datos/srv/vault_personal -/opt/nodo/datos/srv/vault_trabajo -/opt/nodo/datos/botv3 -/opt/nodo/datos/drive
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,605 @@
+{
+ "cuenta": "dcifu004",
+ "host": "Pi5Diego",
+ "momento": "2026-10-04T17:19:16-03:00",
+ "claude": {
+  "disponible": true,
+  "hoy": {
+   "entrada": 0,
+   "salida": 0,
+   "cache_lectura": 0,
+   "cache_escritura": 0,
+   "pensamiento": 0,
+   "mensajes": 0,
+   "modelos": {}
+  },
+  "semana": {
+   "entrada": 229,
+   "salida": 134479,
+   "cache_lectura": 10220279,
+   "cache_escritura": 581648,
+   "pensamiento": 38906,
+   "mensajes": 111,
+   "modelos": {
+    "claude-opus-5-5": 41,
+    "claude-sonnet-5-5": 68,
+    "claude-haiku-4-5-20251001": 1,
+    "claude-fable-5-1": 1
+   }
+  },
+  "total": {
+   "entrada": 1049,
+   "salida": 434759,
+   "cache_lectura": 54989838,
+   "cache_escritura": 1431406,
+   "pensamiento": 143428,
+   "mensajes": 520,
+   "modelos": {
+    "claude-opus-5-5": 385,
+    "claude-sonnet-5": 64,
+    "claude-sonnet-5-5": 68,
+    "claude-haiku-4-5-20251001": 1,
+    "claude-fable-5-1": 1,
+    "<synthetic>": 1
+   }
+  },
+  "sidechain_mensajes": 0,
+  "transcripts": 27,
+  "desde": "2026-09-09"
+ },
+ "codex": {
+  "disponible": false,
+  "razon": "Codex no expone consumo por CLI; las sqlite del codex-home estan sin verificar",
+  "home": "/opt/nodo/datos/agentes/codex-home"
+ },
+ "cuentas_interactivo": {
+  "claude_diego": {
+   "disponible": true,
+   "por_hora": {
+    "2026-09-25T11": {
+     "entrada": 28,
+     "salida": 7829,
+     "cache_lectura": 698408,
+     "cache_escritura": 39282,
+     "mensajes": 14
+    },
+    "2026-09-22T19": {
+     "entrada": 10,
+     "salida": 1334,
+     "cache_lectura": 228998,
+     "cache_escritura": 18894,
+     "mensajes": 5
+    },
+    "2026-09-24T18": {
+     "entrada": 18,
+     "salida": 3234,
+     "cache_lectura": 361752,
+     "cache_escritura": 22227,
+     "mensajes": 9
+    },
+    "2026-09-24T19": {
+     "entrada": 118,
+     "salida": 33699,
+     "cache_lectura": 4636733,
+     "cache_escritura": 68906,
+     "mensajes": 59
+    },
+    "2026-09-24T20": {
+     "entrada": 98,
+     "salida": 35921,
+     "cache_lectura": 7029762,
+     "cache_escritura": 58159,
+     "mensajes": 49
+    },
+    "2026-09-24T21": {
+     "entrada": 100,
+     "salida": 53949,
+     "cache_lectura": 10719010,
+     "cache_escritura": 82127,
+     "mensajes": 50
+    },
+    "2026-09-24T22": {
+     "entrada": 40,
+     "salida": 12829,
+     "cache_lectura": 5265436,
+     "cache_escritura": 18267,
+     "mensajes": 20
+    },
+    "2026-09-23T22": {
+     "entrada": 140,
+     "salida": 30147,
+     "cache_lectura": 4254093,
+     "cache_escritura": 168526,
+     "mensajes": 70
+    },
+    "2026-09-28T19": {
+     "entrada": 2,
+     "salida": 194,
+     "cache_lectura": 23258,
+     "cache_escritura": 18566,
+     "mensajes": 1
+    },
+    "2026-10-02T09": {
+     "entrada": 42,
+     "salida": 6822,
+     "cache_lectura": 1222565,
+     "cache_escritura": 50626,
+     "mensajes": 21
+    },
+    "2026-09-29T23": {
+     "entrada": 32,
+     "salida": 6536,
+     "cache_lectura": 825618,
+     "cache_escritura": 40023,
+     "mensajes": 16
+    },
+    "2026-09-27T21": {
+     "entrada": 12,
+     "salida": 5910,
+     "cache_lectura": 276845,
+     "cache_escritura": 37248,
+     "mensajes": 6
+    },
+    "2026-09-23T16": {
+     "entrada": 2,
+     "salida": 429,
+     "cache_lectura": 23037,
+     "cache_escritura": 17190,
+     "mensajes": 1
+    },
+    "2026-10-01T19": {
+     "entrada": 4,
+     "salida": 1533,
+     "cache_lectura": 68706,
+     "cache_escritura": 23097,
+     "mensajes": 2
+    },
+    "2026-09-23T23": {
+     "entrada": 14,
+     "salida": 5515,
+     "cache_lectura": 725064,
+     "cache_escritura": 4706,
+     "mensajes": 7
+    },
+    "2026-09-22T20": {
+     "entrada": 32,
+     "salida": 12329,
+     "cache_lectura": 1132231,
+     "cache_escritura": 118645,
+     "mensajes": 16
+    },
+    "2026-09-22T21": {
+     "entrada": 58,
+     "salida": 22064,
+     "cache_lectura": 3331211,
+     "cache_escritura": 34423,
+     "mensajes": 27
+    },
+    "2026-09-27T15": {
+     "entrada": 30,
+     "salida": 7997,
+     "cache_lectura": 785532,
+     "cache_escritura": 42236,
+     "mensajes": 15
+    },
+    "2026-09-27T16": {
+     "entrada": 12,
+     "salida": 2285,
+     "cache_lectura": 409167,
+     "cache_escritura": 3916,
+     "mensajes": 6
+    },
+    "2026-09-09T22": {
+     "entrada": 56,
+     "salida": 25052,
+     "cache_lectura": 1962404,
+     "cache_escritura": 69584,
+     "mensajes": 28
+    },
+    "2026-09-09T23": {
+     "entrada": 52,
+     "salida": 39757,
+     "cache_lectura": 2929876,
+     "cache_escritura": 45422,
+     "mensajes": 26
+    },
+    "2026-10-03T23": {
+     "entrada": 28,
+     "salida": 11243,
+     "cache_lectura": 514135,
+     "cache_escritura": 71676,
+     "mensajes": 14
+    },
+    "2026-10-03T22": {
+     "entrada": 106,
+     "salida": 108071,
+     "cache_lectura": 7528492,
+     "cache_escritura": 300760,
+     "mensajes": 53
+    },
+    "2026-10-03T21": {
+     "entrada": 15,
+     "salida": 80,
+     "cache_lectura": 37505,
+     "cache_escritura": 76900,
+     "mensajes": 4
+    },
+    "2026-09-12T17": {
+     "entrada": 0,
+     "salida": 0,
+     "cache_lectura": 0,
+     "cache_escritura": 0,
+     "mensajes": 1
+    }
+   },
+   "limites": {
+    "momento": "2026-10-04T17:19:20-03:00",
+    "plan": null,
+    "ventana_5h": {
+     "usado_pct": 14,
+     "renueva": "2026-10-05T00:30:00.072793+00:00"
+    },
+    "semanal": {
+     "usado_pct": 25,
+     "renueva": "2026-10-10T07:00:00.072814+00:00"
+    }
+   }
+  },
+  "claude_cami": {
+   "disponible": true,
+   "por_hora": {
+    "2026-10-02T16": {
+     "entrada": 126,
+     "salida": 186427,
+     "cache_lectura": 12735576,
+     "cache_escritura": 372599,
+     "mensajes": 63
+    },
+    "2026-10-01T19": {
+     "entrada": 20,
+     "salida": 4301,
+     "cache_lectura": 443849,
+     "cache_escritura": 27502,
+     "mensajes": 10
+    },
+    "2026-10-02T14": {
+     "entrada": 78,
+     "salida": 28726,
+     "cache_lectura": 3880793,
+     "cache_escritura": 152587,
+     "mensajes": 39
+    },
+    "2026-10-02T15": {
+     "entrada": 70,
+     "salida": 48875,
+     "cache_lectura": 4125694,
+     "cache_escritura": 210018,
+     "mensajes": 35
+    },
+    "2026-10-02T21": {
+     "entrada": 78,
+     "salida": 40939,
+     "cache_lectura": 4276533,
+     "cache_escritura": 279776,
+     "mensajes": 39
+    },
+    "2026-10-02T22": {
+     "entrada": 198,
+     "salida": 130901,
+     "cache_lectura": 24402215,
+     "cache_escritura": 231385,
+     "mensajes": 99
+    },
+    "2026-09-29T21": {
+     "entrada": 58,
+     "salida": 15856,
+     "cache_lectura": 1203207,
+     "cache_escritura": 105323,
+     "mensajes": 29
+    },
+    "2026-09-30T20": {
+     "entrada": 274,
+     "salida": 206684,
+     "cache_lectura": 13793181,
+     "cache_escritura": 808130,
+     "mensajes": 137
+    },
+    "2026-09-30T19": {
+     "entrada": 274,
+     "salida": 148228,
+     "cache_lectura": 15044218,
+     "cache_escritura": 515825,
+     "mensajes": 137
+    },
+    "2026-09-29T22": {
+     "entrada": 330,
+     "salida": 182529,
+     "cache_lectura": 15239568,
+     "cache_escritura": 526779,
+     "mensajes": 165
+    },
+    "2026-09-30T21": {
+     "entrada": 22,
+     "salida": 42380,
+     "cache_lectura": 3608930,
+     "cache_escritura": 51358,
+     "mensajes": 14
+    },
+    "2026-10-01T22": {
+     "entrada": 50,
+     "salida": 77511,
+     "cache_lectura": 4001273,
+     "cache_escritura": 198796,
+     "mensajes": 25
+    },
+    "2026-10-03T17": {
+     "entrada": 52,
+     "salida": 132192,
+     "cache_lectura": 5672508,
+     "cache_escritura": 300134,
+     "mensajes": 26
+    },
+    "2026-10-03T18": {
+     "entrada": 86,
+     "salida": 73737,
+     "cache_lectura": 7468637,
+     "cache_escritura": 283817,
+     "mensajes": 43
+    },
+    "2026-10-04T16": {
+     "entrada": 48,
+     "salida": 28687,
+     "cache_lectura": 1049928,
+     "cache_escritura": 177633,
+     "mensajes": 24
+    },
+    "2026-10-03T20": {
+     "entrada": 46,
+     "salida": 47068,
+     "cache_lectura": 1442284,
+     "cache_escritura": 127144,
+     "mensajes": 23
+    },
+    "2026-10-04T17": {
+     "entrada": 78,
+     "salida": 90172,
+     "cache_lectura": 5419406,
+     "cache_escritura": 188228,
+     "mensajes": 39
+    },
+    "2026-10-01T23": {
+     "entrada": 166,
+     "salida": 230152,
+     "cache_lectura": 28691179,
+     "cache_escritura": 508286,
+     "mensajes": 83
+    },
+    "2026-10-01T21": {
+     "entrada": 76,
+     "salida": 102872,
+     "cache_lectura": 6894904,
+     "cache_escritura": 281417,
+     "mensajes": 38
+    },
+    "2026-10-04T15": {
+     "entrada": 102,
+     "salida": 48439,
+     "cache_lectura": 2413842,
+     "cache_escritura": 175615,
+     "mensajes": 51
+    },
+    "2026-09-29T23": {
+     "entrada": 232,
+     "salida": 140236,
+     "cache_lectura": 13512010,
+     "cache_escritura": 430360,
+     "mensajes": 116
+    },
+    "2026-10-03T22": {
+     "entrada": 100,
+     "salida": 91302,
+     "cache_lectura": 5013163,
+     "cache_escritura": 274457,
+     "mensajes": 50
+    },
+    "2026-10-03T19": {
+     "entrada": 6,
+     "salida": 1384,
+     "cache_lectura": 67968,
+     "cache_escritura": 33630,
+     "mensajes": 3
+    },
+    "2026-10-01T20": {
+     "entrada": 4,
+     "salida": 1035,
+     "cache_lectura": 33532,
+     "cache_escritura": 16965,
+     "mensajes": 2
+    }
+   },
+   "limites": {
+    "momento": "2026-10-04T17:19:22-03:00",
+    "plan": null,
+    "ventana_5h": {
+     "usado_pct": 35,
+     "renueva": "2026-10-04T23:30:00.453436+00:00"
+    },
+    "semanal": {
+     "usado_pct": 65,
+     "renueva": "2026-10-05T01:00:00.453460+00:00"
+    }
+   }
+  },
+  "codex": {
+   "disponible": true,
+   "por_hora": {
+    "2026-09-27T01": {
+     "entrada": 281912,
+     "salida": 31388,
+     "cache_lectura": 3033600,
+     "cache_escritura": 0,
+     "mensajes": 62
+    },
+    "2026-09-09T22": {
+     "entrada": 138656,
+     "salida": 13530,
+     "cache_lectura": 1191680,
+     "cache_escritura": 0,
+     "mensajes": 24
+    },
+    "2026-09-30T20": {
+     "entrada": 711470,
+     "salida": 123804,
+     "cache_lectura": 13221376,
+     "cache_escritura": 0,
+     "mensajes": 170
+    },
+    "2026-09-30T19": {
+     "entrada": 1277012,
+     "salida": 116688,
+     "cache_lectura": 14012416,
+     "cache_escritura": 0,
+     "mensajes": 200
+    },
+    "2026-09-30T21": {
+     "entrada": 1986910,
+     "salida": 185016,
+     "cache_lectura": 30387712,
+     "cache_escritura": 0,
+     "mensajes": 322
+    },
+    "2026-09-10T22": {
+     "entrada": 41744,
+     "salida": 1364,
+     "cache_lectura": 270336,
+     "cache_escritura": 0,
+     "mensajes": 16
+    },
+    "2026-09-24T22": {
+     "entrada": 11862,
+     "salida": 456,
+     "cache_lectura": 48128,
+     "cache_escritura": 0,
+     "mensajes": 4
+    },
+    "2026-09-29T21": {
+     "entrada": 142014,
+     "salida": 16334,
+     "cache_lectura": 1534464,
+     "cache_escritura": 0,
+     "mensajes": 30
+    },
+    "2026-09-29T22": {
+     "entrada": 1105854,
+     "salida": 132204,
+     "cache_lectura": 17230336,
+     "cache_escritura": 0,
+     "mensajes": 238
+    },
+    "2026-09-29T23": {
+     "entrada": 757508,
+     "salida": 76234,
+     "cache_lectura": 10739712,
+     "cache_escritura": 0,
+     "mensajes": 128
+    },
+    "2026-10-04T16": {
+     "entrada": 229686,
+     "salida": 40624,
+     "cache_lectura": 4818944,
+     "cache_escritura": 0,
+     "mensajes": 64
+    },
+    "2026-10-04T15": {
+     "entrada": 718248,
+     "salida": 108884,
+     "cache_lectura": 18807296,
+     "cache_escritura": 0,
+     "mensajes": 246
+    },
+    "2026-10-04T17": {
+     "entrada": 539492,
+     "salida": 30692,
+     "cache_lectura": 5199872,
+     "cache_escritura": 0,
+     "mensajes": 64
+    },
+    "2026-10-01T22": {
+     "entrada": 570252,
+     "salida": 34030,
+     "cache_lectura": 4722176,
+     "cache_escritura": 0,
+     "mensajes": 74
+    },
+    "2026-10-01T23": {
+     "entrada": 301192,
+     "salida": 18060,
+     "cache_lectura": 3803136,
+     "cache_escritura": 0,
+     "mensajes": 40
+    },
+    "2026-10-03T18": {
+     "entrada": 798892,
+     "salida": 57460,
+     "cache_lectura": 9015808,
+     "cache_escritura": 0,
+     "mensajes": 118
+    },
+    "2026-10-03T22": {
+     "entrada": 408162,
+     "salida": 68302,
+     "cache_lectura": 4460544,
+     "cache_escritura": 0,
+     "mensajes": 80
+    },
+    "2026-10-03T23": {
+     "entrada": 601930,
+     "salida": 48748,
+     "cache_lectura": 7141888,
+     "cache_escritura": 0,
+     "mensajes": 94
+    },
+    "2026-10-03T20": {
+     "entrada": 198508,
+     "salida": 34116,
+     "cache_lectura": 3234304,
+     "cache_escritura": 0,
+     "mensajes": 46
+    },
+    "2026-10-03T21": {
+     "entrada": 12386,
+     "salida": 30,
+     "cache_lectura": 64256,
+     "cache_escritura": 0,
+     "mensajes": 6
+    },
+    "2026-10-03T19": {
+     "entrada": 263560,
+     "salida": 49414,
+     "cache_lectura": 5958144,
+     "cache_escritura": 0,
+     "mensajes": 70
+    }
+   },
+   "limites": {
+    "momento": "2026-10-04T17:19:13-03:00",
+    "plan": "plus",
+    "ventana_5h": {
+     "usado_pct": 41.0,
+     "renueva": "2026-10-04T20:31:44-03:00"
+    },
+    "semanal": {
+     "usado_pct": 22.0,
+     "renueva": "2026-10-09T20:17:08-03:00"
+    }
+   }
+  }
+ },
+ "equipos": {
+  "activos": {},
+  "vencidos": {
+   "DESKTOP-96QNU37": "2026-09-30T20:48:44-03:00"
+  }
+ },
+ "_telegram": "USO DE TOKENS\ncuenta dcifu004 \u00b7 Pi5Diego \u00b7 10-04 17:19\n\u26a0\ufe0f SOLO las sesiones de esta Pi \u2014 no es el\ntotal de la cuenta (tambien corres agentes\nen el notebook y en PC-2503).\n\nCLAUDE CODE\n hoy     sin actividad\n 7 dias  229 entrada \u00b7 134.5k salida \u00b7 111 msj\n         cache: 10.2M leido \u00b7 581.6k escrito\n todo    1.0k entrada \u00b7 434.8k salida \u00b7 520 msj\n         cache: 55.0M leido \u00b7 1.4M escrito\n modelos: claude-opus-5-5 (385), claude-sonnet-5-5 (68), claude-sonnet-5 (64), claude-haiku-4-5-20251001 (1), claude-fable-5-1 (1), <synthetic> (1)\n desde 2026-09-09 \u00b7 27 transcripts\n\nCODEX\n \u26aa sin datos\n    Codex no expone consumo por CLI; las sqlite del codex-home estan sin verificar\n\nLa CUOTA restante no se puede leer desde\naca: solo la muestra /usage adentro de una\nsesion interactiva. Esto es consumo."
+}

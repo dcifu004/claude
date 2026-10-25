@@ -1,0 +1,215 @@
+{
+ "momento": "2026-10-11T18:55:30-03:00",
+ "cuentas": {
+  "claude_cami": {
+   "nombre": "Claude (Cami)",
+   "motor": "claude",
+   "renueva_5h": "2026-10-12T00:49:59+00:00",
+   "renueva_sem": "2026-10-12T00:59:59+00:00"
+  },
+  "claude_diego": {
+   "nombre": "Claude (Diego)",
+   "motor": "claude",
+   "renueva_5h": "2026-10-12T00:30:00+00:00",
+   "renueva_sem": "2026-10-17T07:00:00+00:00"
+  },
+  "codex": {
+   "nombre": "Codex",
+   "motor": "codex",
+   "renueva_5h": "2026-10-11T21:21:56-03:00",
+   "renueva_sem": "2026-10-18T16:21:56-03:00"
+  }
+ },
+ "reglas": [
+  {
+   "cuenta": "claude_cami",
+   "nombre": "Claude (Cami)",
+   "colas": [
+    "cola43r"
+   ],
+   "fuente": "uso.json",
+   "debil": false,
+   "ventanas": [
+    {
+     "ventana": "semanal",
+     "actual": 81.0,
+     "pronostico": 5.2,
+     "tope": 75,
+     "alcanza": false
+    },
+    {
+     "ventana": "5h",
+     "actual": 47.0,
+     "pronostico": 30.9,
+     "tope": 90,
+     "alcanza": true
+    }
+   ],
+   "alcanza": false,
+   "texto": "Claude (Cami) (cola43r): 5 h ahora 47 % + 30,9 % = 77,9 % ≤ tope 90 %: alcanza · sem ahora 81 % + 5,2 % = 86,2 % > tope 75 %: no alcanza · ↻ 5,6 % en la próxima ventana",
+   "celdas": {
+    "cola43r": {
+     "pct_5h": 30.9,
+     "pct_5h_min": 22.5,
+     "pct_5h_max": 35.0,
+     "pct_sem": 5.2,
+     "pct_sem_min": 3.0,
+     "pct_sem_max": 7.0,
+     "proxima_5h": 5.6,
+     "debil": false
+    }
+   },
+   "proxima_5h": 5.6,
+   "renueva_5h": "2026-10-12T00:49:59+00:00",
+   "renueva_sem": "2026-10-12T00:59:59+00:00"
+  },
+  {
+   "cuenta": "codex",
+   "nombre": "Codex",
+   "colas": [
+    "cola43r"
+   ],
+   "fuente": "uso.json",
+   "debil": false,
+   "ventanas": [
+    {
+     "ventana": "semanal",
+     "actual": 11.0,
+     "pronostico": 4.2,
+     "tope": 75,
+     "alcanza": true
+    },
+    {
+     "ventana": "5h",
+     "actual": 69.0,
+     "pronostico": 0.0,
+     "tope": 90,
+     "alcanza": true
+    }
+   ],
+   "alcanza": true,
+   "texto": "Codex (cola43r): 5 h ahora 69 % + 0 % = 69 % ≤ tope 90 %: alcanza · sem ahora 11 % + 4,2 % = 15,2 % ≤ tope 75 %: alcanza · ↻ 19,1 % en la próxima ventana",
+   "celdas": {
+    "cola43r": {
+     "pct_5h": 0.0,
+     "pct_5h_min": 0.0,
+     "pct_5h_max": 0.0,
+     "pct_sem": 4.2,
+     "pct_sem_min": 2.0,
+     "pct_sem_max": 6.0,
+     "proxima_5h": 19.1,
+     "debil": false
+    }
+   },
+   "proxima_5h": 19.1,
+   "renueva_5h": "2026-10-11T21:21:56-03:00",
+   "renueva_sem": "2026-10-18T16:21:56-03:00"
+  }
+ ],
+ "colas_fuera": [
+  {
+   "cola": "cola41",
+   "estado": "pausada_sin_timer",
+   "motivo": "Claude (Cami) sin margen para rev: semanal 75 % + 2.0 % > tope 75 %",
+   "fase": "41:rev3",
+   "fases_restantes": [
+    {
+     "etapa": "41",
+     "fase": "rev3",
+     "rol": "rev",
+     "cuenta": "claude_cami",
+     "modelo": "claude-opus-5-5",
+     "min": 10.8,
+     "pct_5h": 15.0,
+     "pct_sem": 2.0,
+     "prob": 1.0,
+     "inicio_esperado": "2026-10-11T18:55:30-03:00",
+     "debil": false
+    }
+   ],
+   "debil": false
+  },
+  {
+   "cola": "cola42",
+   "estado": "pausada_sin_timer",
+   "motivo": "Claude (Cami) sin margen para rev: semanal 75 % + 2.0 % > tope 75 %",
+   "fase": "42:rev1",
+   "fases_restantes": [
+    {
+     "etapa": "42",
+     "fase": "rev1",
+     "rol": "rev",
+     "cuenta": "claude_cami",
+     "modelo": "claude-opus-5-5",
+     "min": 10.8,
+     "pct_5h": 15.0,
+     "pct_sem": 2.0,
+     "prob": 1.0,
+     "inicio_esperado": "2026-10-11T18:55:30-03:00",
+     "debil": false
+    },
+    {
+     "etapa": "42",
+     "fase": "fix1",
+     "rol": "fix",
+     "cuenta": "codex",
+     "modelo": "gpt-5.6-terra",
+     "min": 6.1,
+     "pct_5h": 7.0,
+     "pct_sem": 1.0,
+     "prob": 0.67,
+     "inicio_esperado": "2026-10-11T19:06:18-03:00",
+     "debil": false
+    },
+    {
+     "etapa": "42",
+     "fase": "rev2",
+     "rol": "rev",
+     "cuenta": "claude_cami",
+     "modelo": "claude-opus-5-5",
+     "min": 10.8,
+     "pct_5h": 15.0,
+     "pct_sem": 2.0,
+     "prob": 0.67,
+     "inicio_esperado": "2026-10-11T19:10:23-03:00",
+     "debil": false
+    },
+    {
+     "etapa": "42",
+     "fase": "fix2",
+     "rol": "fix",
+     "cuenta": "codex",
+     "modelo": "gpt-5.6-terra",
+     "min": 6.1,
+     "pct_5h": 7.0,
+     "pct_sem": 1.0,
+     "prob": 0.4489,
+     "inicio_esperado": "2026-10-11T19:17:37-03:00",
+     "debil": false
+    },
+    {
+     "etapa": "42",
+     "fase": "rev3",
+     "rol": "rev",
+     "cuenta": "claude_cami",
+     "modelo": "claude-opus-5-5",
+     "min": 10.8,
+     "pct_5h": 15.0,
+     "pct_sem": 2.0,
+     "prob": 0.4489,
+     "inicio_esperado": "2026-10-11T19:20:21-03:00",
+     "debil": false
+    }
+   ],
+   "debil": false
+  },
+  {
+   "cola": "cola46",
+   "estado": "pausada_sin_timer",
+   "motivo": "Claude (Cami) sin margen para autor: semanal 75 % + 4.0 % > tope 75 % (no se pudo proyectar: la etapa 46 no está en el manifiesto)",
+   "fase": "46:autor",
+   "fases_restantes": [],
+   "debil": true
+  }
+ ]
+}

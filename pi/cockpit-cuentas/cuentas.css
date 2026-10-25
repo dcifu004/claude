@@ -1,0 +1,114 @@
+/*
+ * Lo propio de 💳 Cuentas (encargo 13). La base de página (tarjetas, botones, tablas,
+ * campos, chips, insignias, barras y el diálogo) es ../comun/base.css y los colores,
+ * ../comun/tokens.css (encargo 18: ya no carga nada del paquete `bots`): acá sólo va el
+ * margen, la matriz común ruta × asistente y el historial.
+ */
+
+/* ⏳ Quién tiene margen: lo primero que se ve. */
+.margen-cuenta { display: flex; flex-direction: column; gap: 8px; }
+.margen-cuenta h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--texto); font-size: 15px; }
+.margen-cuenta h3 .insignia { margin-left: 0; }
+.margen-cuenta.sobre { border-color: var(--ojo); }
+.margen-ventana { display: flex; flex-direction: column; gap: 3px; font-size: 14px; }
+.insignia.ok { color: var(--ok); background: var(--ok-fondo); }
+/* Encargo 46b: «Capacidad». Sobre la barra de siempre van los tramos fantasma de las colas activas (.cola-c1 a
+   .cola-c4: los mismos tonos de la matriz de 🧵 Encargos), la línea del tope y la barra chica de la renovación. */
+.cola-c1 { --c: #2f6fdb; }.cola-c2 { --c: #8a4fd8; }.cola-c3 { --c: #138a8a; }.cola-c4 { --c: #c2417d; }
+:root[data-theme="dark"] .cola-c1 { --c: #5b8ff0; }:root[data-theme="dark"] .cola-c2 { --c: #a77cf0; }
+:root[data-theme="dark"] .cola-c3 { --c: #3cb8b0; }:root[data-theme="dark"] .cola-c4 { --c: #e06a9f; }
+.capacidad-pista { position: relative; }
+.capacidad-pista .fantasma { background-color: var(--c, var(--tenue)); opacity: .6; border-left: 1px solid var(--tarjeta);
+    background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .35) 0 4px, transparent 4px 8px); }
+.capacidad-pista .fantasma.proxima { border-left: 0; }
+.capacidad-tope { position: absolute; top: -2px; bottom: -2px; left: var(--pos, 100%); width: 2px; background: var(--mal); }
+.capacidad-pista.chica .barra-ciclo { height: 6px; }
+.capacidad-leyenda { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; }
+.capacidad-punto { display: inline-block; width: 10px; height: 10px; margin-right: 4px; border-radius: 3px; vertical-align: -1px; background: var(--c); }
+
+/* Matriz común (nota de Diego, 01-10): UNA tabla, una fila por ruta y una columna por
+   asistente. `table-layout: fixed` reparte el ancho entre las columnas que haya, sin
+   que el contenido pueda ensancharla: los servicios de cada celda bajan de línea. */
+.matriz-comun { table-layout: fixed; width: 100%; }
+.matriz-comun th.ruta { width: 124px; color: var(--texto); font-size: 14px; overflow-wrap: anywhere; }
+.matriz-comun th.ruta .tenue { font-weight: 400; }
+.matriz-comun thead th.col-perfil { color: var(--texto); font-size: 15px; }
+.matriz-comun .col-perfil { padding: 8px 6px; overflow-wrap: anywhere; }
+.matriz-comun td.en-edicion { background: var(--ojo-fondo); }
+/* La ruta que el asistente no tiene: vacía y tenue, no oculta. */
+.matriz-comun td.vacia { color: var(--tenue); font-size: 13px; opacity: .55; }
+.matriz-comun td.fija .insignia { margin-left: 0; }
+.matriz-comun tfoot td, .matriz-comun tfoot th { border-bottom: 0; border-top: 2px solid var(--borde); }
+.celda-nota { margin-top: 4px; font-size: 12.5px; }
+.celda-nota .insignia { margin-left: 6px; }
+.pestanas.solo-angosto { display: none; }
+
+/* Un servicio de la celda: chip (comun.css) que se toca. El 1º contesta, los demás son
+   respaldo; con «+», lo que se puede agregar; en gris, lo prohibido. */
+.servicios { display: flex; flex-wrap: wrap; gap: 6px; }
+.servicio { max-width: 100%; padding: 0; gap: 0; font-size: 13.5px; background: var(--tarjeta); }
+.servicio.primera { background: var(--ok-fondo); border-color: var(--ok); }
+.servicio.respaldo { background: var(--chip); }
+.servicio.libre { border-style: dashed; }
+.servicio.libre .servicio-nombre { color: var(--tenue); }
+.servicio.prohibida { background: var(--chip); opacity: .5; }
+.servicio button { background: transparent; color: var(--texto); border: 0; border-radius: 999px; font-weight: 500; }
+.servicio-boton { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 30px;
+                  padding: 3px 10px; text-align: left; }
+.servicio-boton:disabled { opacity: 1; cursor: not-allowed; }
+.servicio .orden { padding: 0 6px; border-radius: 999px; background: var(--acento);
+                   color: var(--acento-texto); font-size: 11.5px; font-weight: 600; }
+.servicio.libre .orden { background: transparent; color: var(--tenue); padding: 0; font-size: 14px; }
+.servicio-nombre { font-weight: 600; }
+.servicio-dato { color: var(--tenue); font-size: 12px; }
+.servicio-dato.sobre { color: var(--ojo); font-weight: 600; }
+.servicio .quitar { min-width: 28px; min-height: 30px; padding: 0 8px 0 2px; line-height: 1; color: var(--tenue); }
+/* 15: la ⭐ de lo recomendado por función se toca para ver el motivo; un proveedor gratis
+   sin key no se puede agregar y, al tocarlo, dice cómo se carga. */
+.servicio .estrella { min-height: 30px; padding: 0 0 0 8px; line-height: 1; }
+.servicio.ausente { border-style: dotted; opacity: .7; }
+.servicio.ausente .servicio-nombre { color: var(--tenue); }
+.celda-detalle { margin-top: 6px; padding: 6px 8px; border-left: 3px solid var(--acento);
+                 background: var(--chip); font-size: 13px; overflow-wrap: anywhere; }
+
+/* 🆓 Proveedores gratis: listo o «sin key» por asistente, y el resultado de «probar». */
+.proveedores td { vertical-align: top; overflow-wrap: anywhere; }
+.proveedores .insignia { margin-left: 0; }
+.prueba { margin-top: 4px; font-size: 13px; }
+.prueba.ok { color: var(--ok); }
+.prueba.mal { color: var(--mal); }
+
+.avisos-cuentas { margin: 8px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--ojo); }
+.avisos-cuentas li.rojo { color: var(--mal); }
+.atajos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 6px; }
+
+/* Teléfono: la MISMA tabla reducida a una columna, la del asistente de la pestaña. La
+   ruta queda de título sobre su celda y nada tiene ancho fijo: la página no se corre
+   hacia el lado. */
+@media (max-width: 900px) {
+    .pestanas.solo-angosto { display: flex; flex-wrap: wrap; }
+    .matriz-comun .col-perfil:not(.activa) { display: none; }
+    .matriz-comun thead { display: none; }
+    .matriz-comun, .matriz-comun tbody, .matriz-comun tfoot, .matriz-comun tr,
+    .matriz-comun th.ruta, .matriz-comun .col-perfil.activa { display: block; width: auto; }
+    .matriz-comun th.ruta { border-bottom: 0; padding-bottom: 0; }
+    .matriz-comun tfoot th.ruta { border-top: 2px solid var(--borde); }
+    .matriz-comun tfoot td { border-top: 0; }
+    .servicio-boton { min-height: 36px; }
+    .servicio .quitar { min-width: 36px; min-height: 36px; }
+}
+/* Receta por ruta (06a): automático, umbral y quién contestaría. */
+.recetas { margin-top: 10px; padding-top: 4px; border-top: 1px solid var(--borde); }
+.recetas summary { color: var(--tenue); font-size: 13.5px; margin-top: 8px; }
+.recetas input.numero { width: 4.5em; }
+
+/* 💳 Las cuentas: historial por ciclo y costo (30-09-2026). */
+.rejilla.tres { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.cuenta-uso { border: 1px solid var(--borde); border-radius: 8px; padding: 10px 12px; }
+.cuenta-uso h3 { margin-top: 0; }
+.ciclos { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.ciclo { display: grid; grid-template-columns: 44px 1fr 88px; align-items: center; gap: 6px; font-size: 12.5px; }
+.registro .controles-voz strong { min-width: 190px; }
+.registro-cuenta { align-items: center; }
+.registro-cuenta .tenue { font-size: 13px; }
+#cuentas-uso td.num { white-space: nowrap; }
