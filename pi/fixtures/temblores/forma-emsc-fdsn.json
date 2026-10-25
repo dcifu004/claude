@@ -1,0 +1,106 @@
+{
+ "type": "FeatureCollection",
+ "metadata": {
+  "count": 4,
+  "_nota": "FIXTURE CON LA FORMA DOCUMENTADA DE FDSN-WS JSON DEL EMSC, NO ES UNA RESPUESTA REAL (encargo 91)"
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.7,
+     -33.1,
+     -30.0
+    ]
+   },
+   "id": "20261025_0000150",
+   "properties": {
+    "source_id": "0000150",
+    "source_catalog": "EMSC-RTS",
+    "lastupdate": "2026-10-25T17:20:03.0Z",
+    "time": "2026-10-25T17:20:03.1Z",
+    "flynn_region": "OFFSHORE VALPARAISO, CHILE",
+    "lat": -33.1,
+    "lon": -71.7,
+    "depth": 30.0,
+    "evtype": "ke",
+    "auth": "GUC",
+    "mag": 5.5,
+    "magtype": "mw",
+    "unid": "20261025_0000150"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -70.9,
+     -32.8,
+     -90.0
+    ]
+   },
+   "id": "20261025_0000162",
+   "properties": {
+    "source_id": "0000162",
+    "source_catalog": "EMSC-RTS",
+    "lastupdate": "2026-10-25T17:40:12.0Z",
+    "time": "2026-10-25T17:40:12.1Z",
+    "flynn_region": "VALPARAISO, CHILE",
+    "lat": -32.8,
+    "lon": -70.9,
+    "depth": 90.0,
+    "evtype": "ke",
+    "auth": "GUC",
+    "mag": 5.1,
+    "magtype": "mw",
+    "unid": "20261025_0000162"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -72.1,
+     -33.98,
+     -22.0
+    ]
+   },
+   "id": "20261025_0000170",
+   "properties": {
+    "source_id": "0000170",
+    "source_catalog": "EMSC-RTS",
+    "lastupdate": "2026-10-25T17:50:28.0Z",
+    "time": "2026-10-25T17:50:28.1Z",
+    "flynn_region": "OFFSHORE O'HIGGINS, CHILE",
+    "lat": -33.98,
+    "lon": -72.1,
+    "depth": 22.0,
+    "evtype": "ke",
+    "auth": "GUC",
+    "mag": 6.9,
+    "magtype": "mw",
+    "unid": "20261025_0000170"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0,
+     0,
+     0
+    ]
+   },
+   "id": "roto",
+   "properties": {
+    "mag": "cinco",
+    "lat": null
+   }
+  }
+ ]
+}

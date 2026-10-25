@@ -1,0 +1,12 @@
+[Unit]
+Description=Revisa los sismos recientes cada 5 minutos (encargo 91)
+
+[Timer]
+# Cinco minutos: el feed del USGS se regenera cada minuto y un aviso de temblor que llega 10 min tarde
+# ya no sirve de mucho. Bajarlo no mejora nada y multiplica las consultas a dos servicios públicos.
+OnBootSec=4min
+OnUnitActiveSec=5min
+# Sin Persistent=true: lo que importa es lo de AHORA; `max_edad_h` ya descarta lo viejo.
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,40 @@
+# Aviso de temblores (encargo 91). Lo lee pi/temblores.py; sin este archivo valen los mismos valores,
+# escritos en DEFECTO. Un valor con otra forma detiene el script (no se silencia un aviso sin que se note).
+#
+# La casa NO va acá: sale de `clima` del perfil (comuna, a nivel de comuna).
+perfil = "/opt/botv3/perfiles/jaime.toml"
+# Sismos ya avisados y salud de las fuentes. Escritura atómica.
+estado = "/opt/nodo/datos/temblores/estado.json"
+# Principal y respaldo, en ese orden (encargos-nube/91-PLAN.md). Se consultan las dos en cada corrida.
+fuentes = ["usgs", "emsc"]
+# Un sismo más viejo que esto no se avisa (tras un corte, no se avisa hoy el de ayer).
+max_edad_h = 3
+# Mismo sismo entre fuentes o corregido: a menos de estos segundos y kilómetros (o con un id en común).
+tolerancia_s = 120
+tolerancia_km = 100
+retener_dias = 14
+timeout_s = 20
+
+# Cuándo avisar: basta una regla. `km` es la distancia del epicentro a la casa; `caja` es
+# [lat_min, lat_max, lon_min, lon_max].
+# M 5,0 a 300 km: desde ahí se suele sentir en Santiago; más abajo hay varios por día y sería ruido.
+[[regla]]
+nombre = "cerca"
+mag = 5.0
+km = 300
+
+# M 6,5 en Chile continental, se sienta o no en la casa: familia y rutas.
+[[regla]]
+nombre = "chile"
+mag = 6.5
+caja = [-56.0, -17.5, -76.0, -66.0]
+
+# Urgente: sale también en el modo descanso (parte con 🚩). Un remezón que despierta o que puede dañar
+# la zona central.
+[[urgente]]
+mag = 6.5
+km = 300
+
+[[urgente]]
+mag = 7.5
+km = 1000

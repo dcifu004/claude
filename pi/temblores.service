@@ -1,0 +1,33 @@
+[Unit]
+Description=Revisa los sismos recientes y avisa si uno es relevante para la casa (encargo 91)
+After=network-online.target
+Wants=network-online.target
+# A diferencia de avisos.service, este SÍ vive dentro del cifrado: escribe en la bandeja de salida y en el
+# registro único (/opt/nodo/datos, de dcifu004) y lee el perfil del bot. Con el volumen cerrado no corre,
+# y avisos.service ya avisa de eso.
+RequiresMountsFor=/opt/nodo/datos
+
+[Service]
+Type=oneshot
+User=dcifu004
+Group=dcifu004
+ExecStart=/usr/bin/python3 /opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/pi/temblores.py
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectClock=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0027
+# Lo único escribible: su estado, la bandeja de salida (y su cerrojo) y el registro único. La bandeja la
+# crea y recorta registro_avisos.py en la misma carpeta, como hacen las colas.
+ReadWritePaths=/opt/nodo/datos/temblores /opt/nodo/datos
+ReadOnlyPaths=/opt/botv3/perfiles
+
+[Install]
+WantedBy=multi-user.target
