@@ -1,0 +1,182 @@
+{
+ "normal": {
+  "codex": {
+   "h5": {
+    "uso": 41,
+    "tope": 90,
+    "carga": 30.2,
+    "partes": [
+     {
+      "cola": "cola87",
+      "i": 0,
+      "pct": 30.2
+     }
+    ],
+    "despues": 0,
+    "renueva": "2026-10-04T20:31:44-03:00"
+   },
+   "sem": {
+    "uso": 22,
+    "tope": 75,
+    "carga": 6,
+    "partes": [
+     {
+      "cola": "cola87",
+      "i": 0,
+      "pct": 6
+     }
+    ],
+    "despues": 0,
+    "renueva": "2026-10-04T20:31:44-03:00"
+   },
+   "colas": [
+    {
+     "cola": "cola87",
+     "i": 0
+    }
+   ]
+  },
+  "claude_cami": null,
+  "claude_diego": {
+   "h5": {
+    "uso": 14,
+    "tope": 90,
+    "carga": 20,
+    "partes": [
+     {
+      "cola": "cola87",
+      "i": 0,
+      "pct": 12.5
+     },
+     {
+      "cola": "cola88",
+      "i": 1,
+      "pct": 7.5
+     }
+    ],
+    "despues": 12.5,
+    "renueva": "2026-10-05T00:30:00.072793+00:00"
+   },
+   "sem": {
+    "uso": 25,
+    "tope": 75,
+    "carga": 7,
+    "partes": [
+     {
+      "cola": "cola87",
+      "i": 0,
+      "pct": 4
+     },
+     {
+      "cola": "cola88",
+      "i": 1,
+      "pct": 3
+     }
+    ],
+    "despues": 0,
+    "renueva": "2026-10-05T00:30:00.072793+00:00"
+   },
+   "colas": [
+    {
+     "cola": "cola87",
+     "i": 0
+    },
+    {
+     "cola": "cola88",
+     "i": 1
+    }
+   ]
+  },
+  "otra": null
+ },
+ "pasado": {
+  "codex": {
+   "h5": {
+    "uso": 41,
+    "tope": 90,
+    "carga": 30.2,
+    "partes": [
+     {
+      "cola": "cola87",
+      "i": 0,
+      "pct": 30.2
+     }
+    ],
+    "despues": 0,
+    "renueva": "2026-10-04T20:31:44-03:00"
+   },
+   "sem": {
+    "uso": 22,
+    "tope": 75,
+    "carga": 6,
+    "partes": [
+     {
+      "cola": "cola87",
+      "i": 0,
+      "pct": 6
+     }
+    ],
+    "despues": 0,
+    "renueva": "2026-10-04T20:31:44-03:00"
+   },
+   "colas": [
+    {
+     "cola": "cola87",
+     "i": 0
+    }
+   ]
+  },
+  "claude_cami": null,
+  "claude_diego": {
+   "h5": {
+    "uso": 14,
+    "tope": 90,
+    "carga": 81.1,
+    "partes": [
+     {
+      "cola": "cola87",
+      "i": 0,
+      "pct": 55.1
+     },
+     {
+      "cola": "cola88",
+      "i": 1,
+      "pct": 26
+     }
+    ],
+    "despues": 12.5,
+    "renueva": "2026-10-05T00:30:00.072793+00:00"
+   },
+   "sem": {
+    "uso": 25,
+    "tope": 75,
+    "carga": 55,
+    "partes": [
+     {
+      "cola": "cola87",
+      "i": 0,
+      "pct": 40
+     },
+     {
+      "cola": "cola88",
+      "i": 1,
+      "pct": 15
+     }
+    ],
+    "despues": 0,
+    "renueva": "2026-10-05T00:30:00.072793+00:00"
+   },
+   "colas": [
+    {
+     "cola": "cola87",
+     "i": 0
+    },
+    {
+     "cola": "cola88",
+     "i": 1
+    }
+   ]
+  },
+  "otra": null
+ }
+}

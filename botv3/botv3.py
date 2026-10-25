@@ -97,6 +97,13 @@ try:
 except ImportError:  # pragma: no cover - despliegue parcial
     clima_imagen = None
 
+# Imagen de /uso (encargo 90): «¿Quién tiene margen?» de 💳 Cuentas. Si falta, /uso manda
+# el texto de uso-agentes, como antes.
+try:
+    import uso_imagen
+except ImportError:  # pragma: no cover - despliegue parcial
+    uso_imagen = None
+
 # Nombre nuevo → interno (`archivos` → `claude`…). Se normaliza AL ENTRAR —lo que
 # llega de n8n, de los comandos y del perfil— y adentro todo sigue con el nombre de hoy.
 ALIAS_RUTA = recetas.ALIAS_RUTA if recetas else {}
@@ -4982,6 +4989,7 @@ def safe_command(argv: list[str], timeout: int = 45) -> str:
     allowed = {
         ("/usr/local/bin/estado", "--telegram"),
         ("/usr/local/bin/uso-agentes", "--telegram"),
+        ("/usr/local/bin/bots-info", "--margen"),     # encargo 90: el margen de 💳 Cuentas, sin root
     }
     if tuple(argv) not in allowed:
         raise RuntimeError("comando interno no permitido")
@@ -5712,6 +5720,10 @@ def intencion_nodo(texto: str) -> str | None:
 def atender_nodo(chat_id: int, intencion: str, origen: str, en_voz: bool) -> None:
     """Contesta una intención del nodo con el mismo texto que /estado o /uso."""
     programa = {"estado": "/usr/local/bin/estado", "uso": "/usr/local/bin/uso-agentes"}[intencion]
+    if intencion == "uso":
+        # Encargo 90: la misma imagen que /uso, con el mismo respaldo a texto.
+        audit("nodo_uso", origen, "error" if enviar_uso(chat_id) == "error" else "ok")
+        return
     try:
         send_text(chat_id, texto_estado() if intencion == "estado"
                   else safe_command([programa, "--telegram"]))
@@ -7658,11 +7670,39 @@ def comando_estado(chat_id: int) -> None:
         send_text(chat_id, f"No pude obtener el estado: {redact(exc)}")
 
 
-def comando_uso(chat_id: int) -> None:
+def enviar_uso(chat_id: int) -> str:
+    """/uso, el botón 💳 Uso y «¿cuánta cuota queda?» (encargo 90): la imagen de «¿Quién tiene
+    margen?» con los números que calcula `bots-info --margen`, los mismos de 💳 Cuentas. Ante
+    cualquier falla (sin módulo, sin Pillow, bots-info que falla o trae otra forma, sendPhoto
+    rechazado) manda el texto de uso-agentes de siempre. Si la foto pudo haber llegado, no
+    manda nada más, como `enviar_clima`. Devuelve "imagen", "texto", "incierto" o "error"."""
+    enviando = False
+    try:
+        if uso_imagen is None:
+            raise ImportError("uso_imagen.py no está instalado")
+        datos = json.loads(safe_command(["/usr/local/bin/bots-info", "--margen"]))
+        panel = datos.get("panel") if isinstance(datos, dict) else None
+        png = uso_imagen.tarjeta_png(panel)
+        enviando = True
+        send_photo(chat_id, png, uso_imagen.pie(panel))
+    except Exception as exc:
+        if enviando and not _foto_no_llego(exc):
+            LOG.warning("uso: no se sabe si la imagen llegó; no se manda el texto para no duplicar: %s",
+                        _motivo_clima(exc))
+            return "incierto"
+        LOG.warning("uso: se manda el texto en vez de la imagen: %s", _motivo_clima(exc))
+    else:
+        return "imagen"
     try:
         send_text(chat_id, safe_command(["/usr/local/bin/uso-agentes", "--telegram"]))
     except Exception as exc:
         send_text(chat_id, f"No pude obtener el uso: {redact(exc)}")
+        return "error"
+    return "texto"
+
+
+def comando_uso(chat_id: int) -> None:
+    enviar_uso(chat_id)
 
 
 def _remoto_cerrado() -> dict[str, Any]:
