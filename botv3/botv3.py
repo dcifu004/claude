@@ -8376,7 +8376,7 @@ ALIAS_COMANDOS = {
     "/nuevo": "olvidar", "/compras": "compras", "/gastos": "gastos", "/buscar": "buscar",
     "/temporizadores": "temporizadores", "/timer": "temporizadores", "/alarmas": "temporizadores",
     "/ordenes": "ordenes", "/recurrentes": "ordenes", "/estado": "estado", "/uso": "uso", "/usos": "usos",
-    "/remoto": "remoto", **{c: "mercadolibre" for c in COMANDOS_ML},
+    "/remoto": "remoto", "/spotify": "spotify", **{c: "mercadolibre" for c in COMANDOS_ML},
 }
 PREFIJOS_BOTON = {"gas": "gastos", "remoto": "remoto", "ggm": "google", "mem": "memoria", "cmp": "compras",
                   "ggl": "google", "cal": "calificar", "ord": "ordenes", "mlv": "mercadolibre", "bol": "boleta",
@@ -8465,6 +8465,7 @@ MARCAS = {
     "correccion_boleta": ("boleta", True), "atender_frase_google": ("google", True),
     "atender_nodo": (lambda chat_id, intencion, *_: intencion if intencion in ("estado", "uso") else "desconocido", False),
     "atender_compras": ("compras", False), "submit_query": (_ruta_de_consulta, False),
+    "atender_spotify": ("spotify", True),
 }
 for _nombre, (_funcion, _condicional) in MARCAS.items():
     globals()[_nombre] = _marcador(globals()[_nombre], _funcion, _condicional)

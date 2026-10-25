@@ -47,7 +47,8 @@ FUNCIONES = {
     "temporizadores": "⏰ temporizadores", "ordenes": "🔁 órdenes", "buscar": "🔎 buscar",
     "clima": "🌦️ clima", "hora": "🕐 hora", "comuna": "📍 comuna del clima", "estado": "🩺 estado",
     "uso": "💳 uso de cuotas", "usos": "📊 /usos", "remoto": "📱 Remote Control", "memoria": "🧠 memoria",
-    "calificar": "⭐ calificar", "mercadolibre": "🛍️ Mercado Libre", "desconocido": "otro",
+    "calificar": "⭐ calificar", "mercadolibre": "🛍️ Mercado Libre", "spotify": "🎵 Spotify",
+    "desconocido": "otro",
 }
 RE_CONSULTA = re.compile(r"consulta:[a-z_]{1,24}")
 
