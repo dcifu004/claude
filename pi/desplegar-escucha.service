@@ -1,0 +1,47 @@
+[Unit]
+Description=Escucha de nodo-desplegar: despliegues aprobados por Telegram (@Dcs_v5bot, doc 23)
+After=network-online.target
+Wants=network-online.target
+# SIN RequiresMountsFor, igual que avisos.service: el escucha tiene que seguir vivo con el
+# volumen cifrado cerrado (ahi rechaza los pedidos con "corre sudo abrir-datos", y a futuro
+# sera el que reciba el desbloqueo remoto de LUKS, decision D4 del plan 16).
+#
+# El bot es @Dcs_v5bot, el mismo de avisos. avisos.py sólo manda (sendMessage); este es el
+# UNICO que llama getUpdates con ese token. Dos consumidores de getUpdates se roban los
+# toques entre sí.
+#
+# Instalar (con clave, NUNCA por nodo-desplegar: el aprobador no se redespliega a sí mismo):
+#   sudo install -m 0644 desplegar-escucha.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now desplegar-escucha
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/nodo-desplegar escuchar
+Restart=always
+RestartSec=10
+
+# Corre como root porque instala en /etc/systemd/system y /usr/local/bin. Lo que sí se
+# puede es que el KERNEL niegue lo que el código no debería hacer: ProtectSystem=strict
+# deja todo de sólo lectura salvo esta lista, que repite PERMITIDOS del script. Si el
+# código tiene un bug, /etc/sudoers, /etc/ssh y /etc/pam.d siguen sin poder escribirse.
+ProtectSystem=strict
+ReadWritePaths=/etc/systemd/system /etc/systemd/user /usr/local/bin -/usr/local/lib/go-librespot /opt/nodo /opt/botv3 -/opt/captura
+ReadWritePaths=/var/spool/nodo-desplegar /var/lib/nodo-desplegar /etc/nodo/desplegar
+# El guión: si el volumen está cerrado al arrancar la ruta no existe y la unidad fallaría.
+# El script igual rechaza secretos/ por su cuenta; esto es la segunda capa.
+InaccessiblePaths=-/opt/nodo/datos/secretos
+# No hace falta leer /home: la unidad de usuario se instala en /etc/systemd/user, que systemd
+# comparte con todos los gestores de usuario.
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectClock=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# 0022 y no 0077: una carpeta de destino nueva (p. ej. /opt/nodo/algo) tiene que quedar
+# legible. Lo privado (staging, pendientes) se crea con modo explícito 0700.
+UMask=0022
+
+[Install]
+WantedBy=multi-user.target

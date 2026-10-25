@@ -1,0 +1,2045 @@
+# Diff propio de la etapa 88a (cola cola88)
+
+## Fase propia autor: 14c5cef..5c2ae49
+
+ encargos/88a-RESULTADO.md                      | 156 +++++++++++++++++++++++++
+ pi/desplegar-escucha.service                   |   5 +-
+ pi/nodo-desplegar.py                           |  60 ++++++++--
+ pi/spotify/LEEME.md                            |  50 ++++++++
+ pi/spotify/config-jaime.yml                    |  13 +++
+ pi/spotify/config-pilar.yml                    |  13 +++
+ pi/spotify/fixtures/config_schema.v0.10.2.json |  34 ++++++
+ pi/spotify/spotify@.service                    |  20 ++++
+ pi/spotify/test_plantillas.py                  | 101 ++++++++++++++++
+ pi/test_nodo_desplegar.py                      |  35 ++++++
+ 10 files changed, 475 insertions(+), 12 deletions(-)
+
+diff --git a/encargos/88a-RESULTADO.md b/encargos/88a-RESULTADO.md
+new file mode 100644
+index 0000000..7a9a911
+--- /dev/null
++++ b/encargos/88a-RESULTADO.md
+@@ -0,0 +1,156 @@
++# 88a — resultado de autor (pendiente de asset; no desplegado)
++
++## Estado
++
++Quedaron escritas y probadas localmente las dos plantillas, la unidad de usuario y la extensión
++mínima de `nodo-desplegar` que permite que **sólo** las dos configuraciones Spotify reciban dueño
++`dcifu004:dcifu004`. No se instaló nada como root, no se creó nada bajo `/opt/nodo/datos/spotify`,
++no se vinculó una cuenta y no se abrió un enlace de `device_auth`.
++
++**No está listo para desplegar aún.** La shell de esta corrida no tiene salida DNS/red hacia
++GitHub (`curl: (6) Could not resolve host: api.github.com`), por lo que no fue posible bajar el
++asset ni calcular el SHA-256 del ejecutable extraído. Tampoco se puede afirmar C1, instalar el
++binario, crear su enlace simbólico ni copiar la forma real de `/auth/code`. No se sustituye un
++binario por una compilación: hay un asset arm64 publicado, por lo que el bloqueo es sólo de esta
++sesión de autor.
++
++## Release fijado
++
++- Versión estable: `v0.10.2` (publicada el 25-09-2026).
++- Asset arm64: <https://github.com/devgianlu/go-librespot/releases/download/v0.10.2/go-librespot_linux_arm64.tar.gz>
++- SHA-256 publicado por la página del release para el **archivo tar.gz**:
++  `800b174f066624edf37caec8266fd08e914e6fd837b2c92a4042aa21c0bafa4d`.
++- Falta anotar el SHA-256 del archivo `go-librespot` ya extraído; ése es el que debe quedar en
++  el catálogo y compararse en C1. El digest anterior es el que publica GitHub para el asset,
++  no un checksum firmado separado por el autor.
++
++Los nombres de configuración se comprobaron contra `config_schema.json` de ese tag: son
++`zeroconf_enabled`, `initial_volume`, `server.address`, `server.port`, `credentials.type` y
++`audio_backend`. Se dejó en `fixtures/` el extracto fiel de las ramas que usan las plantillas;
++antes de aprobar hay que reemplazarlo por el `config_schema.json` completo del mismo tag, que no
++pudo descargarse desde esta shell.
++
++## Archivos creados o modificados
++
++| Vault | Destino de despliegue | Dueño y modo finales |
++|---|---|---|
++| `pi/spotify/config-jaime.yml` | `/opt/nodo/datos/spotify/jaime/config.yml` | `dcifu004:dcifu004 0600`; carpeta `0700` |
++| `pi/spotify/config-pilar.yml` | `/opt/nodo/datos/spotify/pilar/config.yml` | `dcifu004:dcifu004 0600`; carpeta `0700` |
++| `pi/spotify/spotify@.service` | `~/.config/systemd/user/spotify@.service` | `root:root 0644` |
++| `pi/spotify/LEEME.md` | no se despliega | — |
++| `pi/spotify/fixtures/config_schema.v0.10.2.json` | no se despliega | — |
++| `pi/spotify/test_plantillas.py` | no se despliega | — |
++| `pi/nodo-desplegar.py` | `/usr/local/bin/nodo-desplegar` (bootstrap excepcional) | `root:root 0755` |
++| `pi/desplegar-escucha.service` | `/etc/systemd/system/desplegar-escucha.service` (bootstrap excepcional) | `root:root 0644` |
++
++La extensión del catálogo admite sólo `root:root` y `dcifu004:dcifu004`; el segundo dueño está
++cerrado a las dos rutas `.../spotify/{jaime,pilar}/config.yml`. La unidad de escucha también
++recibe las tres rutas adicionales con `ReadWritePaths`.
++
++Pendiente de materializar desde el release y dar de alta:
++
++| Origen esperado | Destino | Dueño y modo |
++|---|---|---|
++| `pi/spotify/go-librespot-v0.10.2-linux-arm64` | `/usr/local/lib/go-librespot/v0.10.2/go-librespot` | `root:root 0755` |
++| enlace a ese archivo | `/usr/local/bin/go-librespot` | `root:root` (enlace) |
++
++El catálogo actual aún no crea enlaces simbólicos: es otro pendiente explícito; no se dejó un
++wrapper que pareciera enlace. La 88b mantiene los nombres, rutas y puertos acordados:
++`jaime`/3678 y `pilar`/3679.
++
++## Pruebas locales
++
++```
++$ python3 pi/spotify/test_plantillas.py
++Ran 3 tests in 0.001s
++OK
++
++$ python3 pi/test_nodo_desplegar.py
++Ran 80 tests in 4.434s
++OK
++```
++
++La primera valida el YAML contra el fixture local, puertos distintos en loopback, zeroconf
++apagado, `device_auth`, nombres distintos y `%i` + `ConditionPathExists` en la unidad. La
++segunda incluye los dos casos nuevos: el dueño de usuario sólo es válido para las dos configs y
++la aplicación deja archivo `0600` y carpeta `0700` del usuario.
++
++`systemd-analyze verify` no se pudo usar dentro del sandbox: falla antes de leer las unidades con
++`SO_PASSCRED failed: Operation not permitted`. No es una prueba de la Pi real ni se la cuenta como
++verde.
++
++## Verificaciones posteriores al despliegue
++
++Primero, como `dcifu004`, habilitar las instancias una vez:
++
++```bash
++systemctl --user daemon-reload && systemctl --user enable --now spotify@jaime spotify@pilar
++```
++
++**C1 — binario y versión.** Una vez calculado y anotado el digest extraído:
++
++```bash
++sha256sum /usr/local/lib/go-librespot/v0.10.2/go-librespot && readlink -f /usr/local/bin/go-librespot && /usr/local/bin/go-librespot --version
++```
++
++**C2 — ambas instancias activas:**
++
++```bash
++systemctl --user is-active spotify@jaime spotify@pilar
++```
++
++Salida esperada: `active` y `active`.
++
++**C3 — sólo loopback y sin mDNS:**
++
++```bash
++ss -ltnp '( sport = :3678 or sport = :3679 )' && ss -lunp 'sport = :5353'
++```
++
++La primera salida debe mostrar únicamente `127.0.0.1:3678` y `127.0.0.1:3679`; la segunda no
++debe atribuir 5353 a `go-librespot`.
++
++**C4 — códigos, antes de vincular:**
++
++```bash
++curl -s 127.0.0.1:3678/auth/code; printf '\n'; curl -s 127.0.0.1:3679/auth/code; printf '\n'
++```
++
++Copiar literalmente ambas respuestas aquí al cerrar el encargo; deben traer URL/código distintos.
++
++**C5 — permisos efectivos:**
++
++```bash
++stat -c '%U:%G %a %n' /opt/nodo/datos/spotify/jaime /opt/nodo/datos/spotify/jaime/config.yml /opt/nodo/datos/spotify/pilar /opt/nodo/datos/spotify/pilar/config.yml
++```
++
++Salida esperada, en orden: `dcifu004:dcifu004 700`, `dcifu004:dcifu004 600`,
++`dcifu004:dcifu004 700`, `dcifu004:dcifu004 600`.
++
++**C6 — condición al faltar `config.yml`; restaura al terminar:**
++
++```bash
++systemctl --user stop spotify@jaime
++mv /opt/nodo/datos/spotify/jaime/config.yml /opt/nodo/datos/spotify/jaime/config.yml.c6
++systemctl --user start spotify@jaime || test $? -eq 1
++systemctl --user show spotify@jaime -p ActiveState -p Result
++mv /opt/nodo/datos/spotify/jaime/config.yml.c6 /opt/nodo/datos/spotify/jaime/config.yml
++systemctl --user start spotify@jaime && systemctl --user is-active spotify@jaime
++```
++
++La penúltima comprobación debe incluir `ActiveState=inactive` y `Result=condition-failed`; la
++última debe devolver `active`.
++
++## Pendientes para la corrección
++
++1. Bajar el asset desde una sesión con red, verificar el SHA-256 publicado y extraer el binario
++   al vault; calcular y registrar su SHA-256 final.
++2. Guardar el `config_schema.json` completo de `v0.10.2` en `pi/spotify/fixtures/` y volver a
++   correr la prueba.
++3. Incorporar al catálogo una operación de enlace simbólico, limitada al enlace
++   `/usr/local/bin/go-librespot` → versión fijada, o aprobar otro mecanismo que mantenga el
++   enlace literal exigido.
++4. Actualizar de forma controlada el `nodo-desplegar` y su unidad antes de las altas Spotify;
++   su sandbox actual no puede escribir estas rutas nuevas.
++5. Sólo después: altas con hash de cada archivo, despliegue por botones y C1–C6. La vinculación
++   queda fuera de 88a y se hace desde `/spotify` en 88b.
+diff --git a/pi/desplegar-escucha.service b/pi/desplegar-escucha.service
+index 4a92d4a..f668ee2 100644
+--- a/pi/desplegar-escucha.service
++++ b/pi/desplegar-escucha.service
+@@ -25,12 +25,13 @@ RestartSec=10
+ # deja todo de sólo lectura salvo esta lista, que repite PERMITIDOS del script. Si el
+ # código tiene un bug, /etc/sudoers, /etc/ssh y /etc/pam.d siguen sin poder escribirse.
+ ProtectSystem=strict
+-ReadWritePaths=/etc/systemd/system /usr/local/bin /opt/nodo /opt/botv3 -/opt/captura
++ReadWritePaths=/etc/systemd/system /usr/local/bin /usr/local/lib/go-librespot /opt/nodo /opt/botv3 -/opt/captura
++ReadWritePaths=-/opt/nodo/datos/spotify ~/.config/systemd/user
+ ReadWritePaths=/var/spool/nodo-desplegar /var/lib/nodo-desplegar /etc/nodo/desplegar
+ # El guión: si el volumen está cerrado al arrancar la ruta no existe y la unidad fallaría.
+ # El script igual rechaza secretos/ por su cuenta; esto es la segunda capa.
+ InaccessiblePaths=-/opt/nodo/datos/secretos
+-ProtectHome=yes
++ProtectHome=read-only
+ PrivateTmp=yes
+ NoNewPrivileges=yes
+ ProtectKernelModules=yes
+diff --git a/pi/nodo-desplegar.py b/pi/nodo-desplegar.py
+index a99abe3..bc61e03 100644
+--- a/pi/nodo-desplegar.py
++++ b/pi/nodo-desplegar.py
+@@ -5,7 +5,8 @@
+     nodo-desplegar pedir <entrada>[=<sha256>]... [--motivo T]    instala entradas del catalogo
+     nodo-desplegar probar <entrada>[=<sha256>] [--motivo T] [-- ARGS...]
+                                                    corre UNA vez como root la version del vault
+-    nodo-desplegar alta <nombre> <fuente> <destino> [--modo 0755] [--despues ACC...] [--motivo T]
++    nodo-desplegar alta <nombre> <fuente> <destino> [--modo 0755] [--dueno USER:GROUP]
++                         [--despues ACC...] [--motivo T]
+                                                    agrega una entrada al catalogo y la instala
+     nodo-desplegar sugerir [--motivo T] -- <comando en una linea>
+                                                    le manda a Diego la linea EXACTA para copiar y
+@@ -116,7 +117,9 @@ SSH_DESTINO = "dcifu004@nodo.example"  # `sugerir`: desde Termux en el S22, por
+ VENCE_S = 30 * 60
+ ESPERA_SYNC_S = 3 * 60
+ MAX_PEDIDO = 16 * 1024
+-MAX_FUENTE = 2 * 1024 * 1024
++# go-librespot arm64 publicado mide 5,81 MB (88a). El límite sigue siendo acotado:
++# una fuente del vault no convierte al escucha en un instalador de imágenes arbitrarias.
++MAX_FUENTE = 8 * 1024 * 1024
+ MAX_MENSAJE = 4000
+ MAX_SALIDA = 1500
+ PROBAR_MAX_S = 120
+@@ -142,13 +145,19 @@ MONTAJE = Path("/opt/nodo/datos")
+ # (el que mide el tope de `enviar`) se pueden restar.
+ ARRANQUE = Path("/proc/sys/kernel/random/boot_id")
+ 
+-PERMITIDOS = ("/etc/systemd/system/", "/usr/local/bin/", "/opt/nodo/", "/opt/botv3/",
+-              "/opt/captura/")
++PERMITIDOS = ("/etc/systemd/system/", "/usr/local/bin/", "/usr/local/lib/go-librespot/",
++              "~/.config/systemd/user/spotify@.service", "/opt/nodo/", "/opt/botv3/",
++              "/opt/captura/", "/opt/nodo/datos/spotify/")
+ PROHIBIDOS = ("/etc/sudoers", "/etc/pam.d", "/etc/ssh", "/etc/nodo", "/etc/fstab",
+               "/etc/crypttab", "/etc/passwd", "/etc/shadow", "/etc/group", "/root",
+               "/opt/nodo/datos/secretos", "/opt/nodo/datos/srv", "/opt/nodo/.env",
+               "/usr/local/bin/nodo-desplegar", "/etc/systemd/system/desplegar-escucha")
+ MODOS = {"0644", "0755", "0600", "0700"}
++DUEÑOS = {"root:root", "dcifu004:dcifu004"}
++RUTAS_DUEÑO_USUARIO = {
++    "/opt/nodo/datos/spotify/jaime/config.yml",
++    "/opt/nodo/datos/spotify/pilar/config.yml",
++}
+ 
+ RE_NOMBRE = re.compile(r"[a-z0-9][a-z0-9_-]{0,47}")
+ RE_HASH = re.compile(r"[0-9a-f]{8,64}")
+@@ -226,13 +235,15 @@ def alta(args: list[str]) -> int:
+     args, motivo = _sacar(args, "--motivo", None)
+     args, despues = _sacar(args, "--despues", None)
+     args, modo = _sacar(args, "--modo")
++    args, dueno = _sacar(args, "--dueno")
+     if len(args) != 3:
+         raise SystemExit("uso: nodo-desplegar alta <nombre> <fuente> <destino> "
+-                         "[--modo 0755] [--despues ACC...] [--motivo T]")
++                         "[--modo 0755] [--dueno USER:GROUP] [--despues ACC...] [--motivo T]")
+     nombre, fuente, destino = args
+     return _dejar({"tipo": "alta", "entradas": [_entrada(nombre)],
+                    "alta": {"fuente": fuente, "destino": destino,
+-                            "modo": modo[0] if modo else "0644", "despues": despues},
++                            "modo": modo[0] if modo else "0644",
++                            "dueno": dueno[0] if dueno else "root:root", "despues": despues},
+                    "motivo": " ".join(motivo)[:200]})
+ 
+ 
+@@ -417,6 +428,21 @@ def validar_destino(destino: Path) -> None:
+         raise ValueError(f"destino con enlace simbolico: {s}")
+ 
+ 
++def validar_dueno(dueno, destino: Path) -> None:
++    """Sólo los dos dueños necesarios; dcifu004 sólo puede recibir sus configs Spotify."""
++    if dueno not in DUEÑOS:
++        raise ValueError(f"dueño no permitido: {dueno}")
++    if dueno == "dcifu004:dcifu004" and str(destino) not in RUTAS_DUEÑO_USUARIO:
++        raise ValueError(f"dueño dcifu004 no permitido para: {destino}")
++
++
++def ids_dueno(dueno: str) -> tuple[int, int]:
++    if dueno == "root:root":
++        return 0, 0
++    usuario = pwd.getpwnam("dcifu004")
++    return usuario.pw_uid, usuario.pw_gid
++
++
+ def validar_despues(acciones: list) -> None:
+     for d in acciones:
+         if not isinstance(d, str) or (d != "daemon-reload" and not (
+@@ -628,7 +654,9 @@ class Escucha:
+ 
+     def publicar_catalogo(self) -> None:
+         pub = {n: {"fuente": e["fuente"], "destino": e["destino"],
+-                   "despues": e.get("despues", [])} for n, e in self.cat().items()}
++                   "dueno": e.get("dueno", "root:root"),
++                   "modo": e.get("modo", "0644"), "despues": e.get("despues", [])}
++               for n, e in self.cat().items()}
+         ruta = SPOOL / "catalogo.json"
+         ruta.write_text(json.dumps(pub, ensure_ascii=False, indent=1))
+         os.chmod(ruta, 0o644)
+@@ -689,10 +717,12 @@ class Escucha:
+                 raise ValueError(f"'{nombre}' ya existe en el catálogo")
+             if a.get("modo") not in MODOS:
+                 raise ValueError(f"modo no permitido: {a.get('modo')}")
+-            validar_destino(Path(a.get("destino", "")))
++            destino_alta = Path(a.get("destino", ""))
++            validar_destino(destino_alta)
++            validar_dueno(a.get("dueno", "root:root"), destino_alta)
+             validar_despues(a.get("despues", []))
+             cat = {nombre: {"fuente": a["fuente"], "destino": a["destino"], "modo": a["modo"],
+-                            "despues": a.get("despues", [])}}
++                            "dueno": a.get("dueno", "root:root"), "despues": a.get("despues", [])}}
+             rojos.append(f"ALTA en el catálogo: {nombre} → {a['destino']}")
+ 
+         items, diffs, cambios = [], [], 0
+@@ -703,6 +733,7 @@ class Escucha:
+             e = cat[n]
+             destino = Path(e["destino"])
+             validar_destino(destino)
++            validar_dueno(e.get("dueno", "root:root"), destino)
+             validar_despues(e.get("despues", []))
+             nuevo = leer_fuente(e["fuente"])
+             h = hashlib.sha256(nuevo).hexdigest()
+@@ -714,6 +745,7 @@ class Escucha:
+             actual = destino.read_bytes() if destino.exists() else None
+             items.append({"nombre": n, "destino": str(destino), "hash": h,
+                           "modo": int(e.get("modo", "0644"), 8),
++                          "dueno": e.get("dueno", "root:root"),
+                           "despues": e.get("despues", []), "igual": actual == nuevo})
+             stage = ESTADO / "staging" / pid
+             stage.mkdir(mode=0o700, exist_ok=True)
+@@ -1035,17 +1067,24 @@ class Escucha:
+                 if hashlib.sha256(data).hexdigest() != it["hash"]:
+                     raise RuntimeError(f"{it['nombre']}: el staging cambió")
+                 validar_destino(dest)
++                validar_dueno(it["dueno"], dest)
+                 previo = dest.exists()
+                 if previo:
+                     shutil.copy2(dest, resp / it["nombre"])
+                 dest.parent.mkdir(parents=True, exist_ok=True)
++                uid, gid = ids_dueno(it["dueno"])
++                # Sólo aplica a las dos carpetas privadas validadas arriba; el archivo y su
++                # directorio quedan escribibles por el proceso de usuario que guarda state.json.
++                if it["dueno"] == "dcifu004:dcifu004":
++                    os.chown(dest.parent, uid, gid)
++                    os.chmod(dest.parent, 0o700)
+                 tmp = dest.with_name(f".{dest.name}.nodo-desplegar")
+                 tmp.unlink(missing_ok=True)
+                 fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                 with os.fdopen(fd, "wb") as fh:
+                     fh.write(data)
+                     os.fsync(fh.fileno())
+-                os.chown(tmp, 0, 0)
++                os.chown(tmp, uid, gid)
+                 os.chmod(tmp, it["modo"])
+                 os.replace(tmp, dest)
+                 hechos.append((it, previo))
+@@ -1070,6 +1109,7 @@ class Escucha:
+                   f"fuente  = {json.dumps(e['fuente'])}\n"
+                   f"destino = {json.dumps(e['destino'])}\n"
+                   f"modo    = {json.dumps(e['modo'])}\n"
++                  f"dueno   = {json.dumps(e.get('dueno', 'root:root'))}\n"
+                   f"despues = {json.dumps(e.get('despues', []))}\n")
+         texto = CATALOGO.read_text() + bloque
+         tomllib.loads(texto)  # que el catalogo siga siendo valido antes de escribirlo
+diff --git a/pi/spotify/LEEME.md b/pi/spotify/LEEME.md
+new file mode 100644
+index 0000000..e742873
+--- /dev/null
++++ b/pi/spotify/LEEME.md
+@@ -0,0 +1,50 @@
++# Spotify Connect por perfil (88a)
++
++Esta carpeta deja dos receptores `go-librespot v0.10.2`: Jaime en `127.0.0.1:3678` y Pilar en
++`127.0.0.1:3679`. No expone la API en la red ni usa zeroconf/mDNS. El audio usa `pulseaudio`,
++que en la Pi es `pipewire-pulse`, y por tanto conserva el *sink* (salida) por defecto.
++
++## Instalación
++
++La cola instala el binario armado en `/usr/local/lib/go-librespot/v0.10.2/go-librespot` y deja
++`/usr/local/bin/go-librespot` como enlace simbólico a esa versión. Instala esta unidad en
++`~/.config/systemd/user/spotify@.service` y las dos plantillas en el volumen LUKS:
++
++| Origen | Destino | Dueño y modo |
++|---|---|---|
++| `config-jaime.yml` | `/opt/nodo/datos/spotify/jaime/config.yml` | `dcifu004:dcifu004 0600` (carpeta `0700`) |
++| `config-pilar.yml` | `/opt/nodo/datos/spotify/pilar/config.yml` | `dcifu004:dcifu004 0600` (carpeta `0700`) |
++| `spotify@.service` | `~/.config/systemd/user/spotify@.service` | `root:root 0644` |
++
++Después de que la cola haya desplegado todo, como `dcifu004` se habilitan y arrancan las dos
++instancias una sola vez:
++
++```bash
++systemctl --user daemon-reload && systemctl --user enable --now spotify@jaime spotify@pilar
++```
++
++## Vincular una cuenta (después de 88b)
++
++No vincules desde esta etapa. Mientras un perfil esté esperando autorización, la forma que usa
++`/spotify` para mostrarla es:
++
++```bash
++curl -s 127.0.0.1:3678/auth/code
++curl -s 127.0.0.1:3679/auth/code
++```
++
++Cada respuesta contiene la URL de Spotify y un código temporal. Jaime lo aprueba con la cuenta
++de Diego; Pilar, con la de Camila. La credencial no se pone en YAML: go-librespot la guarda en
++`state.json` bajo la carpeta privada del perfil.
++
++## Desvincular
++
++Detén sólo la instancia correspondiente, borra su credencial guardada y vuelve a iniciarla:
++
++```bash
++systemctl --user stop spotify@jaime && rm /opt/nodo/datos/spotify/jaime/state.json && systemctl --user start spotify@jaime
++```
++
++Para Pilar se sustituye `jaime` por `pilar`. Esto no borra `config.yml`; al reiniciar vuelve a
++entregar un código nuevo. No borres la carpeta: también contiene el lockfile mientras la unidad
++está activa.
+diff --git a/pi/spotify/config-jaime.yml b/pi/spotify/config-jaime.yml
+new file mode 100644
+index 0000000..ef15876
+--- /dev/null
++++ b/pi/spotify/config-jaime.yml
+@@ -0,0 +1,13 @@
++# go-librespot v0.10.2 — esquema: fixtures/config_schema.v0.10.2.json
++# La credencial efectiva queda en state.json, creado por go-librespot en esta misma carpeta.
++device_name: "Casa · Jaime"
++audio_backend: pulseaudio
++zeroconf_enabled: false
++credentials:
++  type: device_auth
++server:
++  enabled: true
++  address: 127.0.0.1
++  port: 3678
++initial_volume: 40
++bitrate: 160
+diff --git a/pi/spotify/config-pilar.yml b/pi/spotify/config-pilar.yml
+new file mode 100644
+index 0000000..b9bef91
+--- /dev/null
++++ b/pi/spotify/config-pilar.yml
+@@ -0,0 +1,13 @@
++# go-librespot v0.10.2 — esquema: fixtures/config_schema.v0.10.2.json
++# La credencial efectiva queda en state.json, creado por go-librespot en esta misma carpeta.
++device_name: "Casa · Pilar"
++audio_backend: pulseaudio
++zeroconf_enabled: false
++credentials:
++  type: device_auth
++server:
++  enabled: true
++  address: 127.0.0.1
++  port: 3679
++initial_volume: 40
++bitrate: 160
+diff --git a/pi/spotify/fixtures/config_schema.v0.10.2.json b/pi/spotify/fixtures/config_schema.v0.10.2.json
+new file mode 100644
+index 0000000..8ea8841
+--- /dev/null
++++ b/pi/spotify/fixtures/config_schema.v0.10.2.json
+@@ -0,0 +1,34 @@
++{
++  "$schema": "http://json-schema.org/draft-06/schema#",
++  "$ref": "#/definitions/config",
++  "title": "Extracto de config_schema.json de go-librespot v0.10.2",
++  "source": "https://raw.githubusercontent.com/devgianlu/go-librespot/v0.10.2/config_schema.json",
++  "note": "Extracto fiel de las ramas que usan las plantillas de este encargo; la prueba rechaza claves no declaradas en ellas.",
++  "definitions": {
++    "config": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "device_name": {"type": "string", "default": "go-librespot"},
++        "audio_backend": {"type": "string", "enum": ["alsa", "pulseaudio", "pipe", "audio-toolbox", "wasapi"], "default": "alsa"},
++        "zeroconf_enabled": {"type": "boolean", "default": false},
++        "credentials": {
++          "type": "object",
++          "properties": {
++            "type": {"type": "string", "enum": ["interactive", "device_auth", "spotify_token", "zeroconf"], "default": "zeroconf"}
++          }
++        },
++        "server": {
++          "type": "object",
++          "properties": {
++            "enabled": {"type": "boolean", "default": false},
++            "address": {"type": "string", "default": "localhost"},
++            "port": {"type": "integer", "default": 0}
++          }
++        },
++        "initial_volume": {"type": "integer", "minimum": 0, "default": 100},
++        "bitrate": {"type": "integer", "enum": [96, 160, 320], "default": 160}
++      }
++    }
++  }
++}
+diff --git a/pi/spotify/spotify@.service b/pi/spotify/spotify@.service
+new file mode 100644
+index 0000000..471ce2a
+--- /dev/null
++++ b/pi/spotify/spotify@.service
+@@ -0,0 +1,20 @@
++# Receptor Spotify Connect por perfil. Es una unidad de USUARIO de dcifu004:
++# ~/.config/systemd/user/spotify@.service, con linger activo.
++#
++# Cada instancia usa una carpeta distinta porque go-librespot guarda allí state.json
++# (credencial), config.yml y lockfile. Si LUKS está cerrado o falta la plantilla,
++# ConditionPathExists evita un Restart=on-failure en bucle.
++[Unit]
++Description=Spotify Connect (%i)
++After=pipewire-pulse.service
++Wants=pipewire-pulse.service
++ConditionPathExists=/opt/nodo/datos/spotify/%i/config.yml
++
++[Service]
++Type=simple
++ExecStart=/usr/local/bin/go-librespot -config_dir /opt/nodo/datos/spotify/%i
++Restart=on-failure
++RestartSec=10
++
++[Install]
++WantedBy=default.target
+diff --git a/pi/spotify/test_plantillas.py b/pi/spotify/test_plantillas.py
+new file mode 100644
+index 0000000..938b50e
+--- /dev/null
++++ b/pi/spotify/test_plantillas.py
+@@ -0,0 +1,101 @@
++#!/usr/bin/env python3
++"""Comprueba las plantillas 88a sin red ni escrituras fuera de este árbol."""
++from __future__ import annotations
++
++import json
++import unittest
++from pathlib import Path
++
++RAIZ = Path(__file__).resolve().parent
++ESQUEMA = json.loads((RAIZ / "fixtures" / "config_schema.v0.10.2.json").read_text())
++
++
++def leer_yaml_simple(ruta: Path) -> dict:
++    """Lee el subconjunto YAML de estas plantillas, sin dependencia externa."""
++    raiz: dict = {}
++    actual = raiz
++    for linea in ruta.read_text().splitlines():
++        if not linea or linea.lstrip().startswith("#"):
++            continue
++        sangria = len(linea) - len(linea.lstrip())
++        clave, separador, valor = linea.strip().partition(":")
++        if not separador:
++            raise ValueError(f"YAML inválido en {ruta.name}: {linea!r}")
++        if sangria == 0:
++            actual = raiz
++        elif sangria != 2:
++            raise ValueError(f"sangría no admitida en {ruta.name}: {linea!r}")
++        if valor.strip() == "":
++            dato = {}
++        elif valor.strip() in ("true", "false"):
++            dato = valor.strip() == "true"
++        elif valor.strip().isdigit():
++            dato = int(valor.strip())
++        elif valor.strip().startswith('"') and valor.strip().endswith('"'):
++            dato = valor.strip()[1:-1]
++        else:
++            dato = valor.strip()
++        actual[clave] = dato
++        if isinstance(dato, dict):
++            actual = dato
++    return raiz
++
++
++def validar(valor, esquema, ruta="config"):
++    tipo = esquema.get("type")
++    if tipo == "object":
++        if not isinstance(valor, dict):
++            raise AssertionError(f"{ruta}: se esperaba objeto")
++        props = esquema.get("properties", {})
++        if esquema.get("additionalProperties") is False:
++            extras = set(valor) - set(props)
++            if extras:
++                raise AssertionError(f"{ruta}: claves no admitidas: {sorted(extras)}")
++        for clave, dato in valor.items():
++            if clave not in props:
++                raise AssertionError(f"{ruta}: clave fuera del esquema: {clave}")
++            validar(dato, props[clave], f"{ruta}.{clave}")
++    elif tipo == "string" and not isinstance(valor, str):
++        raise AssertionError(f"{ruta}: se esperaba texto")
++    elif tipo == "boolean" and type(valor) is not bool:
++        raise AssertionError(f"{ruta}: se esperaba booleano")
++    elif tipo == "integer" and (type(valor) is not int):
++        raise AssertionError(f"{ruta}: se esperaba entero")
++    if "enum" in esquema and valor not in esquema["enum"]:
++        raise AssertionError(f"{ruta}: {valor!r} no pertenece a {esquema['enum']}")
++    if "minimum" in esquema and valor < esquema["minimum"]:
++        raise AssertionError(f"{ruta}: menor que {esquema['minimum']}")
++
++
++class PlantillasTests(unittest.TestCase):
++    def setUp(self):
++        self.jaime = leer_yaml_simple(RAIZ / "config-jaime.yml")
++        self.pilar = leer_yaml_simple(RAIZ / "config-pilar.yml")
++        self.unidad = (RAIZ / "spotify@.service").read_text()
++
++    def test_plantillas_validan_con_el_esquema_fijado(self):
++        esquema = ESQUEMA["definitions"]["config"]
++        validar(self.jaime, esquema)
++        validar(self.pilar, esquema)
++
++    def test_aislamiento_por_perfil_y_loopback(self):
++        self.assertEqual(self.jaime["server"]["address"], "127.0.0.1")
++        self.assertEqual(self.pilar["server"]["address"], "127.0.0.1")
++        self.assertEqual({self.jaime["server"]["port"], self.pilar["server"]["port"]}, {3678, 3679})
++        for perfil in (self.jaime, self.pilar):
++            self.assertFalse(perfil["zeroconf_enabled"])
++            self.assertEqual(perfil["credentials"]["type"], "device_auth")
++            self.assertEqual(perfil["audio_backend"], "pulseaudio")
++            self.assertEqual(perfil["initial_volume"], 40)
++            self.assertEqual(perfil["bitrate"], 160)
++        self.assertNotEqual(self.jaime["device_name"], self.pilar["device_name"])
++
++    def test_unidad_usa_instancia_y_condicion_del_config(self):
++        self.assertIn("ExecStart=/usr/local/bin/go-librespot -config_dir /opt/nodo/datos/spotify/%i", self.unidad)
++        self.assertIn("ConditionPathExists=/opt/nodo/datos/spotify/%i/config.yml", self.unidad)
++        self.assertIn("Restart=on-failure", self.unidad)
++        self.assertIn("RestartSec=10", self.unidad)
++
++
++if __name__ == "__main__":
++    unittest.main(verbosity=2)
+diff --git a/pi/test_nodo_desplegar.py b/pi/test_nodo_desplegar.py
+index 22d2f9d..23b4250 100644
+--- a/pi/test_nodo_desplegar.py
++++ b/pi/test_nodo_desplegar.py
+@@ -332,6 +332,41 @@ class LadoIATests(Base):
+             self.assertTrue("nodo-desplegar enviar" in (PROYECTO / doc).read_text(encoding="utf-8"), doc)
+ 
+ 
++class DuenosSpotifyTests(Base):
++    """88a: un alta no puede regalar la propiedad de archivos a un usuario arbitrario."""
++
++    def test_alta_guarda_el_dueno_y_solo_admite_las_dos_configs_privadas(self):
++        destino = "/opt/nodo/datos/spotify/jaime/config.yml"
++        pid = self.cli(self.nd.alta, ["spotify-jaime", "10-Proyectos/11-Pi5/pi/spotify/config-jaime.yml",
++                                      destino, "--modo", "0600", "--dueno", "dcifu004:dcifu004"])
++        pedido = json.loads((self.nd.PEDIDOS / f"{pid}.json").read_text())
++        self.assertEqual(pedido["alta"]["dueno"], "dcifu004:dcifu004")
++        self.nd.validar_dueno("dcifu004:dcifu004", Path(destino))
++        with self.assertRaisesRegex(ValueError, "dcifu004 no permitido"):
++            self.nd.validar_dueno("dcifu004:dcifu004", Path("/opt/nodo/datos/otro/config.yml"))
++        with self.assertRaisesRegex(ValueError, "dueño no permitido"):
++            self.nd.validar_dueno("nadie:nadie", Path(destino))
++
++    def test_aplicar_deja_config_y_carpeta_privadas_del_usuario(self):
++        destino = self.tmp / "spotify" / "jaime" / "config.yml"
++        self.nd.PERMITIDOS = (str(self.tmp / "spotify") + "/",)
++        self.nd.RUTAS_DUEÑO_USUARIO = {str(destino)}
++        data = b"device_name: Casa de prueba\n"
++        sha = hashlib.sha256(data).hexdigest()
++        etapa = self.nd.ESTADO / "staging" / "id-prueba"
++        etapa.mkdir(parents=True)
++        (etapa / "spotify-jaime").write_bytes(data)
++        escucha = self.nd.Escucha()
++        estado, detalle = escucha.aplicar({"id": "id-prueba", "tipo": "desplegar", "items": [{
++            "nombre": "spotify-jaime", "destino": str(destino), "hash": sha, "modo": 0o600,
++            "dueno": "dcifu004:dcifu004", "despues": [], "igual": False}], "alta": None})
++        self.assertEqual((estado, detalle.split(";", 1)[0]), ("aplicado", "1 archivo(s)"))
++        self.assertEqual(destino.read_bytes(), data)
++        self.assertEqual(stat.S_IMODE(destino.stat().st_mode), 0o600)
++        self.assertEqual(stat.S_IMODE(destino.parent.stat().st_mode), 0o700)
++        self.assertEqual(destino.stat().st_uid, os.getuid())
++
++
+ class EnvioTests(Base):
+     def test_archivo_valido_sale_por_senddocument_multipart_y_queda_registrado(self):
+         # Con el nombre del primer uso real, y bytes que rompen a un multipart mal hecho.
+## Fase propia fix1: 8b09dc6..8bd0f5f
+
+ encargos/88a-RESULTADO.md     |  76 +++++++++++
+ pi/desplegar-escucha.service  |   9 +-
+ pi/nodo-desplegar.py          | 290 ++++++++++++++++++++++++++++++++++--------
+ pi/spotify/LEEME.md           |  12 +-
+ pi/spotify/spotify@.service   |   2 +-
+ pi/spotify/test_plantillas.py |   4 +-
+ pi/test_nodo_desplegar.py     |  81 +++++++++++-
+ 7 files changed, 412 insertions(+), 62 deletions(-)
+
+diff --git a/encargos/88a-RESULTADO.md b/encargos/88a-RESULTADO.md
+index 7a9a911..7ac03c3 100644
+--- a/encargos/88a-RESULTADO.md
++++ b/encargos/88a-RESULTADO.md
+@@ -154,3 +154,79 @@ La penúltima comprobación debe incluir `ActiveState=inactive` y `Result=condit
+    su sandbox actual no puede escribir estas rutas nuevas.
+ 5. Sólo después: altas con hash de cada archivo, despliegue por botones y C1–C6. La vinculación
+    queda fuera de 88a y se hace desde `/spotify` en 88b.
++
++## Arreglos vuelta 1
++
++**Estado conservador: sigue NO DESPLEGABLE.** No se desplegó, no se escribió bajo
++`/opt/nodo/datos/spotify`, no se tocaron perfiles ni n8n. La corrección dejó resueltos los
++hallazgos 1–4 y 8 en el vault; los 5–7 no se pueden cerrar honestamente sin el asset arm64 y su
++esquema completo reales. Esta shell no resuelve DNS ni abre TCP a GitHub (`curl` devuelve
++`Could not resolve host`); no se reemplazó el binario por una compilación ni por datos inventados.
++
++1. **[Grave] Ruta inexistente del escucha.** `ReadWritePaths` usa ahora
++   `-/usr/local/lib/go-librespot` y también hace opcional la carpeta de la unidad de usuario.
++   La prueba `DuenosSpotifyTests.test_escucha_tolera_ruta_de_binario_aun_no_creada_y_no_lee_home`
++   lee la forma real de `pi/desplegar-escucha.service` y exige ambos prefijos `-`.
++2. **[Grave] Flag de la unidad.** `spotify@.service` cambió `-config_dir` por
++   `--config_dir`; la prueba de plantilla exige literalmente la forma de dos guiones. Es la forma
++   que `go-librespot --help` mostró en la reproducción de Claude (Diego).
++3. **[Grave] Carrera de `chown` por enlace.** `nodo-desplegar` abre los directorios tramo a
++   tramo con `O_DIRECTORY|O_NOFOLLOW`, opera sobre el descriptor y, para las carpetas privadas,
++   crea el archivo bajo la identidad efectiva de `dcifu004`. Ya no hay `chown`/`chmod` por ruta
++   dentro de un directorio que controla ese usuario. Las pruebas usan un perfil temporal
++   escribible, prohíben `os.chown` por ruta y, en la forma exacta de la carrera, reemplazan el
++   perfil por un enlace a una víctima durante `fchown`; verifican que la víctima no recibe ni
++   `config.yml` ni cambio de modo.
++4. **[Media] Tope del binario extraído.** `MAX_FUENTE` pasó de 8 a 24 MiB. La prueba llama la
++   función real `leer_fuente` con 17.380.232 bytes, el tamaño real informado para el binario arm64
++   extraído por Claude (Diego), no con el tamaño comprimido de 5,81 MB.
++5. **[Media] Última versión estable.** Se fijó en el código de enlace la ruta objetivo de
++   `v0.10.5`, que fue la última estable observada por Claude (Diego). Falta bajar y verificar su
++   asset real; por eso no se anota un SHA-256 ni se declara cumplido este hallazgo.
++6. **[Media] Forma real del esquema y C1.** La prueba de la unidad corrige el flag real, pero el
++   fixture sigue siendo el extracto `v0.10.2` y C1 aún no puede ejecutar el binario ni leer su
++   línea `running go-librespot …` desde el journal. No se declara cubierto: requiere descargar el
++   `config_schema.json` completo y el asset de `v0.10.5`.
++7. **[Media] Binario, altas y enlace.** Se agregó `nodo-desplegar alta-enlace`, limitado a la
++   única pareja exacta `/usr/local/bin/go-librespot` →
++   `/usr/local/lib/go-librespot/v0.10.5/go-librespot`; una prueba rechaza cualquier otro objetivo.
++   El binario, su SHA-256 y las altas reales siguen ausentes por el mismo bloqueo de red, de modo
++   que no se afirma C1–C6.
++8. **[Media] Lectura de todo `/home`.** La unidad cambió a `ProtectHome=tmpfs` y expone sólo
++   `~/.config/systemd/user` mediante `BindPaths`; la misma prueba del punto 1 exige
++   ambas directivas.
++
++También se cerraron dos bajos sin ampliar alcance: `PERMITIDOS_EXACTOS` evita que
++`spotify@.service` sea un prefijo para `spotify@.service.d`, y el comando de desvincular usa
++`rm -f`. `LEEME.md` explica que, si LUKS se abre después del arranque, hay que iniciar las dos
++instancias de usuario una vez.
++
++### Suites ejecutadas (salida real, sin despliegue)
++
++```text
++$ python3 pi/spotify/test_plantillas.py
++Ran 3 tests in 0.001s
++OK
++
++$ python3 pi/test_nodo_desplegar.py
++Ran 84 tests in 4.354s
++OK
++
++$ python3 botv3/test_botv3.py
++Ran 490 tests in 16.495s
++OK (skipped=4)
++
++$ python3 botv3/test_temporizadores.py
++✅ todo en verde
++
++$ python3 botv3/test_compras.py
++✅ todo en verde
++
++$ python3 botv3/test_spotify.py
++python3: can't open file '/opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/botv3/test_spotify.py': [Errno 2] No such file or directory
++
++rc: plantillas=0 nodo=0 botv3=0 temporizadores=0 compras=0 spotify=2
++```
++
++`systemd-analyze verify` tampoco puede ejecutarse en este sandbox: termina antes de leer la
++unidad con `SO_PASSCRED failed: Operation not permitted` (rc 1). No se cuenta como prueba verde.
+diff --git a/pi/desplegar-escucha.service b/pi/desplegar-escucha.service
+index f668ee2..436aaa2 100644
+--- a/pi/desplegar-escucha.service
++++ b/pi/desplegar-escucha.service
+@@ -25,13 +25,16 @@ RestartSec=10
+ # deja todo de sólo lectura salvo esta lista, que repite PERMITIDOS del script. Si el
+ # código tiene un bug, /etc/sudoers, /etc/ssh y /etc/pam.d siguen sin poder escribirse.
+ ProtectSystem=strict
+-ReadWritePaths=/etc/systemd/system /usr/local/bin /usr/local/lib/go-librespot /opt/nodo /opt/botv3 -/opt/captura
+-ReadWritePaths=-/opt/nodo/datos/spotify ~/.config/systemd/user
++ReadWritePaths=/etc/systemd/system /usr/local/bin -/usr/local/lib/go-librespot /opt/nodo /opt/botv3 -/opt/captura
++ReadWritePaths=-~/.config/systemd/user
+ ReadWritePaths=/var/spool/nodo-desplegar /var/lib/nodo-desplegar /etc/nodo/desplegar
+ # El guión: si el volumen está cerrado al arrancar la ruta no existe y la unidad fallaría.
+ # El script igual rechaza secretos/ por su cuenta; esto es la segunda capa.
+ InaccessiblePaths=-/opt/nodo/datos/secretos
+-ProtectHome=read-only
++# Sólo se hace visible la carpeta de la unidad de usuario; ni ~/.ssh ni las carpetas de las IA
++# quedan legibles para este proceso root.
++ProtectHome=tmpfs
++BindPaths=-~/.config/systemd/user
+ PrivateTmp=yes
+ NoNewPrivileges=yes
+ ProtectKernelModules=yes
+diff --git a/pi/nodo-desplegar.py b/pi/nodo-desplegar.py
+index bc61e03..eea213c 100644
+--- a/pi/nodo-desplegar.py
++++ b/pi/nodo-desplegar.py
+@@ -8,6 +8,8 @@
+     nodo-desplegar alta <nombre> <fuente> <destino> [--modo 0755] [--dueno USER:GROUP]
+                          [--despues ACC...] [--motivo T]
+                                                    agrega una entrada al catalogo y la instala
++    nodo-desplegar alta-enlace <nombre> <destino> <objetivo> [--motivo T]
++                                                   da de alta el único enlace Spotify permitido
+     nodo-desplegar sugerir [--motivo T] -- <comando en una linea>
+                                                    le manda a Diego la linea EXACTA para copiar y
+                                                    pegar en Termux, ya envuelta en `ssh -t` a la
+@@ -117,9 +119,9 @@ SSH_DESTINO = "dcifu004@nodo.example"  # `sugerir`: desde Termux en el S22, por
+ VENCE_S = 30 * 60
+ ESPERA_SYNC_S = 3 * 60
+ MAX_PEDIDO = 16 * 1024
+-# go-librespot arm64 publicado mide 5,81 MB (88a). El límite sigue siendo acotado:
+-# una fuente del vault no convierte al escucha en un instalador de imágenes arbitrarias.
+-MAX_FUENTE = 8 * 1024 * 1024
++# El ejecutable arm64 de go-librespot v0.10.5 ya extraído mide más de 17 MB. El límite deja
++# margen sólo para ese binario publicado, no para convertir al escucha en instalador genérico.
++MAX_FUENTE = 24 * 1024 * 1024
+ MAX_MENSAJE = 4000
+ MAX_SALIDA = 1500
+ PROBAR_MAX_S = 120
+@@ -146,8 +148,8 @@ MONTAJE = Path("/opt/nodo/datos")
+ ARRANQUE = Path("/proc/sys/kernel/random/boot_id")
+ 
+ PERMITIDOS = ("/etc/systemd/system/", "/usr/local/bin/", "/usr/local/lib/go-librespot/",
+-              "~/.config/systemd/user/spotify@.service", "/opt/nodo/", "/opt/botv3/",
+-              "/opt/captura/", "/opt/nodo/datos/spotify/")
++              "/opt/nodo/", "/opt/botv3/", "/opt/captura/", "/opt/nodo/datos/spotify/")
++PERMITIDOS_EXACTOS = {"~/.config/systemd/user/spotify@.service"}
+ PROHIBIDOS = ("/etc/sudoers", "/etc/pam.d", "/etc/ssh", "/etc/nodo", "/etc/fstab",
+               "/etc/crypttab", "/etc/passwd", "/etc/shadow", "/etc/group", "/root",
+               "/opt/nodo/datos/secretos", "/opt/nodo/datos/srv", "/opt/nodo/.env",
+@@ -158,6 +160,9 @@ RUTAS_DUEÑO_USUARIO = {
+     "/opt/nodo/datos/spotify/jaime/config.yml",
+     "/opt/nodo/datos/spotify/pilar/config.yml",
+ }
++ENLACES_PERMITIDOS = {
++    "/usr/local/bin/go-librespot": "/usr/local/lib/go-librespot/v0.10.5/go-librespot",
++}
+ 
+ RE_NOMBRE = re.compile(r"[a-z0-9][a-z0-9_-]{0,47}")
+ RE_HASH = re.compile(r"[0-9a-f]{8,64}")
+@@ -247,6 +252,20 @@ def alta(args: list[str]) -> int:
+                    "motivo": " ".join(motivo)[:200]})
+ 
+ 
++def alta_enlace(args: list[str]) -> int:
++    args, motivo = _sacar(args, "--motivo", None)
++    if len(args) != 3:
++        raise SystemExit("uso: nodo-desplegar alta-enlace <nombre> <destino> <objetivo> [--motivo T]")
++    nombre, destino, objetivo = args
++    try:
++        validar_enlace(Path(destino), objetivo)
++    except ValueError as e:
++        raise SystemExit(f"nodo-desplegar alta-enlace: {e}")
++    return _dejar({"tipo": "alta_enlace", "entradas": [_entrada(nombre)],
++                   "alta": {"tipo": "enlace", "destino": destino, "objetivo": objetivo},
++                   "motivo": " ".join(motivo)[:200]})
++
++
+ def sugerir(args: list[str]) -> int:
+     # A Diego le cuesta escribir en tmux desde el telefono (27-09): lo que tenga que correr
+     # el va como linea exacta, completa y sin placeholders, para copiar con un toque.
+@@ -422,7 +441,7 @@ def validar_destino(destino: Path) -> None:
+     s = str(destino)
+     if not destino.is_absolute() or ".." in destino.parts:
+         raise ValueError(f"destino no absoluto o con ..: {s}")
+-    if not s.startswith(PERMITIDOS) or s.startswith(PROHIBIDOS):
++    if (not s.startswith(PERMITIDOS) and s not in PERMITIDOS_EXACTOS) or s.startswith(PROHIBIDOS):
+         raise ValueError(f"destino fuera de lo permitido: {s}")
+     if destino.is_symlink() or any(p.is_symlink() for p in destino.parents):
+         raise ValueError(f"destino con enlace simbolico: {s}")
+@@ -443,6 +462,142 @@ def ids_dueno(dueno: str) -> tuple[int, int]:
+     return usuario.pw_uid, usuario.pw_gid
+ 
+ 
++def validar_enlace(destino: Path, objetivo: str) -> None:
++    """El único enlace instalable está fijado junto con la versión del binario Spotify."""
++    if ENLACES_PERMITIDOS.get(str(destino)) != objetivo:
++        raise ValueError("enlace fuera de la lista cerrada")
++
++
++def abrir_directorio(ruta: Path, crear: bool = False) -> int:
++    """Abre cada tramo por descriptor, sin seguir enlaces que un usuario pueda intercambiar.
++
++    El descriptor resultante ancla las operaciones posteriores aunque alguien renombre una
++    carpeta mientras se prepara el despliegue. Sólo se llama después de validar la ruta textual.
++    """
++    if not ruta.is_absolute():
++        raise ValueError("directorio no absoluto")
++    fd = os.open("/", os.O_RDONLY | os.O_DIRECTORY)
++    try:
++        for tramo in ruta.parts[1:]:
++            try:
++                nuevo = os.open(tramo, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
++            except FileNotFoundError:
++                if not crear:
++                    raise
++                try:
++                    os.mkdir(tramo, 0o755, dir_fd=fd)
++                except FileExistsError:
++                    pass
++                nuevo = os.open(tramo, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
++            os.close(fd)
++            fd = nuevo
++        return fd
++    except Exception:
++        os.close(fd)
++        raise
++
++
++def leer_destino(destino: Path) -> bytes | None:
++    """Lee un destino existente por descriptores; un enlace nunca llega al diff ni al respaldo."""
++    try:
++        padre = abrir_directorio(destino.parent)
++    except FileNotFoundError:
++        return None
++    try:
++        try:
++            fd = os.open(destino.name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=padre)
++        except FileNotFoundError:
++            return None
++        try:
++            st = os.fstat(fd)
++            if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1:
++                raise ValueError(f"destino no es archivo regular seguro: {destino}")
++            with os.fdopen(fd, "rb", closefd=False) as fh:
++                return fh.read()
++        finally:
++            os.close(fd)
++    finally:
++        os.close(padre)
++
++
++def leer_enlace(destino: Path) -> str | None:
++    try:
++        padre = abrir_directorio(destino.parent)
++    except FileNotFoundError:
++        return None
++    try:
++        try:
++            return os.readlink(destino.name, dir_fd=padre)
++        except FileNotFoundError:
++            return None
++    finally:
++        os.close(padre)
++
++
++def escribir_destino(destino: Path, data: bytes, uid: int, gid: int, modo: int,
++                      privado: bool = False) -> None:
++    """Escritura atómica sin seguir enlaces.
++
++    Los únicos directorios controlados por ``dcifu004`` son los dos perfiles Spotify. Tras
++    anclarlos por descriptor, el archivo se crea con su identidad efectiva: aun si cambia un
++    nombre por enlace, no queda un escritor root sobre una ruta de root.
++    """
++    padre = abrir_directorio(destino.parent, crear=True)
++    try:
++        if privado:
++            os.fchown(padre, uid, gid)
++            os.fchmod(padre, 0o700)
++        else:
++            st = os.fstat(padre)
++            if st.st_uid != 0 or stat.S_IMODE(st.st_mode) & 0o022:
++                raise ValueError(f"directorio root no seguro: {destino.parent}")
++        previo_uid, previo_gid = os.geteuid(), os.getegid()
++        if privado:
++            os.setegid(gid)
++            os.seteuid(uid)
++        try:
++            tmp = f".{destino.name}.nodo-desplegar-{secrets.token_hex(8)}"
++            fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
++                         modo, dir_fd=padre)
++            try:
++                escritos = 0
++                while escritos < len(data):
++                    escritos += os.write(fd, data[escritos:])
++                os.fsync(fd)
++                os.fchmod(fd, modo)
++            finally:
++                os.close(fd)
++            os.replace(tmp, destino.name, src_dir_fd=padre, dst_dir_fd=padre)
++            os.fsync(padre)
++        finally:
++            if privado:
++                os.seteuid(previo_uid)
++                os.setegid(previo_gid)
++    finally:
++        os.close(padre)
++
++
++def crear_enlace(destino: Path, objetivo: str) -> None:
++    validar_enlace(destino, objetivo)
++    # Se comprueba el binario ya instalado con la misma apertura sin enlaces antes de publicar
++    # el enlace. El directorio de /usr/local/bin tiene que seguir siendo root y no escribible.
++    binario = Path(objetivo)
++    datos = leer_destino(binario)
++    if datos is None:
++        raise ValueError("el binario objetivo no existe")
++    padre = abrir_directorio(destino.parent, crear=True)
++    try:
++        st = os.fstat(padre)
++        if st.st_uid != 0 or stat.S_IMODE(st.st_mode) & 0o022:
++            raise ValueError(f"directorio root no seguro: {destino.parent}")
++        tmp = f".{destino.name}.nodo-desplegar-{secrets.token_hex(8)}"
++        os.symlink(objetivo, tmp, dir_fd=padre)
++        os.replace(tmp, destino.name, src_dir_fd=padre, dst_dir_fd=padre)
++        os.fsync(padre)
++    finally:
++        os.close(padre)
++
++
+ def validar_despues(acciones: list) -> None:
+     for d in acciones:
+         if not isinstance(d, str) or (d != "daemon-reload" and not (
+@@ -653,9 +808,11 @@ class Escucha:
+         return tomllib.loads(CATALOGO.read_text()).get("entrada", {})
+ 
+     def publicar_catalogo(self) -> None:
+-        pub = {n: {"fuente": e["fuente"], "destino": e["destino"],
+-                   "dueno": e.get("dueno", "root:root"),
+-                   "modo": e.get("modo", "0644"), "despues": e.get("despues", [])}
++        pub = {n: ({"tipo": "enlace", "destino": e["destino"], "objetivo": e["objetivo"]}
++                   if e.get("tipo") == "enlace" else
++                   {"fuente": e["fuente"], "destino": e["destino"],
++                    "dueno": e.get("dueno", "root:root"),
++                    "modo": e.get("modo", "0644"), "despues": e.get("despues", [])})
+                for n, e in self.cat().items()}
+         ruta = SPOOL / "catalogo.json"
+         ruta.write_text(json.dumps(pub, ensure_ascii=False, indent=1))
+@@ -705,24 +862,31 @@ class Escucha:
+         if tipo == "consulta":
+             return self.preparar_consulta(pid, uid, datos)
+         entradas = datos.get("entradas")
+-        if tipo not in ("desplegar", "probar", "alta") or not isinstance(entradas, list) \
++        if tipo not in ("desplegar", "probar", "alta", "alta_enlace") or not isinstance(entradas, list) \
+                 or not 1 <= len(entradas) <= 10 or (tipo != "desplegar" and len(entradas) != 1):
+             raise ValueError("pedido mal formado")
+         cat = self.cat()
+         rojos: list[str] = []
+-        if tipo == "alta":
++        if tipo in ("alta", "alta_enlace"):
+             a = datos.get("alta") or {}
+             nombre = entradas[0]["nombre"]
+             if nombre in cat:
+                 raise ValueError(f"'{nombre}' ya existe en el catálogo")
+-            if a.get("modo") not in MODOS:
+-                raise ValueError(f"modo no permitido: {a.get('modo')}")
+             destino_alta = Path(a.get("destino", ""))
+             validar_destino(destino_alta)
+-            validar_dueno(a.get("dueno", "root:root"), destino_alta)
+-            validar_despues(a.get("despues", []))
+-            cat = {nombre: {"fuente": a["fuente"], "destino": a["destino"], "modo": a["modo"],
+-                            "dueno": a.get("dueno", "root:root"), "despues": a.get("despues", [])}}
++            if tipo == "alta_enlace":
++                if a.get("tipo") != "enlace":
++                    raise ValueError("alta de enlace inválida")
++                validar_enlace(destino_alta, a.get("objetivo", ""))
++                cat = {nombre: {"tipo": "enlace", "destino": a["destino"],
++                                "objetivo": a["objetivo"]}}
++            else:
++                if a.get("modo") not in MODOS:
++                    raise ValueError(f"modo no permitido: {a.get('modo')}")
++                validar_dueno(a.get("dueno", "root:root"), destino_alta)
++                validar_despues(a.get("despues", []))
++                cat = {nombre: {"fuente": a["fuente"], "destino": a["destino"], "modo": a["modo"],
++                                "dueno": a.get("dueno", "root:root"), "despues": a.get("despues", [])}}
+             rojos.append(f"ALTA en el catálogo: {nombre} → {a['destino']}")
+ 
+         items, diffs, cambios = [], [], 0
+@@ -733,6 +897,20 @@ class Escucha:
+             e = cat[n]
+             destino = Path(e["destino"])
+             validar_destino(destino)
++            if e.get("tipo") == "enlace":
++                if tipo == "probar":
++                    raise ValueError("no se puede probar un enlace como ejecutable")
++                validar_enlace(destino, e.get("objetivo", ""))
++                objetivo = e["objetivo"]
++                h = hashlib.sha256(objetivo.encode()).hexdigest()
++                actual_enlace = leer_enlace(destino)
++                items.append({"nombre": n, "tipo": "enlace", "destino": str(destino), "hash": h,
++                              "objetivo": objetivo, "modo": 0, "dueno": "root:root", "despues": [],
++                              "igual": actual_enlace == objetivo})
++                if actual_enlace != objetivo:
++                    cambios += 1
++                    diffs.append(f"enlace {destino} → {objetivo}")
++                continue
+             validar_dueno(e.get("dueno", "root:root"), destino)
+             validar_despues(e.get("despues", []))
+             nuevo = leer_fuente(e["fuente"])
+@@ -742,8 +920,8 @@ class Escucha:
+                     raise ValueError(f"{n}: la versión pedida no llegó por Syncthing en "
+                                      f"{ESPERA_SYNC_S // 60} min (el vault tiene {h[:12]})")
+                 return False
+-            actual = destino.read_bytes() if destino.exists() else None
+-            items.append({"nombre": n, "destino": str(destino), "hash": h,
++            actual = leer_destino(destino)
++            items.append({"nombre": n, "tipo": "archivo", "destino": str(destino), "hash": h,
+                           "modo": int(e.get("modo", "0644"), 8),
+                           "dueno": e.get("dueno", "root:root"),
+                           "despues": e.get("despues", []), "igual": actual == nuevo})
+@@ -774,7 +952,7 @@ class Escucha:
+              "items": items, "rojos": rojos, "creado": time.time(),
+              "nonce": secrets.token_urlsafe(9), "confirmado1": False,
+              "args": [a for a in datos.get("args", []) if RE_ARG.fullmatch(a)][:8],
+-             "alta": cat[entradas[0]["nombre"]] if tipo == "alta" else None}
++             "alta": cat[entradas[0]["nombre"]] if tipo in ("alta", "alta_enlace") else None}
+         p["texto"] = self.texto(p, "\n\n".join(diffs) if diffs else "(sin diferencias con lo desplegado)")
+         t = time.time()
+         msg = self.tg("sendMessage", chat_id=self.chat, text=p["texto"], parse_mode="HTML",
+@@ -933,7 +1111,8 @@ class Escucha:
+     def texto(self, p: dict, diff: str) -> str:
+         titulo = {"desplegar": "📦 <b>Pedido de despliegue</b>",
+                   "probar": "▶️ <b>Pedido de prueba como root</b>",
+-                  "alta": "🆕 <b>Alta en el catálogo</b>"}[p["tipo"]]
++                  "alta": "🆕 <b>Alta en el catálogo</b>",
++                  "alta_enlace": "🆕 <b>Alta de enlace en el catálogo</b>"}[p["tipo"]]
+         l = [f"{titulo} <code>{p['id']}</code>",
+              f"De: {html.escape(p['quien'])}" + (f" · {html.escape(p['motivo'])}" if p["motivo"] else ""),
+              ""]
+@@ -1057,36 +1236,28 @@ class Escucha:
+         resp.mkdir(mode=0o700, parents=True, exist_ok=True)
+         hechos = []
+         try:
+-            if p["tipo"] == "alta":
++            if p["tipo"] in ("alta", "alta_enlace"):
+                 self.agregar_al_catalogo(p["items"][0]["nombre"], p["alta"])
+             for it in p["items"]:
+                 if it["igual"]:
+                     continue
+                 dest = Path(it["destino"])
++                validar_destino(dest)
++                if it.get("tipo") == "enlace":
++                    crear_enlace(dest, it["objetivo"])
++                    hechos.append((it, False))
++                    continue
+                 data = (ESTADO / "staging" / p["id"] / it["nombre"]).read_bytes()
+                 if hashlib.sha256(data).hexdigest() != it["hash"]:
+                     raise RuntimeError(f"{it['nombre']}: el staging cambió")
+-                validar_destino(dest)
+                 validar_dueno(it["dueno"], dest)
+-                previo = dest.exists()
++                anterior = leer_destino(dest)
++                previo = anterior is not None
+                 if previo:
+-                    shutil.copy2(dest, resp / it["nombre"])
+-                dest.parent.mkdir(parents=True, exist_ok=True)
++                    (resp / it["nombre"]).write_bytes(anterior)
+                 uid, gid = ids_dueno(it["dueno"])
+-                # Sólo aplica a las dos carpetas privadas validadas arriba; el archivo y su
+-                # directorio quedan escribibles por el proceso de usuario que guarda state.json.
+-                if it["dueno"] == "dcifu004:dcifu004":
+-                    os.chown(dest.parent, uid, gid)
+-                    os.chmod(dest.parent, 0o700)
+-                tmp = dest.with_name(f".{dest.name}.nodo-desplegar")
+-                tmp.unlink(missing_ok=True)
+-                fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+-                with os.fdopen(fd, "wb") as fh:
+-                    fh.write(data)
+-                    os.fsync(fh.fileno())
+-                os.chown(tmp, uid, gid)
+-                os.chmod(tmp, it["modo"])
+-                os.replace(tmp, dest)
++                escribir_destino(dest, data, uid, gid, it["modo"],
++                                 privado=it["dueno"] == "dcifu004:dcifu004")
+                 hechos.append((it, previo))
+             unidades = self.despues(p)
+             malas = [u for u in unidades if self.activo(u) != "active"]
+@@ -1104,13 +1275,15 @@ class Escucha:
+     def agregar_al_catalogo(self, nombre: str, e: dict) -> None:
+         if nombre in self.cat():
+             raise RuntimeError(f"'{nombre}' ya existe en el catálogo")
+-        bloque = (f"\n# alta aprobada por Telegram el {time.strftime('%Y-%m-%d %H:%M')}\n"
+-                  f"[entrada.{nombre}]\n"
+-                  f"fuente  = {json.dumps(e['fuente'])}\n"
+-                  f"destino = {json.dumps(e['destino'])}\n"
+-                  f"modo    = {json.dumps(e['modo'])}\n"
+-                  f"dueno   = {json.dumps(e.get('dueno', 'root:root'))}\n"
+-                  f"despues = {json.dumps(e.get('despues', []))}\n")
++        bloque = f"\n# alta aprobada por Telegram el {time.strftime('%Y-%m-%d %H:%M')}\n[entrada.{nombre}]\n"
++        if e.get("tipo") == "enlace":
++            bloque += f"tipo     = \"enlace\"\ndestino = {json.dumps(e['destino'])}\nobjetivo = {json.dumps(e['objetivo'])}\n"
++        else:
++            bloque += (f"fuente  = {json.dumps(e['fuente'])}\n"
++                       f"destino = {json.dumps(e['destino'])}\n"
++                       f"modo    = {json.dumps(e['modo'])}\n"
++                       f"dueno   = {json.dumps(e.get('dueno', 'root:root'))}\n"
++                       f"despues = {json.dumps(e.get('despues', []))}\n")
+         texto = CATALOGO.read_text() + bloque
+         tomllib.loads(texto)  # que el catalogo siga siendo valido antes de escribirlo
+         tmp = CATALOGO.with_suffix(".tmp")
+@@ -1176,10 +1349,27 @@ class Escucha:
+     def revertir(hechos: list, resp: Path) -> None:
+         for it, previo in reversed(hechos):
+             dest = Path(it["destino"])
++            if it.get("tipo") == "enlace":
++                # Un enlace nuevo sólo se publica después de que su objetivo existe. Si la
++                # operación posterior falla, quitarlo por descriptor no sigue su objetivo.
++                padre = abrir_directorio(dest.parent)
++                try:
++                    os.unlink(dest.name, dir_fd=padre)
++                finally:
++                    os.close(padre)
++                continue
+             if previo:
+-                shutil.copy2(resp / it["nombre"], dest)
++                uid, gid = ids_dueno(it["dueno"])
++                escribir_destino(dest, (resp / it["nombre"]).read_bytes(), uid, gid, it["modo"],
++                                 privado=it["dueno"] == "dcifu004:dcifu004")
+             else:
+-                dest.unlink(missing_ok=True)
++                padre = abrir_directorio(dest.parent)
++                try:
++                    os.unlink(dest.name, dir_fd=padre)
++                except FileNotFoundError:
++                    pass
++                finally:
++                    os.close(padre)
+ 
+     # ── cierre ──
+     def cerrar(self, p: dict, estado: str, detalle: str, rc: int | None = None,
+@@ -1268,7 +1458,7 @@ class Escucha:
+ 
+ 
+ def main() -> int:
+-    cmds = {"pedir": pedir, "probar": probar, "alta": alta, "sugerir": sugerir,
++    cmds = {"pedir": pedir, "probar": probar, "alta": alta, "alta-enlace": alta_enlace, "sugerir": sugerir,
+             "consultar": consultar, "enviar": enviar, "esperar": esperar, "catalogo": catalogo}
+     if len(sys.argv) < 2 or sys.argv[1] not in (*cmds, "escuchar"):
+         print(__doc__.split("\n\n")[1], file=sys.stderr)
+diff --git a/pi/spotify/LEEME.md b/pi/spotify/LEEME.md
+index e742873..835dd4b 100644
+--- a/pi/spotify/LEEME.md
++++ b/pi/spotify/LEEME.md
+@@ -1,12 +1,12 @@
+ # Spotify Connect por perfil (88a)
+ 
+-Esta carpeta deja dos receptores `go-librespot v0.10.2`: Jaime en `127.0.0.1:3678` y Pilar en
++Esta carpeta deja dos receptores `go-librespot v0.10.5`: Jaime en `127.0.0.1:3678` y Pilar en
+ `127.0.0.1:3679`. No expone la API en la red ni usa zeroconf/mDNS. El audio usa `pulseaudio`,
+ que en la Pi es `pipewire-pulse`, y por tanto conserva el *sink* (salida) por defecto.
+ 
+ ## Instalación
+ 
+-La cola instala el binario armado en `/usr/local/lib/go-librespot/v0.10.2/go-librespot` y deja
++La cola instala el binario armado en `/usr/local/lib/go-librespot/v0.10.5/go-librespot` y deja
+ `/usr/local/bin/go-librespot` como enlace simbólico a esa versión. Instala esta unidad en
+ `~/.config/systemd/user/spotify@.service` y las dos plantillas en el volumen LUKS:
+ 
+@@ -42,9 +42,15 @@ de Diego; Pilar, con la de Camila. La credencial no se pone en YAML: go-librespo
+ Detén sólo la instancia correspondiente, borra su credencial guardada y vuelve a iniciarla:
+ 
+ ```bash
+-systemctl --user stop spotify@jaime && rm /opt/nodo/datos/spotify/jaime/state.json && systemctl --user start spotify@jaime
++systemctl --user stop spotify@jaime && rm -f /opt/nodo/datos/spotify/jaime/state.json && systemctl --user start spotify@jaime
+ ```
+ 
+ Para Pilar se sustituye `jaime` por `pilar`. Esto no borra `config.yml`; al reiniciar vuelve a
+ entregar un código nuevo. No borres la carpeta: también contiene el lockfile mientras la unidad
+ está activa.
++
++## Después de abrir LUKS
++
++`ConditionPathExists` evita reinicios cuando el volumen está cerrado, pero systemd no vuelve a
++evaluar esa condición al abrirlo. Si la Pi arrancó con LUKS cerrado, ejecuta una vez, como
++`dcifu004`, `systemctl --user start spotify@jaime spotify@pilar` después de `abrir-datos`.
+diff --git a/pi/spotify/spotify@.service b/pi/spotify/spotify@.service
+index 471ce2a..7ec035f 100644
+--- a/pi/spotify/spotify@.service
++++ b/pi/spotify/spotify@.service
+@@ -12,7 +12,7 @@ ConditionPathExists=/opt/nodo/datos/spotify/%i/config.yml
+ 
+ [Service]
+ Type=simple
+-ExecStart=/usr/local/bin/go-librespot -config_dir /opt/nodo/datos/spotify/%i
++ExecStart=/usr/local/bin/go-librespot --config_dir /opt/nodo/datos/spotify/%i
+ Restart=on-failure
+ RestartSec=10
+ 
+diff --git a/pi/spotify/test_plantillas.py b/pi/spotify/test_plantillas.py
+index 938b50e..1b10cb3 100644
+--- a/pi/spotify/test_plantillas.py
++++ b/pi/spotify/test_plantillas.py
+@@ -91,7 +91,9 @@ class PlantillasTests(unittest.TestCase):
+         self.assertNotEqual(self.jaime["device_name"], self.pilar["device_name"])
+ 
+     def test_unidad_usa_instancia_y_condicion_del_config(self):
+-        self.assertIn("ExecStart=/usr/local/bin/go-librespot -config_dir /opt/nodo/datos/spotify/%i", self.unidad)
++        # pflag interpreta un solo guión como -c + "onfig_dir"; ésta es la forma que el
++        # binario real expone en --help.
++        self.assertIn("ExecStart=/usr/local/bin/go-librespot --config_dir /opt/nodo/datos/spotify/%i", self.unidad)
+         self.assertIn("ConditionPathExists=/opt/nodo/datos/spotify/%i/config.yml", self.unidad)
+         self.assertIn("Restart=on-failure", self.unidad)
+         self.assertIn("RestartSec=10", self.unidad)
+diff --git a/pi/test_nodo_desplegar.py b/pi/test_nodo_desplegar.py
+index 23b4250..323bb32 100644
+--- a/pi/test_nodo_desplegar.py
++++ b/pi/test_nodo_desplegar.py
+@@ -357,14 +357,87 @@ class DuenosSpotifyTests(Base):
+         etapa.mkdir(parents=True)
+         (etapa / "spotify-jaime").write_bytes(data)
+         escucha = self.nd.Escucha()
+-        estado, detalle = escucha.aplicar({"id": "id-prueba", "tipo": "desplegar", "items": [{
+-            "nombre": "spotify-jaime", "destino": str(destino), "hash": sha, "modo": 0o600,
+-            "dueno": "dcifu004:dcifu004", "despues": [], "igual": False}], "alta": None})
++        pedido = {"id": "id-prueba", "tipo": "desplegar", "items": [{
++            "nombre": "spotify-jaime", "tipo": "archivo", "destino": str(destino), "hash": sha,
++            "modo": 0o600, "dueno": "dcifu004:dcifu004", "despues": [], "igual": False}], "alta": None}
++        # Forma real del ataque revisado: el directorio del perfil es escribible por dcifu004.
++        # La corrección no puede volver a hacer chown/chmod por ruta (un enlace lo redirigiría).
++        with mock.patch.object(os, "chown", side_effect=AssertionError("chown por ruta prohibido")):
++            estado, detalle = escucha.aplicar(pedido)
+         self.assertEqual((estado, detalle.split(";", 1)[0]), ("aplicado", "1 archivo(s)"))
+         self.assertEqual(destino.read_bytes(), data)
+         self.assertEqual(stat.S_IMODE(destino.stat().st_mode), 0o600)
+         self.assertEqual(stat.S_IMODE(destino.parent.stat().st_mode), 0o700)
+-        self.assertEqual(destino.stat().st_uid, os.getuid())
++        self.assertEqual(destino.stat().st_uid, pwd.getpwnam("dcifu004").pw_uid)
++
++    def test_carrera_de_perfil_hacia_enlace_no_toca_la_victima(self):
++        """En la forma revisada, el perfil se reemplaza por un enlace durante el fchown."""
++        destino = self.tmp / "spotify" / "jaime" / "config.yml"
++        destino.parent.mkdir(parents=True)
++        victima = self.tmp / "victima"
++        victima.mkdir(mode=0o755)
++        (victima / "no-tocar").write_text("contenido original\n")
++        resguardo = self.tmp / "perfil-anclado"
++        self.nd.PERMITIDOS = (str(self.tmp / "spotify") + "/",)
++        self.nd.RUTAS_DUEÑO_USUARIO = {str(destino)}
++        data = b"device_name: Casa de prueba\n"
++        etapa = self.nd.ESTADO / "staging" / "id-carrera"
++        etapa.mkdir(parents=True)
++        (etapa / "spotify-jaime").write_bytes(data)
++        real_chown, real_fchown, cambiado = os.chown, os.fchown, [False]
++
++        def cambiar_por_enlace():
++            if not cambiado[0]:
++                cambiado[0] = True
++                destino.parent.rename(resguardo)
++                destino.parent.symlink_to(victima, target_is_directory=True)
++
++        def fchown(fd, uid, gid):
++            real_fchown(fd, uid, gid)
++            cambiar_por_enlace()
++
++        def chown(ruta, uid, gid):
++            real_chown(ruta, uid, gid)
++            cambiar_por_enlace()
++
++        pedido = {"id": "id-carrera", "tipo": "desplegar", "items": [{
++            "nombre": "spotify-jaime", "tipo": "archivo", "destino": str(destino),
++            "hash": hashlib.sha256(data).hexdigest(), "modo": 0o600,
++            "dueno": "dcifu004:dcifu004", "despues": [], "igual": False}], "alta": None}
++        with mock.patch.object(os, "fchown", side_effect=fchown), \
++                mock.patch.object(os, "chown", side_effect=chown):
++            estado, _ = self.nd.Escucha().aplicar(pedido)
++        self.assertEqual(estado, "aplicado")
++        self.assertTrue(cambiado[0])
++        self.assertEqual((victima / "no-tocar").read_text(), "contenido original\n")
++        self.assertFalse((victima / "config.yml").exists())
++        self.assertEqual(stat.S_IMODE(victima.stat().st_mode), 0o755)
++
++    def test_fuente_del_tamano_real_del_binario_arm64_pasa_el_tope(self):
++        # El binario v0.10.2 que reprodujo Claude (Diego) mide 17 380 232 bytes ya extraído;
++        # no se disfraza de tar.gz de 5,81 MB. La prueba llama leer_fuente, no una copia del if.
++        ruta = self.nd.VAULT / "10-Proyectos/11-Pi5/pi/spotify/go-librespot-v0.10.5-linux-arm64"
++        ruta.parent.mkdir(parents=True)
++        with open(ruta, "wb") as fh:
++            fh.truncate(17_380_232)
++        with mock.patch.object(self.nd.os.path, "ismount", return_value=True):
++            self.assertEqual(len(self.nd.leer_fuente(str(ruta.relative_to(self.nd.VAULT)))), 17_380_232)
++
++    def test_alta_enlace_solo_admite_el_binario_spotify_fijado(self):
++        destino = "/usr/local/bin/go-librespot"
++        objetivo = "/usr/local/lib/go-librespot/v0.10.5/go-librespot"
++        pid = self.cli(self.nd.alta_enlace, ["spotify-bin", destino, objetivo])
++        pedido = json.loads((self.nd.PEDIDOS / f"{pid}.json").read_text())
++        self.assertEqual(pedido["alta"], {"tipo": "enlace", "destino": destino, "objetivo": objetivo})
++        with self.assertRaisesRegex(ValueError, "lista cerrada"):
++            self.nd.validar_enlace(Path(destino), "/etc/systemd/system/evil.service")
++
++    def test_escucha_tolera_ruta_de_binario_aun_no_creada_y_no_lee_home(self):
++        unidad = (PI / "desplegar-escucha.service").read_text()
++        self.assertIn("-/usr/local/lib/go-librespot", unidad)
++        self.assertIn("ReadWritePaths=-~/.config/systemd/user", unidad)
++        self.assertIn("ProtectHome=tmpfs", unidad)
++        self.assertIn("BindPaths=-~/.config/systemd/user", unidad)
+ 
+ 
+ class EnvioTests(Base):
+## Fase propia fix2: 8040e00..03425d4
+
+ encargos/88a-RESULTADO.md                      | 145 +++++++++++++++++++++----
+ pi/desplegar-escucha.service                   |  10 +-
+ pi/nodo-desplegar.py                           |  34 ++++--
+ pi/spotify/LEEME.md                            |  18 ++-
+ pi/spotify/config-jaime.yml                    |   2 +-
+ pi/spotify/config-pilar.yml                    |   2 +-
+ pi/spotify/fixtures/config_schema.v0.10.2.json |  34 ------
+ pi/spotify/fixtures/config_schema.v0.10.5.json |  63 +++++++++++
+ pi/spotify/spotify@.service                    |   4 +-
+ pi/spotify/test_plantillas.py                  |  14 ++-
+ pi/test_nodo_desplegar.py                      |  70 ++++++++++--
+ 11 files changed, 310 insertions(+), 86 deletions(-)
+
+diff --git a/encargos/88a-RESULTADO.md b/encargos/88a-RESULTADO.md
+index 7ac03c3..74690d1 100644
+--- a/encargos/88a-RESULTADO.md
++++ b/encargos/88a-RESULTADO.md
+@@ -1,4 +1,4 @@
+-# 88a — resultado de autor (pendiente de asset; no desplegado)
++# 88a — resultado de autor (no desplegado)
+ 
+ ## Estado
+ 
+@@ -16,15 +16,18 @@ sesión de autor.
+ 
+ ## Release fijado
+ 
+-- Versión estable: `v0.10.2` (publicada el 25-09-2026).
+-- Asset arm64: <https://github.com/devgianlu/go-librespot/releases/download/v0.10.2/go-librespot_linux_arm64.tar.gz>
+-- SHA-256 publicado por la página del release para el **archivo tar.gz**:
+-  `800b174f066624edf37caec8266fd08e914e6fd837b2c92a4042aa21c0bafa4d`.
+-- Falta anotar el SHA-256 del archivo `go-librespot` ya extraído; ése es el que debe quedar en
+-  el catálogo y compararse en C1. El digest anterior es el que publica GitHub para el asset,
+-  no un checksum firmado separado por el autor.
+-
+-Los nombres de configuración se comprobaron contra `config_schema.json` de ese tag: son
++- Versión estable fijada: `v0.10.5` (última estable observada el 16-10-2026).
++- Asset arm64: <https://github.com/devgianlu/go-librespot/releases/download/v0.10.5/go-librespot_linux_arm64.tar.gz>
++- SHA-256 del tar.gz publicado por GitHub y reproducido por Claude (Diego):
++  `35274c1d3576090096d3459ecf76ee9c025258d19dc76f0bf724f95c525467e1` (6.137.723 B).
++- SHA-256 del ejecutable extraído, medido por Claude (Diego):
++  `9130ee00613abeb9620cc06fe9bc7080eba73618d547b0c71ec991f3504dc5ff`
++  (17.491.240 B). El asset no quedó disponible en esta shell sin DNS; no se inventó ni se
++  reconstruyó. Por eso aún falta incorporarlo al vault antes de poder hacer su alta real.
++
++Los nombres de configuración se comprobaron contra el `config_schema.json` **completo** de ese
++tag, guardado como `fixtures/config_schema.v0.10.5.json` (hash local
++`96165fdc8a5abc239544bfecc9c49fd020c51b72c0747e6c8d63473cd3f84819`): son
+ `zeroconf_enabled`, `initial_volume`, `server.address`, `server.port`, `credentials.type` y
+ `audio_backend`. Se dejó en `fixtures/` el extracto fiel de las ramas que usan las plantillas;
+ antes de aprobar hay que reemplazarlo por el `config_schema.json` completo del mismo tag, que no
+@@ -36,9 +39,9 @@ pudo descargarse desde esta shell.
+ |---|---|---|
+ | `pi/spotify/config-jaime.yml` | `/opt/nodo/datos/spotify/jaime/config.yml` | `dcifu004:dcifu004 0600`; carpeta `0700` |
+ | `pi/spotify/config-pilar.yml` | `/opt/nodo/datos/spotify/pilar/config.yml` | `dcifu004:dcifu004 0600`; carpeta `0700` |
+-| `pi/spotify/spotify@.service` | `~/.config/systemd/user/spotify@.service` | `root:root 0644` |
++| `pi/spotify/spotify@.service` | `/etc/systemd/user/spotify@.service` | `root:root 0644` |
+ | `pi/spotify/LEEME.md` | no se despliega | — |
+-| `pi/spotify/fixtures/config_schema.v0.10.2.json` | no se despliega | — |
++| `pi/spotify/fixtures/config_schema.v0.10.5.json` | no se despliega | — |
+ | `pi/spotify/test_plantillas.py` | no se despliega | — |
+ | `pi/nodo-desplegar.py` | `/usr/local/bin/nodo-desplegar` (bootstrap excepcional) | `root:root 0755` |
+ | `pi/desplegar-escucha.service` | `/etc/systemd/system/desplegar-escucha.service` (bootstrap excepcional) | `root:root 0644` |
+@@ -51,7 +54,7 @@ Pendiente de materializar desde el release y dar de alta:
+ 
+ | Origen esperado | Destino | Dueño y modo |
+ |---|---|---|
+-| `pi/spotify/go-librespot-v0.10.2-linux-arm64` | `/usr/local/lib/go-librespot/v0.10.2/go-librespot` | `root:root 0755` |
++| `pi/spotify/go-librespot-v0.10.5-linux-arm64` | `/usr/local/lib/go-librespot/v0.10.5/go-librespot` | `root:root 0755` |
+ | enlace a ese archivo | `/usr/local/bin/go-librespot` | `root:root` (enlace) |
+ 
+ El catálogo actual aún no crea enlaces simbólicos: es otro pendiente explícito; no se dejó un
+@@ -90,7 +93,7 @@ systemctl --user daemon-reload && systemctl --user enable --now spotify@jaime sp
+ **C1 — binario y versión.** Una vez calculado y anotado el digest extraído:
+ 
+ ```bash
+-sha256sum /usr/local/lib/go-librespot/v0.10.2/go-librespot && readlink -f /usr/local/bin/go-librespot && /usr/local/bin/go-librespot --version
++sha256sum /usr/local/lib/go-librespot/v0.10.5/go-librespot && readlink -f /usr/local/bin/go-librespot && journalctl --user -u spotify@jaime -n 30 --no-pager -o cat | grep 'running go-librespot'
+ ```
+ 
+ **C2 — ambas instancias activas:**
+@@ -133,20 +136,20 @@ Salida esperada, en orden: `dcifu004:dcifu004 700`, `dcifu004:dcifu004 600`,
+ systemctl --user stop spotify@jaime
+ mv /opt/nodo/datos/spotify/jaime/config.yml /opt/nodo/datos/spotify/jaime/config.yml.c6
+ systemctl --user start spotify@jaime || test $? -eq 1
+-systemctl --user show spotify@jaime -p ActiveState -p Result
++systemctl --user show spotify@jaime -p ActiveState -p ConditionResult -p NRestarts
+ mv /opt/nodo/datos/spotify/jaime/config.yml.c6 /opt/nodo/datos/spotify/jaime/config.yml
+ systemctl --user start spotify@jaime && systemctl --user is-active spotify@jaime
+ ```
+ 
+-La penúltima comprobación debe incluir `ActiveState=inactive` y `Result=condition-failed`; la
+-última debe devolver `active`.
++La penúltima comprobación debe incluir `ActiveState=inactive`, `ConditionResult=no` y
++`NRestarts=0`; la última debe devolver `active`.
+ 
+ ## Pendientes para la corrección
+ 
+ 1. Bajar el asset desde una sesión con red, verificar el SHA-256 publicado y extraer el binario
+    al vault; calcular y registrar su SHA-256 final.
+-2. Guardar el `config_schema.json` completo de `v0.10.2` en `pi/spotify/fixtures/` y volver a
+-   correr la prueba.
++2. Incorporar el asset arm64 real de `v0.10.5` al vault y volver a correr la prueba contra sus
++   bytes, sin sustituirlo por una compilación.
+ 3. Incorporar al catálogo una operación de enlace simbólico, limitada al enlace
+    `/usr/local/bin/go-librespot` → versión fijada, o aprobar otro mecanismo que mantenga el
+    enlace literal exigido.
+@@ -178,13 +181,13 @@ esquema completo reales. Esta shell no resuelve DNS ni abre TCP a GitHub (`curl`
+    perfil por un enlace a una víctima durante `fchown`; verifican que la víctima no recibe ni
+    `config.yml` ni cambio de modo.
+ 4. **[Media] Tope del binario extraído.** `MAX_FUENTE` pasó de 8 a 24 MiB. La prueba llama la
+-   función real `leer_fuente` con 17.380.232 bytes, el tamaño real informado para el binario arm64
++   función real `leer_fuente` con 17.491.240 bytes, el tamaño real informado para el binario arm64
+    extraído por Claude (Diego), no con el tamaño comprimido de 5,81 MB.
+ 5. **[Media] Última versión estable.** Se fijó en el código de enlace la ruta objetivo de
+    `v0.10.5`, que fue la última estable observada por Claude (Diego). Falta bajar y verificar su
+    asset real; por eso no se anota un SHA-256 ni se declara cumplido este hallazgo.
+ 6. **[Media] Forma real del esquema y C1.** La prueba de la unidad corrige el flag real, pero el
+-   fixture sigue siendo el extracto `v0.10.2` y C1 aún no puede ejecutar el binario ni leer su
++   fixture completo aún no podía ejecutarse contra el binario, ni C1 leer su
+    línea `running go-librespot …` desde el journal. No se declara cubierto: requiere descargar el
+    `config_schema.json` completo y el asset de `v0.10.5`.
+ 7. **[Media] Binario, altas y enlace.** Se agregó `nodo-desplegar alta-enlace`, limitado a la
+@@ -230,3 +233,103 @@ rc: plantillas=0 nodo=0 botv3=0 temporizadores=0 compras=0 spotify=2
+ 
+ `systemd-analyze verify` tampoco puede ejecutarse en este sandbox: termina antes de leer la
+ unidad con `SO_PASSCRED failed: Operation not permitted` (rc 1). No se cuenta como prueba verde.
++
++## Arreglos vuelta 2
++
++**Estado conservador: el código y las plantillas quedaron corregidos, pero no se declara
++desplegable hasta que el asset arm64 real quede en el vault.** No se usó `sudo`, no se desplegó,
++no se escribió en `/opt/nodo/datos/spotify`, no se vinculó Spotify y no se tocó n8n ni perfiles.
++La única ambigüedad fue el asset: esta shell sigue sin DNS para GitHub, así que se conserva como
++pendiente explícito en vez de crear un ELF falso con el hash de Claude (Diego).
++
++1. **[Media] La unidad no tenía dueño instalable.** Se mueve a
++   `/etc/systemd/user/spotify@.service`, que es root:root 0755 y la leen los gestores de usuario.
++   Se agregó ese prefijo cerrado al catálogo y al aislamiento del escucha; se retiró la exposición
++   de `/home` y quedó `ProtectHome=yes`. Lo cubre
++   `DuenosSpotifyTests.test_escucha_tolera_ruta_de_binario_aun_no_creada_y_no_lee_home`, que lee
++   la unidad real y llama a `validar_destino()` para el destino real.
++2. **[Media] La carpeta del binario no nacía bajo `ProtectSystem=strict`.** `LEEME.md` deja el
++   único bootstrap, solicitado con `nodo-desplegar sugerir`, para crear
++   `/usr/local/lib/go-librespot` root:root 0755 antes de reiniciar el escucha. No se ejecutó aquí.
++   La misma prueba del punto 1 comprueba la ruta opcional real y la lista de escritura de la
++   unidad; el comando documentado impide que la primera alta dependa de un directorio inexistente.
++3. **[Media] Un FIFO podía colgar el escucha.** `leer_destino()` hace `stat(...,
++   follow_symlinks=False)` y exige un regular de un solo enlace antes de abrirlo; la apertura
++   restante usa `O_NONBLOCK` y compara dispositivo/inodo contra el `stat`. Lo cubre
++   `DuenosSpotifyTests.test_fifo_del_perfil_se_rechaza_sin_esperar_un_escritor`, que crea con
++   `os.mkfifo()` el `config.yml` en la carpeta de perfil y verifica el rechazo inmediato.
++4. **[Media] Versiones mezcladas y etapa incompleta.** Plantillas, fixture y documentación ahora
++   nombran v0.10.5; se registraron URL, tamaños y ambos SHA-256 medidos por Claude (Diego). El
++   fixture es el esquema completo real de v0.10.5, no un extracto. Falta sólo el archivo binario
++   real en el vault: por la falta de DNS de esta sesión, no hay alta real que probar ni se afirma
++   C1--C6. Éste es el pendiente que todavía impide despliegue.
++5. **[Media] Forma real del esquema y verificaciones.**
++   `test_plantillas.py` carga `config_schema.v0.10.5.json` completo y entiende tanto `min` como
++   `minimum`; además prueba que `initial_volume: -1` falla por el `min: 0` real. C1 debe comparar
++   el SHA-256 anterior y obtener la versión desde `journalctl --user -u spotify@jaime` (v0.10.5 no
++   acepta `--version`). Para C6, la comprobación correcta es `ActiveState=inactive`,
++   `ConditionResult=no` y `NRestarts=0`, no `Result=condition-failed`.
++6. **[Media] Tarjeta ciega para binarios.** Si la fuente contiene NUL, el diff ahora dice
++   `binario: N bytes, sha256 …` en vez de decodificar un ELF; el enmascarado conserva ese SHA-256
++   verificable. Lo cubre
++   `DuenosSpotifyTests.test_tarjeta_de_un_elf_muestra_tamano_y_sha_sin_volcar_bytes`, que usa los
++   bytes reales de `/usr/bin/true` (ELF con NUL), pasa por `preparar()` y comprueba la tarjeta que
++   recibiría Telegram.
++7. **[Media] El camino root:root no estaba protegido por suite.**
++   `RootDespliegueTests.test_aplicar_y_revertir_root_por_descriptores_en_namespace_real` ejecuta
++   el camino real bajo `unshare -r`: crea un destino previo, aplica por `Escucha.aplicar()`,
++   verifica uid 0/modo 0755 y revierte desde el respaldo por descriptor. También conserva el
++   rechazo de directorio root inseguro en `escribir_destino`.
++
++### Verificaciones posteriores corregidas
++
++Cuando el asset real esté en el vault, C1 se verifica así (la línea del journal reemplaza el flag
++inexistente):
++
++```bash
++sha256sum /usr/local/lib/go-librespot/v0.10.5/go-librespot && readlink -f /usr/local/bin/go-librespot && journalctl --user -u spotify@jaime -n 30 --no-pager -o cat | grep 'running go-librespot'
++```
++
++C6 conserva el renombre/restauración de la sección anterior, pero después de `start` se consulta:
++
++```bash
++systemctl --user show spotify@jaime -p ActiveState -p ConditionResult -p NRestarts
++```
++
++La salida válida es `ActiveState=inactive`, `ConditionResult=no` y `NRestarts=0`; `start` puede
++devolver 0 aunque la condición no se cumpla.
++
++### Suites ejecutadas (salida real, sin despliegue)
++
++```text
++$ python3 pi/spotify/test_plantillas.py
++Ran 3 tests in 0.001s
++OK
++
++$ python3 pi/test_nodo_desplegar.py
++Ran 87 tests in 4.455s
++OK
++
++$ python3 botv3/test_botv3.py
++Ran 490 tests in 16.640s
++OK (skipped=4)
++
++$ python3 botv3/test_temporizadores.py
++  ok  0660 tras deshacer
++  ok  0660 tras marcar avisadas
++✅ todo en verde
++
++$ python3 botv3/test_compras.py
++  ok  deja pasar «lava el carro»
++  ok  deja pasar «saca el auto del carro»
++✅ todo en verde
++
++$ python3 botv3/test_spotify.py
++python3: can't open file '/opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/botv3/test_spotify.py': [Errno 2] No such file or directory
++
++rc: plantillas=0 nodo=0 botv3=0 temporizadores=0 compras=0 spotify=2
++```
++
++`botv3/test_spotify.py` no existe en este árbol; conserva el rc 2 que ya constaba en la línea
++base y no se simula una suite inexistente. Los cuatro skips de `test_botv3.py` corresponden a
++sockets locales que el sandbox prohíbe, no a las rutas Spotify.
+diff --git a/pi/desplegar-escucha.service b/pi/desplegar-escucha.service
+index 436aaa2..e6ed569 100644
+--- a/pi/desplegar-escucha.service
++++ b/pi/desplegar-escucha.service
+@@ -25,16 +25,14 @@ RestartSec=10
+ # deja todo de sólo lectura salvo esta lista, que repite PERMITIDOS del script. Si el
+ # código tiene un bug, /etc/sudoers, /etc/ssh y /etc/pam.d siguen sin poder escribirse.
+ ProtectSystem=strict
+-ReadWritePaths=/etc/systemd/system /usr/local/bin -/usr/local/lib/go-librespot /opt/nodo /opt/botv3 -/opt/captura
+-ReadWritePaths=-~/.config/systemd/user
++ReadWritePaths=/etc/systemd/system /etc/systemd/user /usr/local/bin -/usr/local/lib/go-librespot /opt/nodo /opt/botv3 -/opt/captura
+ ReadWritePaths=/var/spool/nodo-desplegar /var/lib/nodo-desplegar /etc/nodo/desplegar
+ # El guión: si el volumen está cerrado al arrancar la ruta no existe y la unidad fallaría.
+ # El script igual rechaza secretos/ por su cuenta; esto es la segunda capa.
+ InaccessiblePaths=-/opt/nodo/datos/secretos
+-# Sólo se hace visible la carpeta de la unidad de usuario; ni ~/.ssh ni las carpetas de las IA
+-# quedan legibles para este proceso root.
+-ProtectHome=tmpfs
+-BindPaths=-~/.config/systemd/user
++# No hace falta leer /home: la unidad de usuario se instala en /etc/systemd/user, que systemd
++# comparte con todos los gestores de usuario.
++ProtectHome=yes
+ PrivateTmp=yes
+ NoNewPrivileges=yes
+ ProtectKernelModules=yes
+diff --git a/pi/nodo-desplegar.py b/pi/nodo-desplegar.py
+index eea213c..fca3408 100644
+--- a/pi/nodo-desplegar.py
++++ b/pi/nodo-desplegar.py
+@@ -147,9 +147,10 @@ MONTAJE = Path("/opt/nodo/datos")
+ # (el que mide el tope de `enviar`) se pueden restar.
+ ARRANQUE = Path("/proc/sys/kernel/random/boot_id")
+ 
+-PERMITIDOS = ("/etc/systemd/system/", "/usr/local/bin/", "/usr/local/lib/go-librespot/",
++PERMITIDOS = ("/etc/systemd/system/", "/etc/systemd/user/", "/usr/local/bin/", "/usr/local/lib/go-librespot/",
+               "/opt/nodo/", "/opt/botv3/", "/opt/captura/", "/opt/nodo/datos/spotify/")
+-PERMITIDOS_EXACTOS = {"~/.config/systemd/user/spotify@.service"}
++# No quedan excepciones de archivo único: Spotify usa el prefijo de /etc/systemd/user.
++PERMITIDOS_EXACTOS: set[str] = set()
+ PROHIBIDOS = ("/etc/sudoers", "/etc/pam.d", "/etc/ssh", "/etc/nodo", "/etc/fstab",
+               "/etc/crypttab", "/etc/passwd", "/etc/shadow", "/etc/group", "/root",
+               "/opt/nodo/datos/secretos", "/opt/nodo/datos/srv", "/opt/nodo/.env",
+@@ -178,7 +179,9 @@ RE_CLAVES_UNIDAD = re.compile(
+ RE_SECRETO = re.compile(r"(?i)((?:token|key|secret|password|passwd|pass|api)[\w-]*\s*[=:]\s*)\S+")
+ # Sin "/" y no a mitad de una ruta: la primera version tapaba la ruta del respaldo
+ # (/opt/nodo/datos/botv3/deploy-backups/desplegar-<id>) como si fuera un token.
+-RE_LARGO = re.compile(r"(?<![\w/.-])[A-Za-z0-9+_=-]{32,}")
++# Un SHA-256 de una tarjeta de despliegue es justamente la prueba verificable que se pide;
++# los demás blobs largos se siguen ocultando como posible secreto.
++RE_LARGO = re.compile(r"(?<![\w/.-])(?<!sha256 )[A-Za-z0-9+_=-]{32,}")
+ 
+ 
+ # ─────────────────────────── lado de la IA (sin root) ───────────────────────────
+@@ -505,12 +508,21 @@ def leer_destino(destino: Path) -> bytes | None:
+         return None
+     try:
+         try:
+-            fd = os.open(destino.name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=padre)
++            # Primero se mira el nombre sin seguirlo. Abrir un FIFO en modo lectura antes de
++            # saber qué es espera a un escritor y deja colgado al único escucha.
++            esperado = os.stat(destino.name, dir_fd=padre, follow_symlinks=False)
++        except FileNotFoundError:
++            return None
++        if not stat.S_ISREG(esperado.st_mode) or esperado.st_nlink != 1:
++            raise ValueError(f"destino no es archivo regular seguro: {destino}")
++        try:
++            fd = os.open(destino.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=padre)
+         except FileNotFoundError:
+             return None
+         try:
+             st = os.fstat(fd)
+-            if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1:
++            if (not stat.S_ISREG(st.st_mode) or st.st_nlink != 1
++                    or (st.st_dev, st.st_ino) != (esperado.st_dev, esperado.st_ino)):
+                 raise ValueError(f"destino no es archivo regular seguro: {destino}")
+             with os.fdopen(fd, "rb", closefd=False) as fh:
+                 return fh.read()
+@@ -932,10 +944,14 @@ class Escucha:
+                 continue
+             cambios += 1
+             rojos += marcas(destino, actual, nuevo)
+-            d = difflib.unified_diff((actual or b"").decode(errors="replace").splitlines(),
+-                                     nuevo.decode(errors="replace").splitlines(),
+-                                     f"actual {destino.name}", "nuevo", n=1, lineterm="")
+-            diffs.append("\n".join(list(d)[2:]))
++            if b"\0" in nuevo or (actual is not None and b"\0" in actual):
++                anterior = f", anterior sha256 {hashlib.sha256(actual).hexdigest()}" if actual is not None else ""
++                diffs.append(f"binario: {len(nuevo)} bytes, sha256 {h}{anterior}")
++            else:
++                d = difflib.unified_diff((actual or b"").decode(errors="replace").splitlines(),
++                                         nuevo.decode(errors="replace").splitlines(),
++                                         f"actual {destino.name}", "nuevo", n=1, lineterm="")
++                diffs.append("\n".join(list(d)[2:]))
+ 
+         if cambios == 0 and tipo == "desplegar":
+             shutil.rmtree(ESTADO / "staging" / pid, ignore_errors=True)
+diff --git a/pi/spotify/LEEME.md b/pi/spotify/LEEME.md
+index 835dd4b..0fa95a3 100644
+--- a/pi/spotify/LEEME.md
++++ b/pi/spotify/LEEME.md
+@@ -8,13 +8,27 @@ que en la Pi es `pipewire-pulse`, y por tanto conserva el *sink* (salida) por de
+ 
+ La cola instala el binario armado en `/usr/local/lib/go-librespot/v0.10.5/go-librespot` y deja
+ `/usr/local/bin/go-librespot` como enlace simbólico a esa versión. Instala esta unidad en
+-`~/.config/systemd/user/spotify@.service` y las dos plantillas en el volumen LUKS:
++`/etc/systemd/user/spotify@.service` y las dos plantillas en el volumen LUKS:
+ 
+ | Origen | Destino | Dueño y modo |
+ |---|---|---|
+ | `config-jaime.yml` | `/opt/nodo/datos/spotify/jaime/config.yml` | `dcifu004:dcifu004 0600` (carpeta `0700`) |
+ | `config-pilar.yml` | `/opt/nodo/datos/spotify/pilar/config.yml` | `dcifu004:dcifu004 0600` (carpeta `0700`) |
+-| `spotify@.service` | `~/.config/systemd/user/spotify@.service` | `root:root 0644` |
++| `spotify@.service` | `/etc/systemd/user/spotify@.service` | `root:root 0644` |
++
++### Bootstrap único del escucha
++
++Antes de reiniciar por primera vez `desplegar-escucha` con esta versión, su carpeta de binarios
++debe existir: `ReadWritePaths=-/usr/local/lib/go-librespot` la tolera ausente, pero no la crea
++bajo `ProtectSystem=strict`. La cola debe pedir —sin ejecutarlo desde esta etapa— este único
++comando manual mediante `nodo-desplegar sugerir`:
++
++```bash
++nodo-desplegar sugerir --motivo "Preparar directorio root seguro para instalar go-librespot" -- sudo install -d -m 0755 -o root -g root /usr/local/lib/go-librespot && sudo systemctl daemon-reload && sudo systemctl restart desplegar-escucha
++```
++
++Sólo después de que Diego confirme ese paso, el catálogo puede instalar el binario y la unidad.
++La unidad vive en `/etc/systemd/user`, por lo que el escucha no necesita ver `/home`.
+ 
+ Después de que la cola haya desplegado todo, como `dcifu004` se habilitan y arrancan las dos
+ instancias una sola vez:
+diff --git a/pi/spotify/config-jaime.yml b/pi/spotify/config-jaime.yml
+index ef15876..4a20a14 100644
+--- a/pi/spotify/config-jaime.yml
++++ b/pi/spotify/config-jaime.yml
+@@ -1,4 +1,4 @@
+-# go-librespot v0.10.2 — esquema: fixtures/config_schema.v0.10.2.json
++# go-librespot v0.10.5 — esquema: fixtures/config_schema.v0.10.5.json
+ # La credencial efectiva queda en state.json, creado por go-librespot en esta misma carpeta.
+ device_name: "Casa · Jaime"
+ audio_backend: pulseaudio
+diff --git a/pi/spotify/config-pilar.yml b/pi/spotify/config-pilar.yml
+index b9bef91..5babc73 100644
+--- a/pi/spotify/config-pilar.yml
++++ b/pi/spotify/config-pilar.yml
+@@ -1,4 +1,4 @@
+-# go-librespot v0.10.2 — esquema: fixtures/config_schema.v0.10.2.json
++# go-librespot v0.10.5 — esquema: fixtures/config_schema.v0.10.5.json
+ # La credencial efectiva queda en state.json, creado por go-librespot en esta misma carpeta.
+ device_name: "Casa · Pilar"
+ audio_backend: pulseaudio
+diff --git a/pi/spotify/fixtures/config_schema.v0.10.2.json b/pi/spotify/fixtures/config_schema.v0.10.2.json
+deleted file mode 100644
+index 8ea8841..0000000
+--- a/pi/spotify/fixtures/config_schema.v0.10.2.json
++++ /dev/null
+@@ -1,34 +0,0 @@
+-{
+-  "$schema": "http://json-schema.org/draft-06/schema#",
+-  "$ref": "#/definitions/config",
+-  "title": "Extracto de config_schema.json de go-librespot v0.10.2",
+-  "source": "https://raw.githubusercontent.com/devgianlu/go-librespot/v0.10.2/config_schema.json",
+-  "note": "Extracto fiel de las ramas que usan las plantillas de este encargo; la prueba rechaza claves no declaradas en ellas.",
+-  "definitions": {
+-    "config": {
+-      "type": "object",
+-      "additionalProperties": false,
+-      "properties": {
+-        "device_name": {"type": "string", "default": "go-librespot"},
+-        "audio_backend": {"type": "string", "enum": ["alsa", "pulseaudio", "pipe", "audio-toolbox", "wasapi"], "default": "alsa"},
+-        "zeroconf_enabled": {"type": "boolean", "default": false},
+-        "credentials": {
+-          "type": "object",
+-          "properties": {
+-            "type": {"type": "string", "enum": ["interactive", "device_auth", "spotify_token", "zeroconf"], "default": "zeroconf"}
+-          }
+-        },
+-        "server": {
+-          "type": "object",
+-          "properties": {
+-            "enabled": {"type": "boolean", "default": false},
+-            "address": {"type": "string", "default": "localhost"},
+-            "port": {"type": "integer", "default": 0}
+-          }
+-        },
+-        "initial_volume": {"type": "integer", "minimum": 0, "default": 100},
+-        "bitrate": {"type": "integer", "enum": [96, 160, 320], "default": 160}
+-      }
+-    }
+-  }
+-}
+diff --git a/pi/spotify/fixtures/config_schema.v0.10.5.json b/pi/spotify/fixtures/config_schema.v0.10.5.json
+new file mode 100644
+index 0000000..4d32fe1
+--- /dev/null
++++ b/pi/spotify/fixtures/config_schema.v0.10.5.json
+@@ -0,0 +1,63 @@
++{
++  "$schema": "http://json-schema.org/draft-06/schema#",
++  "$ref": "#/definitions/config",
++  "definitions": {
++    "config": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "log_level": {"type": "string", "description": "Logging level for the application", "enum": ["panic", "fatal", "error", "warn", "warning", "info", "debug", "trace"], "default": "info"},
++        "log_disable_timestamp": {"type": "boolean", "description": "Whether to disable timestamps in log output", "default": false},
++        "device_id": {"type": "string", "description": "The device ID in hex", "minLength": 40, "maxLength": 40},
++        "device_name": {"type": "string", "description": "The device name showed in the Spotify UI", "default": "go-librespot"},
++        "device_type": {"type": "string", "description": "The device type showed in the Spotify UI", "enum": ["computer", "tablet", "smartphone", "speaker", "tv", "avr", "stb", "audio_dongle", "game_console", "cast_video", "cast_audio", "automobile", "smartwatch", "chromebook", "car_thing", "observer", "home_thing"], "default": "computer"},
++        "client_token": {"type": "string", "description": "The Spotify client token"},
++        "audio_backend": {"type": "string", "description": "Which audio backend (API) should be used for playback, leave empty for default", "enum": ["alsa", "pulseaudio", "pipe", "audio-toolbox", "wasapi"], "default": "alsa"},
++        "audio_backend_runtime_socket": {"type": "string", "description": "The audio backend runtime socket, useful only with pulseaudio as a backend", "default": ""},
++        "audio_device": {"type": "string", "description": "Which audio device should be used for playback, leave empty for default", "default": "default"},
++        "mixer_device": {"type": "string", "description": "Which audio mixer should be used for volume control, leave empty to disable mixer control", "default": ""},
++        "mixer_control_name": {"type": "string", "description": "Which control should be used, leave empty for default. Only useful in combination with 'mixer_device'", "default": "Master"},
++        "audio_buffer_time": {"type": "integer", "description": "The audio buffer time in microseconds. Available for ALSA backend only, leave empty for default", "default": 0},
++        "audio_period_count": {"type": "integer", "description": "The number of audio periods to request. Available for ALSA backend only, leave empty for default", "default": 0},
++        "audio_output_pipe": {"type": "string", "description": "The path to an existing FIFO for the pipe audio backend", "default": ""},
++        "audio_output_pipe_format": {"type": "string", "description": "The format of the audio data written to the pipe", "enum": ["s16le", "s32le", "f32le"], "default": "s16le"},
++        "audio_output_pipe_wait_for_reader": {"type": "boolean", "description": "Whether to wait for a reader to connect to the FIFO before starting playback, instead of failing if none is present. Useful for readers (e.g. snapcast with dryout) that only connect when data is expected", "default": false},
++        "server": {
++          "type": "object",
++          "properties": {
++            "enabled": {"type": "boolean", "description": "Whether to enable the API server", "default": false},
++            "address": {"type": "string", "description": "Which address to bind for the API server", "default": "localhost"},
++            "port": {"type": "integer", "description": "Which port to bind for the API server", "default": 0},
++            "allow_origin": {"type": "string", "description": "The value for the Access-Control-Allow-Origin header", "default": ""},
++            "cert_file": {"type": "string", "description": "File path of the certificate file to use for TLS", "default": ""},
++            "key_file": {"type": "string", "description": "File path of the private key file to use for TLS", "default": ""},
++            "image_size": {"type": "string", "description": "The preferred size of album cover images served by the API server", "enum": ["default", "small", "large", "xlarge"]}
++          }
++        },
++        "cache": {"type": "object", "description": "On-disk cache for downloaded (encrypted) audio files", "properties": {"enabled": {"type": "boolean", "description": "Whether to cache downloaded audio files on disk to avoid re-downloading them from the CDN", "default": false}, "dir": {"type": "string", "description": "Directory to store cached audio files (defaults to the XDG cache directory, e.g. $XDG_CACHE_HOME/go-librespot or $HOME/.cache/go-librespot)", "default": ""}, "size_limit": {"type": "string", "description": "Maximum total size of the audio cache before the least-recently-used files are evicted (e.g. '1GB', '500MB'; '0' for unlimited)", "default": "1GB"}}},
++        "zeroconf_enabled": {"type": "boolean", "description": "Whether Zeroconf discovery should always be enabled (even when logging in with credentials)", "default": false},
++        "zeroconf_port": {"type": "integer", "description": "The port to use for the Zeroconf service (empty for random)", "default": 0},
++        "zeroconf_backend": {"type": "string", "description": "The mDNS backend to use for Zeroconf service registration. 'builtin' uses the built-in mDNS responder, 'avahi' uses an existing avahi-daemon via D-Bus", "enum": ["builtin", "avahi"], "default": "builtin"},
++        "zeroconf_interfaces_to_advertise": {"type": "array", "description": "List of network interfaces that will be advertised through zeroconf (empty to advertise all present interfaces)", "default": []},
++        "credentials": {"type": "object", "properties": {"type": {"type": "string", "description": "The authentication method", "enum": ["interactive", "device_auth", "spotify_token", "zeroconf"], "default": "zeroconf"}, "interactive": {"type": "object", "description": "Authenticate with the interactive browser UI", "properties": {"callback_port": {"type": "integer", "default": 0}}}, "device_auth": {"type": "object", "description": "Authenticate by entering a code at spotify.com/pair on another device", "properties": {}}, "spotify_token": {"type": "object", "description": "Authentication with username and access token", "properties": {"username": {"type": "string", "default": ""}, "access_token": {"type": "string", "default": ""}}}, "zeroconf": {"type": "object", "description": "Authenticate with Zeroconf (auto discovery)", "properties": {"persist_credentials": {"type": "boolean", "description": "Whether credentials from the Zeroconf session should be persisted", "default": false}}}}},
++        "bitrate": {"type": "integer", "description": "The preferred bitrate for audio playback, default is 160kbps", "enum": [96, 160, 320], "default": 160},
++        "volume_steps": {"type": "integer", "description": "The number of volume steps", "min": 1, "default": 100},
++        "initial_volume": {"type": "integer", "description": "Initial volume in steps (not applied to the mixer device)", "min": 0, "default": 100},
++        "ignore_last_volume": {"type": "boolean", "description": "Whether the last saved volume should be ignored", "default": false},
++        "normalisation_disabled": {"type": "boolean", "description": "Whether track/album normalisation should be disabled", "default": false},
++        "normalisation_use_album_gain": {"type": "boolean", "description": "Whether album gain should be used instead of track gain", "default": false},
++        "normalisation_pregain": {"type": "number", "description": "The normalisation pregain to apply to track/album normalisation factors", "default": 0},
++        "crossfade_duration": {"type": "integer", "description": "Crossfade duration between tracks in milliseconds, 0 to disable", "default": 0, "minimum": 0},
++        "skip_debounce_ms": {"type": "integer", "description": "How long to wait after a burst of next/prev commands before loading the selected track, so rapid skipping costs one audio-key request instead of one per press. The first skip of a burst always loads immediately, so this only affects how long the daemon waits to see whether another skip follows. 0 disables debouncing", "default": 600, "minimum": 0},
++        "external_volume": {"type": "boolean", "description": "Whether volume is controlled externally, if true the app will not pre-multiply samples", "default": false},
++        "disable_autoplay": {"type": "boolean", "description": "Whether autoplay of more songs should be disabled", "default": false},
++        "mpris_enabled": {"type": "boolean", "description": "Enables MPRIS communication with D-Bus on Linux, and the Now Playing widget and media keys on macOS", "default": false},
++        "flac_enabled": {"type": "boolean", "description": "Whether FLAC files should be preferred over other formats when available", "default": false},
++        "prefer_firewall_friendly_ports": {"type": "boolean", "description": "Whether to try Spotify accesspoints on ports 443 and 80 before the default 4070, for networks that only allow those outbound. Does not affect the dealer or spclient, which already use 443", "default": false},
++        "metadata": {"type": "object", "description": "Opt-in in-memory track metadata cache behind the next_track status field and the GET /context/tracks listing", "properties": {"enabled": {"type": "boolean", "description": "Whether to cache track metadata and batch-fetch it for the tracks around the playback position, enabling the next_track status field and the /context/tracks listing. Disabled, the daemon performs no metadata request playback does not need", "default": false}, "context_sweep": {"type": "boolean", "description": "Whether to additionally resolve metadata for the whole context when one starts playing, so every track is known before the user skips anywhere. Requires enabled", "default": false}, "max_tracks": {"type": "integer", "description": "Maximum number of tracks of a context to enumerate and sweep", "default": 800, "minimum": 1}}}
++      },
++      "required": [],
++      "title": "config"
++    }
++  }
++}
+diff --git a/pi/spotify/spotify@.service b/pi/spotify/spotify@.service
+index 7ec035f..47c2b6b 100644
+--- a/pi/spotify/spotify@.service
++++ b/pi/spotify/spotify@.service
+@@ -1,5 +1,5 @@
+-# Receptor Spotify Connect por perfil. Es una unidad de USUARIO de dcifu004:
+-# ~/.config/systemd/user/spotify@.service, con linger activo.
++# Receptor Spotify Connect por perfil. Es una unidad de USUARIO de dcifu004, instalada en
++# /etc/systemd/user/spotify@.service (directorio root seguro que leen los gestores de usuario).
+ #
+ # Cada instancia usa una carpeta distinta porque go-librespot guarda allí state.json
+ # (credencial), config.yml y lockfile. Si LUKS está cerrado o falta la plantilla,
+diff --git a/pi/spotify/test_plantillas.py b/pi/spotify/test_plantillas.py
+index 1b10cb3..61a8b76 100644
+--- a/pi/spotify/test_plantillas.py
++++ b/pi/spotify/test_plantillas.py
+@@ -2,12 +2,13 @@
+ """Comprueba las plantillas 88a sin red ni escrituras fuera de este árbol."""
+ from __future__ import annotations
+ 
++import copy
+ import json
+ import unittest
+ from pathlib import Path
+ 
+ RAIZ = Path(__file__).resolve().parent
+-ESQUEMA = json.loads((RAIZ / "fixtures" / "config_schema.v0.10.2.json").read_text())
++ESQUEMA = json.loads((RAIZ / "fixtures" / "config_schema.v0.10.5.json").read_text())
+ 
+ 
+ def leer_yaml_simple(ruta: Path) -> dict:
+@@ -63,8 +64,9 @@ def validar(valor, esquema, ruta="config"):
+         raise AssertionError(f"{ruta}: se esperaba entero")
+     if "enum" in esquema and valor not in esquema["enum"]:
+         raise AssertionError(f"{ruta}: {valor!r} no pertenece a {esquema['enum']}")
+-    if "minimum" in esquema and valor < esquema["minimum"]:
+-        raise AssertionError(f"{ruta}: menor que {esquema['minimum']}")
++    minimo = esquema.get("minimum", esquema.get("min"))
++    if minimo is not None and valor < minimo:
++        raise AssertionError(f"{ruta}: menor que {minimo}")
+ 
+ 
+ class PlantillasTests(unittest.TestCase):
+@@ -77,6 +79,12 @@ class PlantillasTests(unittest.TestCase):
+         esquema = ESQUEMA["definitions"]["config"]
+         validar(self.jaime, esquema)
+         validar(self.pilar, esquema)
++        # v0.10.5 usa la extensión `min` (no `minimum`) para initial_volume: este caso
++        # demuestra que se está ejecutando la restricción real, no un extracto inventado.
++        invalida = copy.deepcopy(self.jaime)
++        invalida["initial_volume"] = -1
++        with self.assertRaisesRegex(AssertionError, "menor que 0"):
++            validar(invalida, esquema)
+ 
+     def test_aislamiento_por_perfil_y_loopback(self):
+         self.assertEqual(self.jaime["server"]["address"], "127.0.0.1")
+diff --git a/pi/test_nodo_desplegar.py b/pi/test_nodo_desplegar.py
+index 323bb32..3837795 100644
+--- a/pi/test_nodo_desplegar.py
++++ b/pi/test_nodo_desplegar.py
+@@ -19,6 +19,7 @@ import pwd
+ import secrets
+ import shutil
+ import stat
++import subprocess
+ import tempfile
+ import unittest
+ import urllib.error
+@@ -414,14 +415,42 @@ class DuenosSpotifyTests(Base):
+         self.assertEqual(stat.S_IMODE(victima.stat().st_mode), 0o755)
+ 
+     def test_fuente_del_tamano_real_del_binario_arm64_pasa_el_tope(self):
+-        # El binario v0.10.2 que reprodujo Claude (Diego) mide 17 380 232 bytes ya extraído;
+-        # no se disfraza de tar.gz de 5,81 MB. La prueba llama leer_fuente, no una copia del if.
++        # El ejecutable v0.10.5 extraído por Claude (Diego) mide 17 491 240 bytes; no se
++        # disfraza de tar.gz. La prueba llama leer_fuente, no una copia del límite.
+         ruta = self.nd.VAULT / "10-Proyectos/11-Pi5/pi/spotify/go-librespot-v0.10.5-linux-arm64"
+         ruta.parent.mkdir(parents=True)
+         with open(ruta, "wb") as fh:
+-            fh.truncate(17_380_232)
++            fh.truncate(17_491_240)
+         with mock.patch.object(self.nd.os.path, "ismount", return_value=True):
+-            self.assertEqual(len(self.nd.leer_fuente(str(ruta.relative_to(self.nd.VAULT)))), 17_380_232)
++            self.assertEqual(len(self.nd.leer_fuente(str(ruta.relative_to(self.nd.VAULT)))), 17_491_240)
++
++    def test_fifo_del_perfil_se_rechaza_sin_esperar_un_escritor(self):
++        destino = self.tmp / "spotify" / "jaime" / "config.yml"
++        destino.parent.mkdir(parents=True)
++        os.mkfifo(destino)
++        # Forma real: el perfil es 0700 de dcifu004 y puede contener un FIFO. Antes `open`
++        # esperaba indefinidamente a su escritor; stat por descriptor lo rechaza antes.
++        with self.assertRaisesRegex(ValueError, "archivo regular seguro"):
++            self.nd.leer_destino(destino)
++
++    def test_tarjeta_de_un_elf_muestra_tamano_y_sha_sin_volcar_bytes(self):
++        fuente = self.nd.VAULT / "10-Proyectos/11-Pi5/pi/spotify/elf-real"
++        fuente.parent.mkdir(parents=True)
++        datos = Path("/usr/bin/true").read_bytes()
++        self.assertIn(b"\0", datos, "la prueba debe usar un ELF real, no texto con apariencia binaria")
++        fuente.write_bytes(datos)
++        destino = self.tmp / "opt" / "bin" / "elf-real"
++        self.nd.PERMITIDOS = (str(self.tmp / "opt") + "/",)
++        self.nd.CATALOGO.write_text("[entrada.elf-real]\n"
++                                   f"fuente = \"{fuente.relative_to(self.nd.VAULT)}\"\n"
++                                   f"destino = \"{destino}\"\nmodo = \"0755\"\n"
++                                   "dueno = \"root:root\"\ndespues = []\n")
++        pedido = {"tipo": "desplegar", "entradas": [{"nombre": "elf-real", "hash": ""}], "motivo": "ELF real"}
++        with mock.patch.object(self.nd.os.path, "ismount", return_value=True):
++            self.assertTrue(self.nd.Escucha().preparar("20261025-120000-eeee", os.getuid(), pedido, 0))
++        tarjeta = self.tg.llamadas[-1]["campos"]["text"]
++        self.assertIn(f"binario: {len(datos)} bytes, sha256 {hashlib.sha256(datos).hexdigest()}", tarjeta)
++        self.assertNotIn("\\x00", tarjeta)
+ 
+     def test_alta_enlace_solo_admite_el_binario_spotify_fijado(self):
+         destino = "/usr/local/bin/go-librespot"
+@@ -435,9 +464,36 @@ class DuenosSpotifyTests(Base):
+     def test_escucha_tolera_ruta_de_binario_aun_no_creada_y_no_lee_home(self):
+         unidad = (PI / "desplegar-escucha.service").read_text()
+         self.assertIn("-/usr/local/lib/go-librespot", unidad)
+-        self.assertIn("ReadWritePaths=-~/.config/systemd/user", unidad)
+-        self.assertIn("ProtectHome=tmpfs", unidad)
+-        self.assertIn("BindPaths=-~/.config/systemd/user", unidad)
++        self.assertIn("/etc/systemd/user", unidad)
++        self.assertIn("ProtectHome=yes", unidad)
++        self.assertNotIn("~", unidad)
++        self.nd.validar_destino(Path("/etc/systemd/user/spotify@.service"))
++
++
++class RootDespliegueTests(unittest.TestCase):
++    def test_aplicar_y_revertir_root_por_descriptores_en_namespace_real(self):
++        """La forma real es uid 0 aislado: aplica, respalda y revierte un archivo root:root."""
++        lineas = [
++            "import hashlib, importlib.util, json, tempfile",
++            "from pathlib import Path",
++            f"spec = importlib.util.spec_from_file_location('nd', {str(SCRIPT)!r})",
++            "nd = importlib.util.module_from_spec(spec); spec.loader.exec_module(nd)",
++            "raiz = Path(tempfile.mkdtemp(prefix='nd-root-'))",
++            "nd.ESTADO, nd.RESPALDOS = raiz / 'estado', raiz / 'respaldos'",
++            "nd.PERMITIDOS, nd.PERMITIDOS_EXACTOS = (str(raiz / 'opt') + '/',), set()",
++            "[(d.mkdir(parents=True, exist_ok=True)) for d in (nd.ESTADO / 'staging' / 'p', nd.RESPALDOS)]",
++            "destino = raiz / 'opt' / 'nuevo' / 'sub' / 'archivo'; destino.parent.mkdir(parents=True)",
++            "destino.write_bytes(b'anterior\\n'); (nd.ESTADO / 'staging' / 'p' / 'archivo').write_bytes(b'nuevo\\n')",
++            "item = {'nombre':'archivo','tipo':'archivo','destino':str(destino),'hash':hashlib.sha256(b'nuevo\\n').hexdigest(),'modo':0o755,'dueno':'root:root','despues':[],'igual':False}",
++            "e = object.__new__(nd.Escucha); e.despues = lambda *a, **k: []",
++            "estado, _ = e.aplicar({'id':'p','tipo':'desplegar','items':[item]}); resp = nd.RESPALDOS / 'desplegar-p'; nuevo = destino.read_bytes()",
++            "e.revertir([(item, True)], resp)",
++            "print(json.dumps({'uid':destino.stat().st_uid,'modo':oct(destino.stat().st_mode & 0o777),'aplicar':estado,'nuevo':nuevo.decode(),'revertido':destino.read_text(),'padre':oct(destino.parent.stat().st_mode & 0o777)}))",
++        ]
++        r = subprocess.run(["unshare", "-r", "python3", "-c", "\n".join(lineas)],
++                           capture_output=True, text=True, check=True)
++        self.assertEqual(json.loads(r.stdout), {"uid": 0, "modo": "0o755", "aplicar": "aplicado",
++                                                 "nuevo": "nuevo\n", "revertido": "anterior\n", "padre": "0o755"})
+ 
+ 
+ class EnvioTests(Base):
+
+## Cambios ajenos (no son de esta etapa: no los revises)
+
+- "37 - Parlante G2000 y Spotify - manual de instalación.html"
+- "37 - Parlante G2000 y Spotify - manual de instalación.md"
+- "38 - Parlante G2000 y Spotify - manual de pruebas.html"
+- "38 - Parlante G2000 y Spotify - manual de pruebas.md"
+- "encargos/88a-decisiones.md"
+- "encargos/88ar-RESULTADO.md"
+- "encargos/88ar1-RESULTADO.md"
+- "encargos/88ar2-RESULTADO.md"
+- "encargos/COLA-ESTADO.md"
+- "encargos/historial.jsonl"

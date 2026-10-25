@@ -17,6 +17,7 @@ El usuario dice cuál. Cada uno tiene su archivo:
 | 92, contador de uso de los bots | `encargos-nube/92-contador-uso-bots.md` |
 | 93, guía de Jaime y Pilar al día | `encargos-nube/93-guia-jaime-pilar.md` |
 | 94, 🔎 auditor de rutas (rama base `base-94`) | `encargos-nube/94-auditor-de-rutas.md` |
+| 88r, revisión cruzada de Spotify (rama base `base-88r`) | `encargos-nube/88r-revision-spotify.md` |
 
 ## Reglas comunes
 

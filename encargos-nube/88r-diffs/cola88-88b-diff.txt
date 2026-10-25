@@ -1,0 +1,1118 @@
+# Diff propio de la etapa 88b (cola cola88)
+
+## Fase propia autor: 6f7e9bb..a59d309
+
+ 35 - Guía de uso de Jaime y Pilar.html      |   5 +
+ 35 - Guía de uso de Jaime y Pilar.md        |   3 +
+ botv3/botv3.py                              | 125 +++++++++++++++++-
+ botv3/fixtures/spotify-search-oxytocin.json |   8 ++
+ botv3/perfiles/jaime.toml                   |   3 +
+ botv3/perfiles/pilar.toml                   |   3 +
+ botv3/spotify.py                            | 191 ++++++++++++++++++++++++++++
+ botv3/test_botv3.py                         |   3 +-
+ botv3/test_spotify.py                       | 153 ++++++++++++++++++++++
+ botv3/update_telegram_commands.py           |  13 +-
+ encargos/88b-RESULTADO.md                   |  88 +++++++++++++
+ encargos/COLA-ESTADO.md                     |  12 ++
+ pi/cargar-clave.py                          |   9 +-
+ pi/test_cuentas_uso.py                      |   3 +-
+ 14 files changed, 610 insertions(+), 9 deletions(-)
+
+diff --git a/35 - Guía de uso de Jaime y Pilar.html b/35 - Guía de uso de Jaime y Pilar.html
+index ea67aad..a69cbe3 100644
+--- a/35 - Guía de uso de Jaime y Pilar.html	
++++ b/35 - Guía de uso de Jaime y Pilar.html	
+@@ -87,6 +87,11 @@ footer{color:var(--mu);font-size:.85rem;margin-top:20px}
+ <div class="row"><span class="lbl">Ejemplos</span>«avísame en 20 minutos» · «alarma a las 7 de la mañana» · «agrega 5 minutos»</div>
+ <div class="row"><span class="lbl">Alcance</span>Cada bot ve sólo los suyos. Cancelar no pide confirmación. Hoy el aviso llega por Telegram; con el parlante, va a sonar. Hasta 10 activos, de 5 segundos a 24 horas</div>
+ </div>
++<div class="card"><h2>🎵 Música (Spotify) <span class="quien">Jaime y Pilar</span></h2>
++<div class="row"><span class="lbl">Comando</span><code>/spotify</code></div>
++<div class="row"><span class="lbl">Por voz</span>«reproduce Oxytocin de Billie Eilish», «pon Oxytocin en Spotify», «pausa la música», «sigue con la música»</div>
++<div class="row"><span class="lbl">Alcance</span>Cada bot usa la cuenta vinculada a su perfil. Al reproducir, pausa el otro receptor si estaba sonando. Por nota de voz deja la confirmación escrita. La primera vez, <code>/spotify</code> entrega el enlace y código para aprobar desde el teléfono; después muestra si está vinculado y qué suena. «pausa» sola sólo toma Spotify cuando hay música sonando.</div>
++</div>
+ <div class="card"><h2>🔁 Órdenes que se repiten <span class="quien">Jaime y Pilar</span></h2>
+ <div class="row"><span class="lbl">Comando</span><code>/ordenes</code> (pausar, reanudar, borrar, renovar)</div>
+ <div class="row"><span class="lbl">Por voz</span>«despiértame de lunes a viernes a las 6:30», «cada domingo recuérdame regar»</div>
+diff --git a/35 - Guía de uso de Jaime y Pilar.md b/35 - Guía de uso de Jaime y Pilar.md
+index 2a7a4a3..183d1f8 100644
+--- a/35 - Guía de uso de Jaime y Pilar.md	
++++ b/35 - Guía de uso de Jaime y Pilar.md	
+@@ -36,6 +36,7 @@ a Pilar. Nada de eso se escribe sin tu toque.
+ | 🌦️ **Clima** | `/menu` → 🌦️ Clima | «va a llover hoy», «cómo va a estar mañana», «hace frío afuera», «va a llover mañana en Puerto Montt», «cambia la comuna del clima a Ñuñoa» | «qué temperatura va a hacer mañana» · «el pronóstico de la semana» · «clima en Ñuñoa» · «pon el clima de Valdivia» · «restablece la comuna del clima» | En Las Condes **o la comuna que elijan**, sin IA. **Otra comuna, una vez:** «clima en Ñuñoa», «el pronóstico de la semana en Valdivia»; contesta en texto y no cambia nada. Sirve con el nombre exacto de una comuna de Chile (las 345 están en la casa; lo que se dice no sale a internet): «clima en Buenos Aires» sigue el camino de una pregunta normal. **Cambiar la comuna fija:** «cambia la comuna del clima a Ñuñoa», «el clima de ahora en adelante en Viña del Mar», o el botón «📍 Comuna» bajo la imagen (compartir la ubicación —vale 10 min—, escribir la comuna o «Volver a Las Condes»); **siempre pide ✅**. Con un nombre a medias («Puerto», «San») muestra hasta 6 comunas para elegir. De la ubicación se guarda sólo la comuna más cercana. Cada bot tiene la suya: la de Jaime no cambia la de Pilar. **El botón manda una imagen de hoy, mañana y pasado** (cuándo llueve, hora a hora, con horarios aproximados «~12:15») y un pie de dos líneas; si la imagen no se puede hacer, manda el texto del clima de hoy. **Debajo de la imagen, «⏰ Programar aviso»**: «L–V 7:30 · S–D 10:00», «Todos los días 8:00» u «Otro horario…»; con un aviso puesto aparecen «Cambiar» y «Pausar»/«Reanudar». **El aviso llega solo, a esa hora, como la misma imagen**; los feriados usan el horario de fin de semana. También se pide escrito o dictado: «mándame el clima de lunes a viernes a las 7:30», «pausa el aviso del clima», «qué avisos de clima tengo». Las frases siguen en texto y se dicen por voz, salvo la semana, que va al chat. «temperatura del living» sigue yendo a la casa (sensores); «clima laboral», a una pregunta normal |
+ | 🕐 **Hora y fecha** | — | «qué hora es», «qué día es hoy» | → «Son las 7 y 20 de la tarde» · «Hoy es martes 21 de octubre» | Instantáneo y sin internet |
+ | ⏰ **Temporizadores** | `/temporizadores` (`/timer 10 min tallarines`, `/alarmas`) | «temporizador de 10 minutos para los tallarines», «cuánto le queda», «cancela el de los huevos» | «avísame en 20 minutos» · «alarma a las 7 de la mañana» · «agrega 5 minutos» | Cada bot ve sólo los suyos. Cancelar no pide confirmación. Hoy el aviso llega por Telegram; con el parlante, va a sonar. Hasta 10 activos, de 5 segundos a 24 horas |
++| 🎵 **Música (Spotify)** | `/spotify` | «reproduce Oxytocin de Billie Eilish», «pon Oxytocin en Spotify», «pausa la música», «sigue con la música» | «reproduce música de Billie Eilish» · «pausa Spotify» | Vale para los dos bots y usa la cuenta vinculada a cada perfil. Al pedir una canción, pausa el otro receptor si estaba sonando. Por nota de voz deja la confirmación escrita (no la lee). La primera vez: `/spotify` muestra el enlace y código para aprobar desde el teléfono; después muestra si está vinculado y qué suena. «pausa» sola sólo toma Spotify si hay música sonando. |
+ | 🔁 **Órdenes que se repiten** | `/ordenes` (pausar, reanudar, borrar, renovar) | «despiértame de lunes a viernes a las 6:30», «cada domingo recuérdame regar» | «pausa la alarma de los lunes» · «cada 2 horas recuérdame tomar agua» · «… por 2 semanas» · «… hasta fin de mes» | Por voz, **crear pide ✅** en el chat; escrita, se crea y trae ↩️ Deshacer. Pausar, reanudar y borrar no piden confirmación y se pueden deshacer durante una hora. Hasta 10 por bot, y como mucho una cada hora (más seguido es un temporizador). Los avisos del clima aparecen acá con 🌦️ y los mismos botones |
+ | 🩺 **Estado del nodo** | `/estado` | «cómo está la Pi» | — | Cómo está la Pi de la casa. Por voz dice la versión corta; el detalle va escrito |
+ | 💳 **Uso de cuotas** | `/uso` | «cuánta cuota queda» | — | Cuánto queda de las cuentas de Claude y de Codex. **La respuesta es escrita**, también si se pregunta por voz (decisión del 19-10) |
+@@ -50,6 +51,7 @@ a Pilar. Nada de eso se escribe sin tu toque.
+ **Tiene:**
+ 
+ - La misma lista de compras de la casa que Jaime.
++- Música con Spotify de Camila: `/spotify` para vincular una vez desde su teléfono.
+ - Gastos y boletas, con Cami como quien paga por defecto.
+ - Buscar, clima (con su propia comuna y su propio aviso), hora y fecha.
+ - Sus propios temporizadores y órdenes: no ve los de Jaime, ni Jaime los suyos.
+@@ -79,3 +81,4 @@ a Pilar. Nada de eso se escribe sin tu toque.
+ - **20-10-2026 (encargo 73):** fila 📱 *Remote Control*: `/remoto` sólo en Jaime, hasta 8 h y con cierre manual.
+ - **23-10-2026 (encargo 78b):** fila 🔎 *Buscar*: `/buscar <consulta>` y botón para Jaime y Pilar, sin IA.
+ - **25-10-2026 (encargo 93):** revisada contra lo que hacen hoy los bots: filas nuevas 🧾 *Boleta por foto*; en *Pregunta libre*, el hilo de 10 turnos, `/olvidar` y 👍/👎; en *Órdenes*, los límites; sección *Pilar (Camila)*; Mercado Libre en *Próximamente*; sin nombres internos.
++- **25-10-2026 (encargo 88b):** fila 🎵 *Música (Spotify)* y `/spotify` para Jaime y Pilar.
+diff --git a/botv3/botv3.py b/botv3/botv3.py
+index 23e922f..01d30af 100644
+--- a/botv3/botv3.py
++++ b/botv3/botv3.py
+@@ -97,6 +97,11 @@ try:
+ except ImportError:  # pragma: no cover - despliegue parcial
+     clima_imagen = None
+ 
++try:
++    import spotify as spotify_mod
++except ImportError:  # pragma: no cover - despliegue parcial
++    spotify_mod = None
++
+ # Nombre nuevo → interno (`archivos` → `claude`…). Se normaliza AL ENTRAR —lo que
+ # llega de n8n, de los comandos y del perfil— y adentro todo sigue con el nombre de hoy.
+ ALIAS_RUTA = recetas.ALIAS_RUTA if recetas else {}
+@@ -173,6 +178,23 @@ def cargar_perfil(nombre: str) -> dict[str, Any]:
+     # "true" entre comillas no puede quedar en un sí ni en un no silencioso.
+     if not isinstance(datos.get("recibe_de_ia", False), bool):
+         raise RuntimeError(f"recibe_de_ia en {ruta} tiene que ser true o false")
++    spotify = datos.get("spotify")
++    if spotify is not None:
++        if not isinstance(spotify, dict):
++            raise RuntimeError(f"spotify en {ruta} tiene que ser una tabla")
++
++        def api_local(valor: Any) -> str:
++            if not isinstance(valor, str) or not re.fullmatch(r"http://127\.0\.0\.1:[1-9][0-9]{0,4}", valor):
++                raise RuntimeError(f"spotify.api inválida en {ruta}: sólo http://127.0.0.1:<puerto>")
++            if int(valor.rsplit(":", 1)[1]) > 65535:
++                raise RuntimeError(f"spotify.api inválida en {ruta}: puerto fuera de rango")
++            return valor
++
++        spotify["api"] = api_local(spotify.get("api"))
++        otros = spotify.get("otros", [])
++        if not isinstance(otros, list):
++            raise RuntimeError(f"spotify.otros en {ruta} tiene que ser una lista")
++        spotify["otros"] = [api_local(x) for x in otros]
+     return datos
+ 
+ 
+@@ -6704,6 +6726,101 @@ def atender_temporizador(chat_id: int, texto: str, origen: str, en_voz: bool) ->
+     return True
+ 
+ 
++# ── Música Spotify por perfil (88b) ───────────────────────────────────────────
++
++def _spotify_suena(estado: dict[str, Any] | None) -> bool:
++    return bool(estado) and not bool(estado.get("stopped")) and not bool(estado.get("paused"))
++
++
++def _spotify_artistas(item: dict[str, Any]) -> str:
++    artistas = item.get("artists", [])
++    return ", ".join(str(a.get("name", "")) for a in artistas
++                     if isinstance(a, dict) and a.get("name"))
++
++
++def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
++    """Atiende Spotify localmente; las órdenes multimedia no se dicen por voz."""
++    if spotify_mod is None:
++        return False
++    cfg = PERFIL_CFG.get("spotify")
++    inicial = spotify_mod.interpretar(texto, sonando=False)
++    if not cfg:
++        if inicial:
++            send_text(chat_id, f"Spotify no está configurado para {NOMBRE}")
++            return True
++        return False
++    bases = [cfg["api"], *cfg["otros"]]
++    try:
++        estados = {base: spotify_mod.estado(base) for base in bases}
++    except spotify_mod.SpotifyError:
++        if inicial:
++            send_text(chat_id, "No pude usar Spotify ahora.")
++            return True
++        return False
++    intencion = spotify_mod.interpretar(texto, sonando=any(_spotify_suena(x) for x in estados.values()))
++    if not intencion:
++        return False
++    propio = estados[cfg["api"]]
++    if propio is None:
++        send_text(chat_id, "Falta vincular tu Spotify: /spotify")
++        return True
++    try:
++        if intencion["accion"] == "pausa":
++            for base, estado_actual in estados.items():
++                if _spotify_suena(estado_actual):
++                    spotify_mod.pausar(base)
++            send_text(chat_id, "⏸️ Spotify en pausa.")
++            return True
++        if intencion["accion"] == "sigue":
++            spotify_mod.reanudar(cfg["api"])
++            send_text(chat_id, f"▶️ Spotify de {PERSONA} sigue.")
++            return True
++        elegido = spotify_mod.elegir(
++            spotify_mod.buscar(intencion, requests.Session()),
++            intencion.get("titulo", ""), intencion.get("artista", ""),
++        )
++        if not elegido or not elegido.get("uri"):
++            send_text(chat_id, "No encontré esa música en Spotify.")
++            return True
++        # El otro receptor se pausa ANTES del play propio, siempre en ese orden.
++        for base in cfg["otros"]:
++            if _spotify_suena(estados.get(base)):
++                spotify_mod.pausar(base)
++        spotify_mod.reproducir(cfg["api"], str(elegido["uri"]))
++        titulo = str(elegido.get("name", intencion.get("artista", "Spotify")))
++        artistas = _spotify_artistas(elegido)
++        send_text(chat_id, f"▶️ {titulo}" + (f" — {artistas}" if artistas else "") +
++                  f" · Spotify de {PERSONA}")
++        return True
++    except spotify_mod.SpotifyError:
++        send_text(chat_id, "No pude usar Spotify ahora.")
++        return True
++
++
++def comando_spotify(chat_id: int) -> None:
++    """Muestra vínculo y canción actual, o el código device_auth pendiente."""
++    if spotify_mod is None or not PERFIL_CFG.get("spotify"):
++        send_text(chat_id, f"Spotify no está configurado para {NOMBRE}")
++        return
++    try:
++        datos = spotify_mod.estado(PERFIL_CFG["spotify"]["api"])
++        if datos is None:
++            pendiente = spotify_mod.codigo(PERFIL_CFG["spotify"]["api"])
++            if pendiente and pendiente.get("url") and pendiente.get("code"):
++                send_text(chat_id, f"Spotify de {PERSONA}: falta vincular.\nAbre {pendiente['url']}\nCódigo: {pendiente['code']}")
++            else:
++                send_text(chat_id, f"Spotify de {PERSONA}: falta vincular. Espera un momento y prueba /spotify.")
++            return
++        track = datos.get("track") if isinstance(datos.get("track"), dict) else {}
++        titulo = str(track.get("name", ""))
++        artistas = ", ".join(str(x) for x in track.get("artist_names", []) if x)
++        detalle = f" · {titulo}" + (f" — {artistas}" if artistas else "") if titulo else ""
++        estado_actual = "en pausa" if datos.get("paused") else "sonando" if not datos.get("stopped") else "sin música"
++        send_text(chat_id, f"Spotify de {PERSONA}: vinculado, {estado_actual}{detalle}.")
++    except spotify_mod.SpotifyError:
++        send_text(chat_id, "No pude ver Spotify ahora.")
++
++
+ # --- Órdenes permanentes (encargo 35, D43) ----------------------------------
+ # Nivel 1 de D10: todo esto escribe DATOS en casa/temporizadores.json. Ninguna
+ # orden crea unidades ni ejecuta nada; quien las hace sonar es el mismo hilo de
+@@ -8009,6 +8126,8 @@ def handle_message(message: dict[str, Any]) -> None:
+             return
+         if atender_temporizador(chat_id, dicho, "voz", en_voz=True):
+             return
++        if atender_spotify(chat_id, dicho, en_voz=True):
++            return
+         # 69: hora y clima sin modelo, después de temporizadores («mañana a las 7» es
+         # de ellos) y antes de gasto, agenda, nodo y compras.
+         if atender_hora_o_clima(chat_id, dicho, en_voz=True):
+@@ -8085,6 +8204,8 @@ def handle_message(message: dict[str, Any]) -> None:
+             return
+         if atender_temporizador(chat_id, text, "telegram", en_voz=False):
+             return
++        if atender_spotify(chat_id, text, en_voz=False):
++            return
+         if atender_hora_o_clima(chat_id, text, en_voz=False):
+             return
+         gasto = intencion_gasto(text) if _gastos_activos() else None
+@@ -8127,6 +8248,8 @@ def handle_message(message: dict[str, Any]) -> None:
+         comando_buscar(chat_id, argument)
+     elif command in {"/temporizadores", "/timer", "/alarmas"}:
+         comando_temporizadores(chat_id, command, argument)
++    elif command == "/spotify":
++        comando_spotify(chat_id)
+     elif command in {"/ordenes", "/recurrentes"}:
+         comando_ordenes(chat_id, argument)
+     elif command == "/estado":
+@@ -8313,7 +8436,7 @@ def sincronizar_menu() -> None:
+     """
+     try:
+         from update_telegram_commands import comandos
+-        deseado = comandos(ALLOWED_AUTO_ROUTES, PERFIL)
++        deseado = comandos(ALLOWED_AUTO_ROUTES, PERFIL, bool(PERFIL_CFG.get("spotify")))
+         actual = telegram("getMyCommands") or []
+         if [(c.get("command"), c.get("description")) for c in actual] != \
+                 [(c["command"], c["description"]) for c in deseado]:
+diff --git a/botv3/fixtures/spotify-search-oxytocin.json b/botv3/fixtures/spotify-search-oxytocin.json
+new file mode 100644
+index 0000000..31a9b78
+--- /dev/null
++++ b/botv3/fixtures/spotify-search-oxytocin.json
+@@ -0,0 +1,8 @@
++{
++  "tracks": {
++    "items": [
++      {"name": "Oxytocin", "uri": "spotify:track:4t2OeILB07eMGTXSUbMPEu", "artists": [{"name": "Billie Eilish", "uri": "spotify:artist:6qqNVTkY8uBg9cP3Jd7DAH"}]},
++      {"name": "Oxytocin", "uri": "spotify:track:1vVw7g6qQ0Zx0fCj8eY6JH", "artists": [{"name": "Niki & The Dove"}]}
++    ]
++  }
++}
+diff --git a/botv3/perfiles/jaime.toml b/botv3/perfiles/jaime.toml
+index 6c6057f..635cb9d 100644
+--- a/botv3/perfiles/jaime.toml
++++ b/botv3/perfiles/jaime.toml
+@@ -79,6 +79,9 @@ voz_habla_agenda = true
+ # en rango; si la clave falta o es invalida, el perfil queda sin clima (la hora no la usa).
+ clima = { lugar = "Las Condes", lat = -33.41, lon = -70.57 }
+ 
++# Receptor Connect local de este perfil; el otro sólo se pausa para no superponer audio.
++spotify = { api = "http://127.0.0.1:3678", otros = ["http://127.0.0.1:3679"] }
++
+ # Quien paga cada ruta de agente, en orden: la primera contesta y las demas son
+ # el respaldo si falla o se agota (29-09-2026, pagina 🤖 → 💳 Cuentas). Reemplaza a
+ # `web_codex = true` y `claude_config_web`, que decian lo mismo en dos llaves:
+diff --git a/botv3/perfiles/pilar.toml b/botv3/perfiles/pilar.toml
+index 301b78c..15b600e 100644
+--- a/botv3/perfiles/pilar.toml
++++ b/botv3/perfiles/pilar.toml
+@@ -47,6 +47,9 @@ voz = "/opt/piper/voces/es_MX-claude-high.onnx"
+ # en rango; si la clave falta o es invalida, el perfil queda sin clima (la hora no la usa).
+ clima = { lugar = "Las Condes", lat = -33.41, lon = -70.57 }
+ 
++# Receptor Connect local de este perfil; el otro sólo se pausa para no superponer audio.
++spotify = { api = "http://127.0.0.1:3679", otros = ["http://127.0.0.1:3678"] }
++
+ # Mensajes y documentos de las IA (encargo 70, 19-10-2026): `mensaje --a pilar` deja el envio en
+ # casa/para-pilar/ y este bot lo entrega SOLO con el ✅ de Diego (firma root de `nodo-desplegar
+ # sugerir`, de un solo uso y dentro de 30 min). Sin esta llave el hilo no arranca; jaime no la lleva.
+diff --git a/botv3/spotify.py b/botv3/spotify.py
+new file mode 100644
+index 0000000..124c61c
+--- /dev/null
++++ b/botv3/spotify.py
+@@ -0,0 +1,191 @@
++"""Spotify local: frases, búsqueda Web API y receptor go-librespot.
++
++No conoce Telegram ni escribe estado: el token Client Credentials vive sólo en
++memoria de este proceso.  La API del receptor es siempre loopback y la Web API
++recibe la búsqueda mediante ``params``, nunca interpolada en una URL.
++"""
++from __future__ import annotations
++
++import os
++import re
++import time
++import unicodedata
++from typing import Any
++
++import requests
++from rapidfuzz.fuzz import WRatio
++
++
++TIMEOUT = 3
++MAX_CONSULTA = 120
++TOKEN_URL = "https://accounts.spotify.com/api/token"
++SEARCH_URL = "https://api.spotify.com/v1/search"
++_TOKEN = ""
++_TOKEN_HASTA = 0.0
++
++
++class SpotifyError(RuntimeError):
++    """Error esperado; su texto nunca incluye una credencial ni una URL."""
++
++
++def plano(valor: object) -> str:
++    return "".join(
++        c for c in unicodedata.normalize("NFD", str(valor or "").lower())
++        if unicodedata.category(c) != "Mn"
++    )
++
++
++def _limpiar(texto: str) -> str:
++    return re.sub(r"\s+", " ", plano(texto).strip(" ¿?¡!.,;:\"'“”«»"))
++
++
++def interpretar(texto: str, sonando: bool) -> dict[str, str] | None:
++    """Interpreta sólo las frases completas de música aprobadas en diseño 36."""
++    frase = _limpiar(texto)
++    # El vocativo puede llegar con «Hola Jaime.» desde Whisper. Sólo se permite
++    # al principio para no tragarse una pregunta que menciona a una persona.
++    frase = re.sub(r"^(?:(?:hola|hey|oye|buenas)\s+)?(?:jaime|pilar)(?:\s+|[.,:;]+\s*)", "", frase)
++    if len(frase) > MAX_CONSULTA or not frase:
++        return None
++
++    en_spotify = bool(re.search(r"\s+en\s+spotify$", frase))
++    frase = re.sub(r"\s+en\s+spotify$", "", frase)
++    if re.fullmatch(r"(?:pausa(?:\s+(?:la\s+)?(?:musica|spotify))?|para\s+(?:la\s+)?(?:musica|spotify))", frase):
++        return {"accion": "pausa"} if sonando or frase != "pausa" else None
++    if re.fullmatch(r"(?:sigue|continua|reanuda)(?:\s+(?:con\s+)?(?:la\s+)?(?:musica|spotify))?", frase):
++        return {"accion": "sigue"}
++
++    verbo = r"(?:reproduce|reproducir|pon|pone|toca|tocame)"
++    # «pon una alarma/temporizador» ya pertenece a temporizadores: poner música
++    # exige nombrar Spotify incluso si trae un «de …» que parece artista.
++    if re.match(r"^(?:pon|pone)\b", frase) and not en_spotify:
++        return None
++    m = re.fullmatch(rf"{verbo}\s+(?:musica\s+de|a)\s+(.+?)", frase)
++    if m and m.group(1).strip():
++        return {"accion": "artista", "artista": m.group(1).strip()}
++
++    # Una canción sin artista necesita decir Spotify; con «de artista» ya es
++    # inequívoca. Así «reproducir la última nota» sigue al router.
++    m = re.fullmatch(rf"{verbo}\s+(.+?)\s+de\s+(.+?)", frase)
++    if m and m.group(1).strip() and m.group(2).strip():
++        return {"accion": "cancion", "titulo": m.group(1).strip(), "artista": m.group(2).strip()}
++    m = re.fullmatch(rf"{verbo}\s+(.+?)", frase)
++    if en_spotify and m and m.group(1).strip():
++        return {"accion": "cancion", "titulo": m.group(1).strip()}
++    return None
++
++
++def _token(sesion: requests.Session) -> str:
++    global _TOKEN, _TOKEN_HASTA
++    if _TOKEN and time.monotonic() < _TOKEN_HASTA:
++        return _TOKEN
++    client_id = os.environ.get("SPOTIFY_CLIENT_ID", "").strip()
++    secreto = os.environ.get("SPOTIFY_CLIENT_SECRET", "").strip()
++    if not client_id or not secreto:
++        raise SpotifyError("faltan las claves de Spotify")
++    try:
++        respuesta = sesion.post(TOKEN_URL, data={"grant_type": "client_credentials"},
++                                auth=(client_id, secreto), timeout=TIMEOUT)
++        respuesta.raise_for_status()
++        datos = respuesta.json()
++        token = str(datos.get("access_token", ""))
++        vence = int(datos.get("expires_in", 0))
++    except (requests.RequestException, ValueError, TypeError) as exc:
++        raise SpotifyError("no pude buscar en Spotify") from exc
++    if not token or vence <= 60:
++        raise SpotifyError("no pude buscar en Spotify")
++    _TOKEN, _TOKEN_HASTA = token, time.monotonic() + vence - 60
++    return _TOKEN
++
++
++def _items(datos: dict[str, Any], tipo: str) -> list[dict[str, Any]]:
++    bloque = datos.get(f"{tipo}s", {})
++    return list(bloque.get("items", [])) if isinstance(bloque, dict) else []
++
++
++def buscar(consulta: dict[str, str] | str, sesion: requests.Session) -> list[dict[str, Any]]:
++    """Busca hasta cinco pistas o artistas; prueba campos y luego texto libre."""
++    if isinstance(consulta, dict):
++        accion = consulta.get("accion", "cancion")
++        tipo = "artist" if accion == "artista" else "track"
++        titulo = str(consulta.get("titulo", "")).strip()[:MAX_CONSULTA]
++        artista = str(consulta.get("artista", "")).strip()[:MAX_CONSULTA]
++        campos = " ".join(x for x in ([f"track:{titulo}"] if titulo else []) +
++                           ([f"artist:{artista}"] if artista else []))
++        libre = " ".join(x for x in (titulo, artista) if x)
++    else:
++        tipo, campos, libre = "track", str(consulta).strip()[:MAX_CONSULTA], str(consulta).strip()[:MAX_CONSULTA]
++    if not campos:
++        return []
++    headers = {"Authorization": f"Bearer {_token(sesion)}"}
++    try:
++        respuesta = sesion.get(SEARCH_URL, headers=headers,
++                               params={"q": campos, "type": tipo, "market": "CL", "limit": 5}, timeout=TIMEOUT)
++        respuesta.raise_for_status()
++        datos = respuesta.json()
++        encontrados = _items(datos, tipo)
++        if encontrados or libre == campos:
++            return encontrados
++        respuesta = sesion.get(SEARCH_URL, headers=headers,
++                               params={"q": libre, "type": tipo, "market": "CL", "limit": 5}, timeout=TIMEOUT)
++        respuesta.raise_for_status()
++        return _items(respuesta.json(), tipo)
++    except (requests.RequestException, ValueError, TypeError) as exc:
++        raise SpotifyError("no pude buscar en Spotify") from exc
++
++
++def elegir(resultados: list[dict[str, Any]], titulo: str = "", artista: str = "") -> dict[str, Any] | None:
++    """Elige por título y artista, tolerando las tildes y errores de Whisper."""
++    mejor: dict[str, Any] | None = None
++    puntaje_mejor = -1.0
++    for item in resultados:
++        nombre = plano(item.get("name", ""))
++        autores = " ".join(plano(a.get("name", "")) for a in item.get("artists", []) if isinstance(a, dict)) or nombre
++        pt = WRatio(plano(titulo), nombre) if titulo else 100
++        pa = WRatio(plano(artista), autores) if artista else 100
++        puntaje = pt * 0.7 + pa * 0.3
++        if puntaje > puntaje_mejor:
++            mejor, puntaje_mejor = item, puntaje
++    return mejor
++
++
++def _url(base: str, ruta: str) -> str:
++    return base.rstrip("/") + ruta
++
++
++def _peticion(metodo: str, base: str, ruta: str, **kwargs: Any) -> tuple[int, dict[str, Any] | None]:
++    try:
++        respuesta = requests.request(metodo, _url(base, ruta), timeout=TIMEOUT, **kwargs)
++        if respuesta.status_code == 204:
++            return 204, None
++        respuesta.raise_for_status()
++        return respuesta.status_code, respuesta.json() if respuesta.content else {}
++    except (requests.RequestException, ValueError) as exc:
++        raise SpotifyError("el receptor Spotify no está disponible") from exc
++
++
++def estado(base: str) -> dict[str, Any] | None:
++    _, datos = _peticion("GET", base, "/status")
++    return datos
++
++
++def codigo(base: str) -> dict[str, Any] | None:
++    _, datos = _peticion("GET", base, "/auth/code")
++    return datos
++
++
++def reproducir(base: str, uri: str) -> None:
++    _peticion("POST", base, "/player/play", json={"uri": uri})
++
++
++def pausar(base: str) -> None:
++    _peticion("POST", base, "/player/pause")
++
++
++def reanudar(base: str) -> None:
++    _peticion("POST", base, "/player/resume")
++
++
++def volumen(base: str, valor: int) -> None:
++    """Reservado para la ampliación de volumen por voz."""
++    _peticion("POST", base, "/player/volume", json={"volume": int(valor)})
+diff --git a/botv3/test_botv3.py b/botv3/test_botv3.py
+index 80f9e52..b6b9b91 100644
+--- a/botv3/test_botv3.py
++++ b/botv3/test_botv3.py
+@@ -6255,7 +6255,8 @@ class SincronizarMenuTests(unittest.TestCase):
+ 
+     def _deseado(self):
+         from update_telegram_commands import comandos
+-        return comandos(botv3.ALLOWED_AUTO_ROUTES, botv3.PERFIL)
++        return comandos(botv3.ALLOWED_AUTO_ROUTES, botv3.PERFIL,
++                        bool(botv3.PERFIL_CFG.get("spotify")))
+ 
+     def test_escribe_si_difiere(self):
+         self.actual = [{"command": "compras", "description": "Lista de compras de la casa"}]
+diff --git a/botv3/test_spotify.py b/botv3/test_spotify.py
+new file mode 100644
+index 0000000..7fc47d7
+--- /dev/null
++++ b/botv3/test_spotify.py
+@@ -0,0 +1,153 @@
++#!/usr/bin/env python3
++"""Pruebas locales de Spotify: no llaman a Telegram ni a Spotify real."""
++import importlib.util
++import json
++import os
++from pathlib import Path
++import sys
++import tempfile
++import threading
++import unittest
++from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
++from unittest import mock
++
++ROOT = Path(__file__).parent
++sys.path.insert(0, str(ROOT))
++import spotify
++
++
++class FrasesTests(unittest.TestCase):
++    CAPTURA = [
++        ("Hola Jaime. Reproducir oxitocina de Billie Eilish en Spotify.", False, "cancion"),
++        ("reproduce Oxytocin de Billie Eilish", False, "cancion"),
++        ("Pon Oxytocin en Spotify", False, "cancion"),
++        ("tócame Bad Guy de Billie Eilish en spotify", False, "cancion"),
++        ("Reproduce música de Billie Eilish.", False, "artista"),
++        ("reproduce a Billie Eilish en Spotify", False, "artista"),
++        ("Pausa la música.", False, "pausa"), ("pausa Spotify", False, "pausa"),
++        ("sigue con la música", False, "sigue"), ("pausa", True, "pausa"),
++    ]
++    NO = ["pon una alarma a las 7", "pon un temporizador de 5 minutos", "pon pausa",
++          "agrega leche a la lista", "¿quién canta Oxytocin?", "reproducir la última nota", "compré pan"]
++
++    def test_c1_y_c2(self):
++        for texto, sonando, accion in self.CAPTURA:
++            with self.subTest(texto=texto): self.assertEqual(spotify.interpretar(texto, sonando)["accion"], accion)
++        self.assertIsNone(spotify.interpretar("pausa", False))
++        for texto in self.NO:
++            with self.subTest(texto=texto): self.assertIsNone(spotify.interpretar(texto, False))
++
++    def test_fixture_y_whisper(self):
++        datos = json.loads((ROOT / "fixtures/spotify-search-oxytocin.json").read_text())
++        elegido = spotify.elegir(datos["tracks"]["items"], "oxitocina", "billi eilish")
++        self.assertEqual(elegido["name"], "Oxytocin")
++        self.assertEqual(elegido["artists"][0]["name"], "Billie Eilish")
++
++
++class ReceptorFalso:
++    def __init__(self, sonando=False, registro=None, nombre="receptor"):
++        self.sonando, self.llamadas = sonando, []
++        padre = self
++        class Handler(BaseHTTPRequestHandler):
++            def log_message(self, *args): pass
++            def _enviar(self, codigo=200, datos=None):
++                self.send_response(codigo); self.send_header("Content-Type", "application/json"); self.end_headers()
++                if datos is not None: self.wfile.write(json.dumps(datos).encode())
++            def do_GET(self):
++                padre.llamadas.append(("GET", self.path)); padre.registro.append((padre.nombre, "GET", self.path))
++                if self.path == "/status":
++                    self._enviar(200, {"stopped": not padre.sonando, "paused": False,
++                                      "track": {"name": "Oxytocin", "artist_names": ["Billie Eilish"]}})
++                elif self.path == "/auth/code": self._enviar(204)
++                else: self._enviar(404)
++            def do_POST(self):
++                padre.llamadas.append(("POST", self.path)); padre.registro.append((padre.nombre, "POST", self.path))
++                if self.path == "/player/pause": padre.sonando = False
++                if self.path == "/player/play": padre.sonando = True
++                self._enviar()
++        self.http = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
++        self.registro = registro if registro is not None else []
++        self.nombre = nombre
++        self.hilo = threading.Thread(target=self.http.serve_forever, daemon=True); self.hilo.start()
++    @property
++    def base(self): return f"http://127.0.0.1:{self.http.server_port}"
++    def cerrar(self): self.http.shutdown(); self.http.server_close(); self.hilo.join()
++
++
++class IntegracionTests(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.tmp = tempfile.TemporaryDirectory()
++        os.environ["BOTV3_STATE_DIR"] = str(Path(cls.tmp.name) / "estado")
++        spec = importlib.util.spec_from_file_location("spotify_bot", ROOT / "botv3.py")
++        cls.bot = importlib.util.module_from_spec(spec); spec.loader.exec_module(cls.bot)
++
++    @classmethod
++    def tearDownClass(cls): cls.tmp.cleanup()
++
++    def test_pausa_otro_antes_de_reproducir(self):
++        try:
++            orden = []
++            jaime, pilar = ReceptorFalso(True, orden, "jaime"), ReceptorFalso(False, orden, "pilar")
++        except PermissionError:
++            self.skipTest("sandbox sin permiso para bind loopback; la Pi sí ejecuta este servidor local")
++        self.addCleanup(jaime.cerrar); self.addCleanup(pilar.cerrar)
++        previo, persona, nombre = self.bot.PERFIL_CFG, self.bot.PERSONA, self.bot.NOMBRE
++        self.bot.PERFIL_CFG = {"spotify": {"api": pilar.base, "otros": [jaime.base]}}
++        self.bot.PERSONA, self.bot.NOMBRE = "Camila", "Pilar"
++        enviados = []
++        with mock.patch.object(self.bot, "send_text", lambda _, texto: enviados.append(texto)), \
++             mock.patch.object(spotify, "buscar", return_value=[{"name": "Oxytocin", "uri": "spotify:track:x", "artists": [{"name": "Billie Eilish"}]}]):
++            self.assertTrue(self.bot.atender_spotify(1, "reproduce Oxytocin de Billie Eilish", False))
++        self.bot.PERFIL_CFG, self.bot.PERSONA, self.bot.NOMBRE = previo, persona, nombre
++        self.assertEqual(jaime.llamadas[-1], ("POST", "/player/pause"))
++        self.assertEqual(pilar.llamadas[-1], ("POST", "/player/play"))
++        self.assertLess(orden.index(("jaime", "POST", "/player/pause")),
++                        orden.index(("pilar", "POST", "/player/play")))
++        self.assertIn("▶️ Oxytocin — Billie Eilish · Spotify de Camila", enviados)
++
++    def test_comando_codigo_y_vinculado(self):
++        previo = self.bot.PERFIL_CFG
++        self.bot.PERFIL_CFG = {"spotify": {"api": "http://127.0.0.1:1", "otros": []}}
++        enviados = []
++        with mock.patch.object(self.bot.spotify_mod, "estado", return_value=None), \
++             mock.patch.object(self.bot.spotify_mod, "codigo", return_value={"url": "https://spotify.com/pair", "code": "ABCD"}), \
++             mock.patch.object(self.bot, "send_text", lambda _, texto: enviados.append(texto)):
++            self.bot.comando_spotify(1)
++        self.assertIn("https://spotify.com/pair", enviados[0]); self.assertIn("ABCD", enviados[0])
++        enviados.clear()
++        with mock.patch.object(self.bot.spotify_mod, "estado", return_value={"stopped": False, "paused": False,
++                                                                               "track": {"name": "Oxytocin", "artist_names": ["Billie Eilish"]}}), \
++             mock.patch.object(self.bot, "send_text", lambda _, texto: enviados.append(texto)):
++            self.bot.comando_spotify(1)
++        self.assertIn("vinculado, sonando", enviados[0]); self.assertIn("Oxytocin — Billie Eilish", enviados[0])
++        self.bot.PERFIL_CFG = previo
++
++
++class ErroresYPerfilTests(unittest.TestCase):
++    def test_secreto_no_sale_al_fallar(self):
++        viejo = dict(os.environ); spotify._TOKEN, spotify._TOKEN_HASTA = "", 0
++        os.environ["SPOTIFY_CLIENT_ID"] = "id-prueba-largo-123456"
++        os.environ["SPOTIFY_CLIENT_SECRET"] = "sk-PRUEBA-NO-DEBE-SALIR"
++        sesion = mock.Mock(); sesion.post.side_effect = spotify.requests.ConnectionError("sk-PRUEBA-NO-DEBE-SALIR")
++        with self.assertRaises(spotify.SpotifyError) as error: spotify.buscar({"accion": "cancion", "titulo": "x"}, sesion)
++        self.assertNotIn("sk-PRUEBA-NO-DEBE-SALIR", str(error.exception))
++        os.environ.clear(); os.environ.update(viejo)
++
++    def test_perfil_remoto_o_https_rechazado(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            Path(tmp, "jaime.toml").write_text('rutas=["gpt"]\n', encoding="utf-8")
++            anterior = os.environ.get("BOTV3_PERFILES_DIR")
++            os.environ["BOTV3_PERFILES_DIR"] = tmp
++            spec = importlib.util.spec_from_file_location("perfil_spotify_prueba", ROOT / "botv3.py")
++            modulo = importlib.util.module_from_spec(spec); spec.loader.exec_module(modulo)
++            try:
++                for valor in ('http://10.0.0.5:3678', 'https://127.0.0.1:3678'):
++                    Path(tmp, "prueba.toml").write_text('rutas=["gpt"]\nspotify={api="' + valor + '"}\n')
++                    with self.assertRaises(RuntimeError): modulo.cargar_perfil("prueba")
++            finally:
++                if anterior is None: os.environ.pop("BOTV3_PERFILES_DIR", None)
++                else: os.environ["BOTV3_PERFILES_DIR"] = anterior
++
++
++if __name__ == "__main__": unittest.main()
+diff --git a/botv3/update_telegram_commands.py b/botv3/update_telegram_commands.py
+index af45370..bf48ce8 100644
+--- a/botv3/update_telegram_commands.py
++++ b/botv3/update_telegram_commands.py
+@@ -20,7 +20,14 @@ def rutas_del_perfil() -> list[str]:
+         return list(tomllib.load(f).get("rutas", []))
+ 
+ 
+-def comandos(rutas, perfil: str | None = None) -> list[dict[str, str]]:
++def spotify_del_perfil() -> bool:
++    perfil = os.environ.get("BOTV3_PERFIL", "jaime")
++    carpeta = Path(os.environ.get("BOTV3_PERFILES_DIR", Path(__file__).parent / "perfiles"))
++    with open(carpeta / f"{perfil}.toml", "rb") as f:
++        return isinstance(tomllib.load(f).get("spotify"), dict)
++
++
++def comandos(rutas, perfil: str | None = None, spotify_activo: bool = False) -> list[dict[str, str]]:
+     """El menú de un perfil según sus rutas. Única lista: la usan el bot y este script."""
+     rutas = set(rutas)
+     perfil = os.environ.get("BOTV3_PERFIL", "jaime") if perfil is None else perfil
+@@ -39,6 +46,8 @@ def comandos(rutas, perfil: str | None = None) -> list[dict[str, str]]:
+         *([{"command": "google", "description": "Agenda y correo (crear pide confirmar)"}]
+           if "google" in rutas else []),
+         {"command": "temporizadores", "description": "Temporizadores y alarmas activos"},
++        *([{"command": "spotify", "description": "Vincular y ver Spotify de este perfil"}]
++          if spotify_activo else []),
+         {"command": "buscar", "description": "Buscar en internet (sin IA)"},
+         # Remote Control abre una sesión de la cuenta de Diego: Pilar no debe verla
+         # ni aunque sus rutas de agente sean parecidas.
+@@ -54,7 +63,7 @@ if __name__ == "__main__":
+     token = os.environ["BOTV3_TOKEN"]
+     response = requests.post(
+         f"https://api.telegram.org/bot{token}/setMyCommands",
+-        json={"commands": comandos(rutas_del_perfil())}, timeout=20,
++        json={"commands": comandos(rutas_del_perfil(), spotify_activo=spotify_del_perfil())}, timeout=20,
+     )
+     response.raise_for_status()
+     if not response.json().get("ok"):
+diff --git a/encargos/88b-RESULTADO.md b/encargos/88b-RESULTADO.md
+new file mode 100644
+index 0000000..aa9624d
+--- /dev/null
++++ b/encargos/88b-RESULTADO.md
+@@ -0,0 +1,88 @@
++---
++tipo: resultado
++encargo: 88b
++fecha: 2026-10-25
++estado: LISTO PARA REVISIÓN Y DESPLIEGUE (sin Spotify ni Telegram reales)
++---
++
++# 88b — Spotify por perfil en Jaime y Pilar
++
++## Cambios
++
++| Archivo | Cambio |
++|---|---|
++| `botv3/spotify.py` | Nuevo módulo puro: frases ancladas, búsqueda Web API con Client Credentials en memoria, elección con `rapidfuzz` y cliente loopback de go-librespot (`/status`, `/auth/code`, play, pause, resume y volumen reservado). |
++| `botv3/botv3.py` | Valida `spotify` en el perfil; atiende música después de temporizadores y antes de hora/clima, tanto escrita como dictada; agrega `/spotify`. No verbaliza órdenes multimedia. |
++| `botv3/perfiles/{jaime,pilar}.toml` | Receptores simétricos: Jaime `127.0.0.1:3678`, Pilar `127.0.0.1:3679`. |
++| `botv3/update_telegram_commands.py` | Registra `/spotify` sólo para perfiles que declaran receptor. |
++| `botv3/fixtures/spotify-search-oxytocin.json`, `botv3/test_spotify.py` | Fixture y pruebas de frases, fuzzy matching, receptor falso, perfil, errores y secreto. |
++| `pi/cargar-clave.py` | Acepta `SPOTIFY_CLIENT_ID` y `SPOTIFY_CLIENT_SECRET`, sin prefijo exigido. |
++| `35 - Guía de uso de Jaime y Pilar.{md,html}` | Sección Música (Spotify), frases, `/spotify` y vinculación. |
++
++El cliente usa la especificación oficial de go-librespot v0.10.5: `/status` entrega `stopped`,
++`paused` y `track`; sin sesión devuelve 204. `/auth/code` devuelve `url`, `code` y `expires_at`,
++o 204 si no hay una autorización pendiente. La 88a no pudo observar estas respuestas en una
++instancia real porque no instaló los receptores; se confirmó contra el OpenAPI del mismo release.
++
++## C1 y C2
++
++| Frase | Resultado |
++|---|---|
++| Hola Jaime. Reproducir oxitocina de Billie Eilish en Spotify. | `cancion` |
++| reproduce Oxytocin de Billie Eilish | `cancion` |
++| Pon Oxytocin en Spotify | `cancion` |
++| tócame Bad Guy de Billie Eilish en spotify | `cancion` |
++| Reproduce música de Billie Eilish. | `artista` |
++| reproduce a Billie Eilish en Spotify | `artista` |
++| Pausa la música. / pausa Spotify / pausa con música sonando | `pausa` |
++| sigue con la música | `sigue` |
++| pon una alarma a las 7; pon un temporizador de 5 minutos; pausa sin música; pon pausa; agrega leche a la lista; ¿quién canta Oxytocin?; reproducir la última nota; compré pan | `None` |
++
++Al reproducir desde Pilar, la prueba local comprueba que el `POST /player/pause` de Jaime ocurre
++antes del `POST /player/play` de Pilar. Este sandbox no permite abrir puertos loopback, por lo
++que esa única prueba queda marcada `skipped=1` aquí; en la Pi usa un puerto efímero y se ejecuta.
++
++## Fixture
++
++No había `SPOTIFY_CLIENT_ID` ni `SPOTIFY_CLIENT_SECRET` en este entorno, así que no se llamó a
++Spotify ni se guardó una respuesta real. El fixture es una respuesta recortada con los campos de
++`/search` documentados por Spotify y el URI público de *Oxytocin*. La prueba confirma que
++«oxitocina» + «billi eilish» elige *Oxytocin — Billie Eilish*.
++
++## Claves y despliegue
++
++Pedir por separado, para no escribir valores sensibles en el historial:
++
++```text
++nodo-desplegar sugerir --motivo "88b: cargar Client ID de Spotify en ambos perfiles" -- sudo cargar-clave SPOTIFY_CLIENT_ID jaime pilar
++nodo-desplegar sugerir --motivo "88b: cargar Client Secret de Spotify en ambos perfiles" -- sudo cargar-clave SPOTIFY_CLIENT_SECRET jaime pilar
++```
++
++También faltan las altas de `spotify.py`, su fixture y `cargar-clave.py` modificado, además de
++las versiones actualizadas de `botv3.py`, perfiles y menú. Hashes relevantes: `spotify.py`
++`bfdae1a6ce28`, fixture `479d740d0c38`, `cargar-clave.py` `eaf59c8e57f5` y `botv3.py`
++`09e8db58ff61`. Deben desplegarse juntos y reiniciar `botv3@jaime.service` y
++`botv3@pilar.service` sólo después de que 88a esté instalada.
++
++Se revisó la unidad plantilla: permite `AF_INET` y el drop-in de Pilar no declara
++`IPAddressDeny`, por lo que no bloquea `127.0.0.1`.
++
++## Verificación
++
++```text
++python3 -m py_compile botv3/spotify.py botv3/botv3.py botv3/test_spotify.py pi/cargar-clave.py  → 0
++python3 pi/spotify/test_plantillas.py → Ran 3 tests, OK
++python3 pi/test_nodo_desplegar.py    → Ran 93 tests, OK
++python3 botv3/test_botv3.py          → Ran 490 tests, OK (skipped=4)
++python3 botv3/test_temporizadores.py → ✅ todo en verde
++python3 botv3/test_compras.py        → ✅ todo en verde
++python3 botv3/test_spotify.py        → Ran 6 tests, OK (skipped=1: bind loopback del sandbox)
++```
++
++## Pendientes
++
++1. Desplegar 88a y sus receptores, luego las altas 88b y las dos claves.
++2. Ejecutar `botv3/test_spotify.py` en la Pi para que C4 abra su servidor loopback sin el salto
++   del sandbox.
++3. Vincular cada cuenta desde `/spotify`; recién ahí probar reproducción real y confirmar que
++   el audio llega al G2000.
+diff --git a/encargos/COLA-ESTADO.md b/encargos/COLA-ESTADO.md
+index e82686f..31a0a64 100644
+--- a/encargos/COLA-ESTADO.md
++++ b/encargos/COLA-ESTADO.md
+@@ -2114,3 +2114,15 @@ Motivo de la cola: Encargo 88: Spotify por perfil (diseño 36): 88a dos receptor
+ - 25-10 16:20 · 88c: rev1 con Codex · gpt-5.6-terra xhigh (pronóstico 6.8 min, +16.0 % 5 h; ahora 10 % 5 h, fresco) · termina ~17:04 (entre 16:40 y 17:24)
+ - 25-10 16:28 · 88c: ✅ DESPLEGABLE (rev1, 8.2 min)
+ - 25-10 16:28 · 88b: autor con Codex · gpt-5.6-terra medium (pronóstico 8.7 min, +10.5 % 5 h; ahora 24 % 5 h, fresco) · termina ~16:56 (entre 16:42 y 17:09)
++
++## Reanudación desde 91n:rev1 · cola cola91n · 25-10 16:34
++
++Motivo de la cola: Encargo 91n: revisión cruzada (Codex) del aviso de temblores que escribió Claude (Diego) en la nube; sin arreglos en la Pi.
++
++
++## Reanudación desde 93n:rev1 · cola cola93n · 25-10 16:34
++
++Motivo de la cola: Encargo 93n: revisión cruzada (Codex) de la guía de Jaime y Pilar que puso al día Claude (Diego) en la nube.
++
++- 25-10 16:34 · ⏳ Se espera a que termine la sesión «cola88»
++- 25-10 16:34 · ⏳ Se espera a que termine la sesión «cola88»
+diff --git a/pi/cargar-clave.py b/pi/cargar-clave.py
+index e79fb67..f303101 100644
+--- a/pi/cargar-clave.py
++++ b/pi/cargar-clave.py
+@@ -35,15 +35,16 @@ from datetime import datetime
+ SECRETOS = "/opt/nodo/datos/secretos"
+ ORIGEN_COMUN = f"{SECRETOS}/botv3.env"
+ 
+-# La lista fija: las mismas variables que recetas.PROVEEDORES (hay una prueba que lo
+-# compara). El prefijo es el que tenian las keys cargadas el 01-10; "" = no se sabe (la
+-# de AI Studio de ese dia no empieza con el `AIza` de siempre). No coincidir con el
+-# prefijo no rechaza la key: se avisa y se pregunta, porque un proveedor lo puede cambiar.
++# La lista fija incluye las variables de recetas.PROVEEDORES y las dos credenciales
++# Client Credentials de Spotify. El prefijo es el que tenían las keys cargadas el
++# 01-10; "" = no se sabe. No coincidir no rechaza: se avisa y se pregunta.
+ VARIABLES = {
+     "GROQ_API_KEY": "gsk_",
+     "GEMINI_API_KEY": "",
+     "OPENROUTER_API_KEY": "sk-or-",
+     "TAVILY_API_KEY": "tvly-",
++    "SPOTIFY_CLIENT_ID": "",
++    "SPOTIFY_CLIENT_SECRET": "",
+ }
+ 
+ # Una key: letras, numeros, «_», «-» y «.». La primera verificacion del 01-10 solo
+diff --git a/pi/test_cuentas_uso.py b/pi/test_cuentas_uso.py
+index 406e7a7..189e3c6 100644
+--- a/pi/test_cuentas_uso.py
++++ b/pi/test_cuentas_uso.py
+@@ -1678,7 +1678,8 @@ class ProveedoresGratisTests(unittest.TestCase):
+     def test_cargar_clave_no_muestra_la_key_y_acepta_guiones(self):
+         cc = _cargar("cargar_clave", PI / "cargar-clave.py")
+         # La lista fija es la de la tabla de proveedores, ni una más (Mistral se ignora).
+-        self.assertEqual(set(cc.VARIABLES), {p["key"] for p in recetas.PROVEEDORES.values()})
++        self.assertEqual(set(cc.VARIABLES), {p["key"] for p in recetas.PROVEEDORES.values()} |
++                         {"SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET"})
+         self.assertNotIn("MISTRAL_API_KEY", cc.VARIABLES)
+         for variable, key in KEYS_FALSAS.items():
+             self.assertEqual(cc.problema_de_forma(key), "", variable)
+## Fase propia fix1: aba7dc1..d56f9a4
+
+ botv3/botv3.py                               | 21 +++++++---
+ botv3/fixtures/spotify-receptor-v0.10.5.json | 21 ++++++++++
+ botv3/spotify.py                             | 12 +++++-
+ botv3/test_spotify.py                        | 60 +++++++++++++++++++++++++---
+ encargos/88b-RESULTADO.md                    | 45 +++++++++++++++++++++
+ 5 files changed, 146 insertions(+), 13 deletions(-)
+
+diff --git a/botv3/botv3.py b/botv3/botv3.py
+index 01d30af..06b9f8e 100644
+--- a/botv3/botv3.py
++++ b/botv3/botv3.py
+@@ -6743,12 +6743,23 @@ def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
+     if spotify_mod is None:
+         return False
+     cfg = PERFIL_CFG.get("spotify")
+-    inicial = spotify_mod.interpretar(texto, sonando=False)
++    # Sólo el vocativo del perfil que atiende se elimina. Uno dirigido al otro
++    # asistente queda intacto y debe continuar por su flujo normal.
++    if spotify_mod.vocativo_ajeno(texto, NOMBRE):
++        return False
++    limpio = sin_vocativo(texto)
++    inicial = spotify_mod.interpretar(limpio, sonando=False)
+     if not cfg:
+         if inicial:
+             send_text(chat_id, f"Spotify no está configurado para {NOMBRE}")
+             return True
+         return False
++    # La gran mayoría de las frases no son música. No consultar receptores para
++    # ellas: evita hasta dos timeouts de 3 s antes de compras/temporizadores.
++    # «pausa» sola es el único caso ambiguo y se resuelve después con /status.
++    pausa_sola = spotify_mod._limpiar(limpio) == "pausa"
++    if not inicial and not pausa_sola:
++        return False
+     bases = [cfg["api"], *cfg["otros"]]
+     try:
+         estados = {base: spotify_mod.estado(base) for base in bases}
+@@ -6757,13 +6768,10 @@ def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
+             send_text(chat_id, "No pude usar Spotify ahora.")
+             return True
+         return False
+-    intencion = spotify_mod.interpretar(texto, sonando=any(_spotify_suena(x) for x in estados.values()))
++    intencion = spotify_mod.interpretar(limpio, sonando=any(_spotify_suena(x) for x in estados.values()))
+     if not intencion:
+         return False
+     propio = estados[cfg["api"]]
+-    if propio is None:
+-        send_text(chat_id, "Falta vincular tu Spotify: /spotify")
+-        return True
+     try:
+         if intencion["accion"] == "pausa":
+             for base, estado_actual in estados.items():
+@@ -6771,6 +6779,9 @@ def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
+                     spotify_mod.pausar(base)
+             send_text(chat_id, "⏸️ Spotify en pausa.")
+             return True
++        if propio is None:
++            send_text(chat_id, "Falta vincular tu Spotify: /spotify")
++            return True
+         if intencion["accion"] == "sigue":
+             spotify_mod.reanudar(cfg["api"])
+             send_text(chat_id, f"▶️ Spotify de {PERSONA} sigue.")
+diff --git a/botv3/fixtures/spotify-receptor-v0.10.5.json b/botv3/fixtures/spotify-receptor-v0.10.5.json
+new file mode 100644
+index 0000000..acadf94
+--- /dev/null
++++ b/botv3/fixtures/spotify-receptor-v0.10.5.json
+@@ -0,0 +1,21 @@
++{
++  "origen": "Esquema OpenAPI oficial go-librespot v0.10.5; 88a no pudo capturar un receptor aún no instalado.",
++  "status_sonando": {
++    "username": "usuario-prueba", "device_id": "0123456789abcdef", "device_type": "SPEAKER", "device_name": "Casa · Jaime",
++    "play_origin": "go-librespot", "play_origin_device_id": null, "context_uri": null, "context_name": null,
++    "stopped": false, "paused": false, "buffering": false, "volume": 32768, "volume_steps": 65535,
++    "repeat_context": false, "repeat_track": false, "shuffle_context": false,
++    "track": {
++      "uri": "spotify:track:4t2OeILB07eMGTXSUbMPEu", "name": "Oxytocin", "artist_names": ["Billie Eilish"], "artist_uris": ["spotify:artist:6qqNVTkY8uBg9cP3Jd7DAH"],
++      "album_name": "Happier Than Ever", "album_uri": "spotify:album:0JGOiO34nwfUdDrD612dOp", "album_cover_url": "https://i.scdn.co/image/ab67616d0000b273", "position": 0, "duration": 210000,
++      "release_date": "2021-07-30", "track_number": 3, "disc_number": 1, "format": "OGG_VORBIS_160", "codec": "vorbis", "bitrate": 160, "sample_rate": 44100, "bit_depth": null
++    }
++  },
++  "status_detenido": {
++    "username": "usuario-prueba", "device_id": "fedcba9876543210", "device_type": "SPEAKER", "device_name": "Casa · Pilar",
++    "play_origin": null, "play_origin_device_id": null, "context_uri": null, "context_name": null,
++    "stopped": true, "paused": false, "buffering": false, "volume": 32768, "volume_steps": 65535,
++    "repeat_context": false, "repeat_track": false, "shuffle_context": false, "track": null
++  },
++  "auth_code": {"url": "https://www.spotify.com/pair?code=ABCD-EFGH", "code": "ABCD-EFGH", "expires_at": "2026-10-25T17:30:00Z"}
++}
+diff --git a/botv3/spotify.py b/botv3/spotify.py
+index 124c61c..3073bf4 100644
+--- a/botv3/spotify.py
++++ b/botv3/spotify.py
+@@ -39,11 +39,19 @@ def _limpiar(texto: str) -> str:
+     return re.sub(r"\s+", " ", plano(texto).strip(" ¿?¡!.,;:\"'“”«»"))
+ 
+ 
++def vocativo_ajeno(texto: str, nombre: str) -> bool:
++    """Indica si el comienzo llama explícitamente al otro asistente."""
++    frase = _limpiar(texto)
++    encontrado = re.match(r"^(?:(?:hola|hey|oye|buenas)\s+)?(jaime|pilar)(?:\s+|[.,:;]+\s*)", frase)
++    return bool(encontrado and encontrado.group(1) != plano(nombre))
++
++
+ def interpretar(texto: str, sonando: bool) -> dict[str, str] | None:
+     """Interpreta sólo las frases completas de música aprobadas en diseño 36."""
+     frase = _limpiar(texto)
+-    # El vocativo puede llegar con «Hola Jaime.» desde Whisper. Sólo se permite
+-    # al principio para no tragarse una pregunta que menciona a una persona.
++    # El filtro del bot ya rechazó un vocativo dirigido al otro perfil. Aquí se
++    # acepta el vocativo inicial para conservar la función pura sobre la forma
++    # real que entrega Whisper.
+     frase = re.sub(r"^(?:(?:hola|hey|oye|buenas)\s+)?(?:jaime|pilar)(?:\s+|[.,:;]+\s*)", "", frase)
+     if len(frase) > MAX_CONSULTA or not frase:
+         return None
+diff --git a/botv3/test_spotify.py b/botv3/test_spotify.py
+index 7fc47d7..5747608 100644
+--- a/botv3/test_spotify.py
++++ b/botv3/test_spotify.py
+@@ -15,6 +15,19 @@ ROOT = Path(__file__).parent
+ sys.path.insert(0, str(ROOT))
+ import spotify
+ 
++RECEPTOR_FIXTURE = json.loads((ROOT / "fixtures/spotify-receptor-v0.10.5.json").read_text())
++STATUS_OBLIGATORIOS = {
++    "username", "device_id", "device_type", "device_name", "play_origin",
++    "play_origin_device_id", "context_uri", "context_name", "stopped", "paused",
++    "buffering", "volume", "volume_steps", "repeat_context", "repeat_track",
++    "shuffle_context", "track",
++}
++TRACK_OBLIGATORIOS = {
++    "uri", "name", "artist_names", "artist_uris", "album_name", "album_uri",
++    "album_cover_url", "position", "duration", "release_date", "track_number",
++    "disc_number", "format", "codec", "bitrate", "sample_rate", "bit_depth",
++}
++
+ 
+ class FrasesTests(unittest.TestCase):
+     CAPTURA = [
+@@ -43,6 +56,15 @@ class FrasesTests(unittest.TestCase):
+         self.assertEqual(elegido["name"], "Oxytocin")
+         self.assertEqual(elegido["artists"][0]["name"], "Billie Eilish")
+ 
++    def test_fixture_receptor_respeta_forma_openapi_v0105(self):
++        """C4/C7 usan todos los campos obligatorios del contrato del receptor."""
++        for nombre in ("status_sonando", "status_detenido"):
++            with self.subTest(nombre=nombre):
++                estado = RECEPTOR_FIXTURE[nombre]
++                self.assertEqual(set(estado), STATUS_OBLIGATORIOS)
++        self.assertEqual(set(RECEPTOR_FIXTURE["status_sonando"]["track"]), TRACK_OBLIGATORIOS)
++        self.assertEqual(set(RECEPTOR_FIXTURE["auth_code"]), {"url", "code", "expires_at"})
++
+ 
+ class ReceptorFalso:
+     def __init__(self, sonando=False, registro=None, nombre="receptor"):
+@@ -56,8 +78,9 @@ class ReceptorFalso:
+             def do_GET(self):
+                 padre.llamadas.append(("GET", self.path)); padre.registro.append((padre.nombre, "GET", self.path))
+                 if self.path == "/status":
+-                    self._enviar(200, {"stopped": not padre.sonando, "paused": False,
+-                                      "track": {"name": "Oxytocin", "artist_names": ["Billie Eilish"]}})
++                    datos = dict(RECEPTOR_FIXTURE["status_sonando" if padre.sonando else "status_detenido"])
++                    datos["device_name"] = f"Casa · {padre.nombre.capitalize()}"
++                    self._enviar(200, datos)
+                 elif self.path == "/auth/code": self._enviar(204)
+                 else: self._enviar(404)
+             def do_POST(self):
+@@ -111,18 +134,43 @@ class IntegracionTests(unittest.TestCase):
+         self.bot.PERFIL_CFG = {"spotify": {"api": "http://127.0.0.1:1", "otros": []}}
+         enviados = []
+         with mock.patch.object(self.bot.spotify_mod, "estado", return_value=None), \
+-             mock.patch.object(self.bot.spotify_mod, "codigo", return_value={"url": "https://spotify.com/pair", "code": "ABCD"}), \
++             mock.patch.object(self.bot.spotify_mod, "codigo", return_value=RECEPTOR_FIXTURE["auth_code"]), \
+              mock.patch.object(self.bot, "send_text", lambda _, texto: enviados.append(texto)):
+             self.bot.comando_spotify(1)
+-        self.assertIn("https://spotify.com/pair", enviados[0]); self.assertIn("ABCD", enviados[0])
++        self.assertIn("https://www.spotify.com/pair", enviados[0]); self.assertIn("ABCD-EFGH", enviados[0])
+         enviados.clear()
+-        with mock.patch.object(self.bot.spotify_mod, "estado", return_value={"stopped": False, "paused": False,
+-                                                                               "track": {"name": "Oxytocin", "artist_names": ["Billie Eilish"]}}), \
++        with mock.patch.object(self.bot.spotify_mod, "estado", return_value=RECEPTOR_FIXTURE["status_sonando"]), \
+              mock.patch.object(self.bot, "send_text", lambda _, texto: enviados.append(texto)):
+             self.bot.comando_spotify(1)
+         self.assertIn("vinculado, sonando", enviados[0]); self.assertIn("Oxytocin — Billie Eilish", enviados[0])
+         self.bot.PERFIL_CFG = previo
+ 
++    def test_c2_no_consulta_receptor_y_vocativo_ajeno_no_activa(self):
++        previo, nombre = self.bot.PERFIL_CFG, self.bot.NOMBRE
++        self.bot.PERFIL_CFG = {"spotify": {"api": "http://127.0.0.1:3678", "otros": ["http://127.0.0.1:3679"]}}
++        # El módulo de esta suite carga el perfil Jaime; Pilar es el vocativo ajeno.
++        self.bot.NOMBRE = "Jaime"
++        frases_c2 = [
++            "pon una alarma a las 7", "pon un temporizador de 5 minutos", "pon pausa",
++            "agrega leche a la lista", "¿quién canta Oxytocin?", "reproducir la última nota", "compré pan",
++        ]
++        try:
++            with mock.patch.object(self.bot.spotify_mod, "estado") as estado, \
++                 mock.patch.object(self.bot.spotify_mod, "buscar") as buscar:
++                for texto in frases_c2:
++                    with self.subTest(texto=texto): self.assertFalse(self.bot.atender_spotify(1, texto, False))
++                self.assertFalse(self.bot.atender_spotify(1, "Hola Pilar. reproduce Oxytocin de Billie Eilish", False))
++                self.assertEqual(estado.call_count, 0)
++                self.assertEqual(buscar.call_count, 0)
++            # La excepción deliberada es «pausa» sola: C2 exige dejarla pasar
++            # cuando nada suena, lo que sólo se sabe consultando ambos estados.
++            with mock.patch.object(self.bot.spotify_mod, "estado", side_effect=[
++                    RECEPTOR_FIXTURE["status_detenido"], RECEPTOR_FIXTURE["status_detenido"]]) as estado:
++                self.assertFalse(self.bot.atender_spotify(1, "pausa", False))
++                self.assertEqual(estado.call_count, 2)
++        finally:
++            self.bot.PERFIL_CFG, self.bot.NOMBRE = previo, nombre
++
+ 
+ class ErroresYPerfilTests(unittest.TestCase):
+     def test_secreto_no_sale_al_fallar(self):
+diff --git a/encargos/88b-RESULTADO.md b/encargos/88b-RESULTADO.md
+index aa9624d..a24b5c2 100644
+--- a/encargos/88b-RESULTADO.md
++++ b/encargos/88b-RESULTADO.md
+@@ -86,3 +86,48 @@ python3 botv3/test_spotify.py        → Ran 6 tests, OK (skipped=1: bind loopba
+    del sandbox.
+ 3. Vincular cada cuenta desde `/spotify`; recién ahí probar reproducción real y confirmar que
+    el audio llega al G2000.
++
++## Arreglos vuelta 1
++
++Se eligió el criterio conservador cuando había ambigüedad: una frase dirigida explícitamente al
++otro asistente no se interpreta como música en el perfil que la recibió. El fixture del receptor
++no se presenta como captura: 88a no instaló los receptores, por lo que su origen es el contrato
++OpenAPI oficial v0.10.5. Contiene literalmente todos los campos obligatorios que ese receptor
++emitirá; queda pendiente sustituirlo por una captura una vez desplegada 88a.
++
++| Hallazgo | Cambio puntual | Prueba sobre la forma usada realmente |
++|---|---|---|
++| Grave: frases ajenas hacían `GET /status` antes de decidir | `atender_spotify` interpreta primero y retorna sin construir bases ni consultar un receptor para C2. Sólo `pausa` sola conserva la consulta, porque necesita conocer si algo suena. | `test_c2_no_consulta_receptor_y_vocativo_ajeno_no_activa`: sobre las frases C2 no ambiguas cuenta **0** llamadas a `estado()` y `buscar()`; para `pausa` con los dos `status_detenido` del fixture cuenta exactamente **2** y retorna `False`. |
++| Media: el vocativo del otro perfil podía activar el receptor propio | `spotify.vocativo_ajeno(texto, NOMBRE)` rechaza antes de `sin_vocativo()` e `interpretar()`. El parser sigue aceptando «Hola Jaime…» de Whisper, pero la atención del perfil Jaime deja pasar «Hola Pilar…». | La misma prueba usa la transcripción realista «Hola Pilar. reproduce Oxytocin de Billie Eilish»: retorna `False`, y mantiene los contadores de `estado()` y `buscar()` en **0**. C1 sigue probado directamente con «Hola Jaime. Reproducir oxitocina de Billie Eilish en Spotify.». |
++| Media: C4/C7 usaban objetos reducidos, no el contrato del receptor | Se agregó `botv3/fixtures/spotify-receptor-v0.10.5.json` y el servidor HTTP falso lo entrega para `/status`; C7 usa su `auth_code`. Incluye los 17 campos obligatorios de `status`, los 17 de `track` si existe, y `url`, `code`, `expires_at` para `/auth/code`. | `test_fixture_receptor_respeta_forma_openapi_v0105` exige esos conjuntos exactos de claves y C4/C7 consumen esas estructuras. Origen: [OpenAPI oficial go-librespot v0.10.5](https://raw.githubusercontent.com/devgianlu/go-librespot/v0.10.5/api-spec.yml), no una respuesta inventada ni una captura inexistente. El bind loopback de C4 sigue saltado en este sandbox; la prueba queda preparada para ejecutarse sin salto en la Pi. |
++
++Salida real de las suites después de los cambios:
++
++```text
++$ python3 pi/spotify/test_plantillas.py
++Ran 3 tests in 0.001s
++OK
++
++$ python3 pi/test_nodo_desplegar.py
++Ran 93 tests in 4.903s
++OK
++
++$ python3 botv3/test_botv3.py
++Ran 490 tests in 16.577s
++OK (skipped=4)
++
++$ python3 botv3/test_temporizadores.py
++✅ todo en verde
++
++$ python3 botv3/test_compras.py
++✅ todo en verde
++
++$ python3 botv3/test_spotify.py
++Ran 8 tests in 0.092s
++OK (skipped=1)
++```
++
++El único salto de Spotify es el servidor HTTP loopback efímero de C4: este sandbox no permite
++`bind(127.0.0.1)`. No se reemplazó por una falsa prueba de red; las comprobaciones de forma del
++fixture, de frases y de cero llamadas sí corrieron aquí. No se usó Spotify, Telegram, n8n, perfiles
++desplegados ni `sudo`.
+
+## Cambios ajenos (no son de esta etapa: no los revises)
+
+- "encargos/88br-RESULTADO.md"
+- "encargos/88br1-RESULTADO.md"
+- "encargos/COLA-ESTADO.md" (también lo cambió esta etapa: lo que se despliegue lo incluye)
+- "encargos/historial.jsonl"

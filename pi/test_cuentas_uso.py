@@ -1678,7 +1678,8 @@ class ProveedoresGratisTests(unittest.TestCase):
     def test_cargar_clave_no_muestra_la_key_y_acepta_guiones(self):
         cc = _cargar("cargar_clave", PI / "cargar-clave.py")
         # La lista fija es la de la tabla de proveedores, ni una más (Mistral se ignora).
-        self.assertEqual(set(cc.VARIABLES), {p["key"] for p in recetas.PROVEEDORES.values()})
+        self.assertEqual(set(cc.VARIABLES), {p["key"] for p in recetas.PROVEEDORES.values()} |
+                         {"SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET"})
         self.assertNotIn("MISTRAL_API_KEY", cc.VARIABLES)
         for variable, key in KEYS_FALSAS.items():
             self.assertEqual(cc.problema_de_forma(key), "", variable)

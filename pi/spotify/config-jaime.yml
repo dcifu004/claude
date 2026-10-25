@@ -1,0 +1,13 @@
+# go-librespot v0.10.5 — esquema: fixtures/config_schema.v0.10.5.json
+# La credencial efectiva queda en state.json, creado por go-librespot en esta misma carpeta.
+device_name: "Casa · Jaime"
+audio_backend: pulseaudio
+zeroconf_enabled: false
+credentials:
+  type: device_auth
+server:
+  enabled: true
+  address: 127.0.0.1
+  port: 3678
+initial_volume: 40
+bitrate: 160

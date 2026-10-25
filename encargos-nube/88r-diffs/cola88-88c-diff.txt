@@ -1,0 +1,459 @@
+# Diff propio de la etapa 88c (cola cola88)
+
+## Fase propia autor: b873b5c..e3066d8
+
+ encargos/88a-RESULTADO.md |  11 +++--
+ encargos/88c-RESULTADO.md | 103 ++++++++++++++++++++++++++++++++++++++++++++++
+ pi/nodo-desplegar.py      |  69 +++++++++++++++++++++++++++++--
+ pi/spotify/LEEME.md       |  31 ++++++++++++--
+ pi/test_nodo_desplegar.py | 102 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 303 insertions(+), 13 deletions(-)
+
+diff --git a/encargos/88a-RESULTADO.md b/encargos/88a-RESULTADO.md
+index 74690d1..4ebfbe6 100644
+--- a/encargos/88a-RESULTADO.md
++++ b/encargos/88a-RESULTADO.md
+@@ -26,12 +26,11 @@ sesión de autor.
+   reconstruyó. Por eso aún falta incorporarlo al vault antes de poder hacer su alta real.
+ 
+ Los nombres de configuración se comprobaron contra el `config_schema.json` **completo** de ese
+-tag, guardado como `fixtures/config_schema.v0.10.5.json` (hash local
+-`96165fdc8a5abc239544bfecc9c49fd020c51b72c0747e6c8d63473cd3f84819`): son
++tag, guardado como `fixtures/config_schema.v0.10.5.json` (13.895 B, sha256
++`e6a3cf037c27af877c35183b51e8df82c88ef0e2fb88ecd38ee2cca3a5ee50cc`): son
+ `zeroconf_enabled`, `initial_volume`, `server.address`, `server.port`, `credentials.type` y
+-`audio_backend`. Se dejó en `fixtures/` el extracto fiel de las ramas que usan las plantillas;
+-antes de aprobar hay que reemplazarlo por el `config_schema.json` completo del mismo tag, que no
+-pudo descargarse desde esta shell.
++`audio_backend`. El fixture fue reemplazado por el archivo real descargado del tag v0.10.5; la
++prueba de plantillas sigue validando contra ese esquema completo.
+ 
+ ## Archivos creados o modificados
+ 
+@@ -135,7 +134,7 @@ Salida esperada, en orden: `dcifu004:dcifu004 700`, `dcifu004:dcifu004 600`,
+ ```bash
+ systemctl --user stop spotify@jaime
+ mv /opt/nodo/datos/spotify/jaime/config.yml /opt/nodo/datos/spotify/jaime/config.yml.c6
+-systemctl --user start spotify@jaime || test $? -eq 1
++systemctl --user start spotify@jaime
+ systemctl --user show spotify@jaime -p ActiveState -p ConditionResult -p NRestarts
+ mv /opt/nodo/datos/spotify/jaime/config.yml.c6 /opt/nodo/datos/spotify/jaime/config.yml
+ systemctl --user start spotify@jaime && systemctl --user is-active spotify@jaime
+diff --git a/encargos/88c-RESULTADO.md b/encargos/88c-RESULTADO.md
+new file mode 100644
+index 0000000..ca07edc
+--- /dev/null
++++ b/encargos/88c-RESULTADO.md
+@@ -0,0 +1,103 @@
++# 88c — resultado del arreglo tras revisión 3
++
++## Estado
++
++**Listo en el vault; no desplegado.** No se ejecutó `sudo`, el bootstrap ni las altas, no se
++escribió en `/etc` o `/usr/local`, y no se tocó el binario. El volumen LUKS estaba montado. Se
++verificaron los artefactos recibidos:
++
++```text
++9130ee00613abeb9620cc06fe9bc7080eba73618d547b0c71ec991f3504dc5ff  pi/spotify/go-librespot-v0.10.5-linux-arm64
++e6a3cf037c27af877c35183b51e8df82c88ef0e2fb88ecd38ee2cca3a5ee50cc  pi/spotify/fixtures/config_schema.v0.10.5.json
++```
++
++El binario conserva modo `0755` y tamaño `17.491.240 B`. El fixture es el esquema real completo
++de v0.10.5 (13.895 B); también se corrigió el texto histórico de `88a-RESULTADO.md` que aún decía
++que era un extracto y el `|| test` que sobraba en C6.
++
++## Cambios por archivo
++
++- `pi/nodo-desplegar.py`: `RE_FUENTE` acepta sólo el carácter adicional `@`; una ruta absoluta y
++  `..` siguen rechazados. Se sacó el prefijo Spotify redundante de `PERMITIDOS`. Los enlaces se
++  revisan antes de `validar_destino`: uno ya correcto queda sin cambios, uno distinto se rechaza,
++  el hash pedido se valida y una creación deja su objetivo como respaldo. Al iniciar, el escucha
++  limpia únicamente temporales regulares con la forma `.nombre.nodo-desplegar-<16 hex>` en las
++  carpetas derivadas del catálogo, abiertas sin seguir enlaces.
++- `pi/test_nodo_desplegar.py`: de 87 a 93 pruebas. Cubren la fuente real con `@`, el catálogo de
++  `unidad-botv3-at-service`, el bootstrap partido como shell, enlace repetido/distinto/hash,
++  respaldo de reversión y limpieza de un temporal aun con el enlace instalado.
++- `pi/spotify/LEEME.md`: bootstrap completo y entre comillas, cinco altas con sus hashes en el
++  orden seguro, y nota de actualización de versión. Los nombres personales sueltos se cambiaron
++  por «el usuario» o la etiqueta del perfil.
++- `encargos/88a-RESULTADO.md`: corrigió la descripción/hash del fixture real y el comando C6.
++
++## Hallazgos de rev3
++
++| Hallazgo | Estado |
++|---|---|
++| 1. `@` en fuentes | Cerrado: la ruta real `pi/spotify/spotify@.service` pasa por `leer_fuente`; absoluta y `..` fallan. La entrada real `unidad-botv3-at-service` prepara. |
++| 2. Bootstrap partido e incompleto | Cerrado: una sola cadena citada llega a `sugerir` con sus cinco pasos. |
++| 3. Binario y altas | Cerrado en el vault: binario verificado y cinco líneas de alta documentadas, sin ejecutarlas. |
++| 4. Enlace ya existente | Cerrado: objetivo igual se omite; otro objetivo se rechaza; se exige el hash y se conserva respaldo al revertir. |
++| 5. Fixture | Cerrado por el antecedente: fixture real v0.10.5 y texto corregido. |
++| 6. Actualización de versión | Cerrado: `LEEME.md` explica que se actualiza el objetivo permitido, fuentes y bootstrap antes de la nueva alta. |
++| 7. Nombre de pila | Cerrado en `LEEME.md`. |
++| 8. Detalles | Cerrados: limpieza de temporales al inicio, prefijo redundante retirado y C6 sin `|| test`. |
++
++El `O_NONBLOCK` de `leer_fuente` no se modificó: queda deliberadamente fuera de alcance.
++
++## Para copiar al desplegar
++
++Primero, enviar esta única sugerencia; las comillas aseguran que la shell entrega una sola orden a
++`sugerir`:
++
++```bash
++nodo-desplegar sugerir --motivo "Preparar directorio root seguro para instalar go-librespot" -- "sudo install -d -m 0755 -o root -g root /usr/local/lib/go-librespot && sudo install -m 0755 -o root -g root /opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/pi/nodo-desplegar.py /usr/local/bin/nodo-desplegar && sudo install -m 0644 -o root -g root /opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/pi/desplegar-escucha.service /etc/systemd/system/desplegar-escucha.service && sudo systemctl daemon-reload && sudo systemctl restart desplegar-escucha"
++```
++
++Después de su confirmación, pedir las altas en este orden. Las configuraciones y la unidad llevan
++`--despues` vacío; el hash del enlace es el SHA-256 de su objetivo literal.
++
++```bash
++nodo-desplegar alta spotify-binario=9130ee00613abeb9620cc06fe9bc7080eba73618d547b0c71ec991f3504dc5ff 10-Proyectos/11-Pi5/pi/spotify/go-librespot-v0.10.5-linux-arm64 /usr/local/lib/go-librespot/v0.10.5/go-librespot --modo 0755 --dueno root:root --motivo "Instalar binario Spotify v0.10.5 verificado"
++nodo-desplegar alta-enlace spotify-enlace=ded4581c06ac51458b67946717f7b7d80c9186aa9394817b9e26319671eed499 /usr/local/bin/go-librespot /usr/local/lib/go-librespot/v0.10.5/go-librespot --motivo "Publicar enlace del binario Spotify v0.10.5"
++nodo-desplegar alta spotify-unidad=2802c2eec07aa6508f659c8ebb8503c0d1109a8189baf41f44fdad9be215ce79 10-Proyectos/11-Pi5/pi/spotify/spotify@.service /etc/systemd/user/spotify@.service --modo 0644 --dueno root:root --despues --motivo "Instalar unidad de usuario Spotify"
++nodo-desplegar alta spotify-jaime=d870872bda05ac186c638a7e5bfe8e596d0231bd72e2773369504fbd6acfe3c0 10-Proyectos/11-Pi5/pi/spotify/config-jaime.yml /opt/nodo/datos/spotify/jaime/config.yml --modo 0600 --dueno dcifu004:dcifu004 --despues --motivo "Instalar configuración privada Spotify Jaime"
++nodo-desplegar alta spotify-pilar=8b0367c7efea4d62842da326babaf02be96f3ca5c2cf667707c839455941d48a 10-Proyectos/11-Pi5/pi/spotify/config-pilar.yml /opt/nodo/datos/spotify/pilar/config.yml --modo 0600 --dueno dcifu004:dcifu004 --despues --motivo "Instalar configuración privada Spotify Pilar"
++```
++
++## Suites ejecutadas
++
++```text
++$ python3 pi/spotify/test_plantillas.py
++Ran 3 tests in 0.001s
++OK
++
++$ python3 pi/test_nodo_desplegar.py
++Ran 93 tests in 4.715s
++OK
++
++$ python3 botv3/test_botv3.py
++Ran 490 tests in 16.533s
++OK (skipped=4)
++
++$ python3 botv3/test_temporizadores.py
++✅ todo en verde
++
++$ python3 botv3/test_compras.py
++✅ todo en verde
++
++$ python3 botv3/test_spotify.py
++python3: can't open file '.../botv3/test_spotify.py': [Errno 2] No such file or directory
++
++rc: plantillas=0 nodo=0 botv3=0 temporizadores=0 compras=0 spotify=2
++```
++
++La sexta suite no existe en este árbol y el rc 2 es el mismo de la línea base; no es una falla
++nueva del arreglo. Los cuatro `skipped` del bot corresponden a sockets locales que el sandbox no
++permite.
++
++## Pendientes
++
++Sólo queda el despliegue manual descrito arriba y luego las verificaciones C1--C6 en la Pi. La
++vinculación de cuentas sigue fuera de esta etapa, en 88b.
+diff --git a/pi/nodo-desplegar.py b/pi/nodo-desplegar.py
+index fca3408..fd323ae 100644
+--- a/pi/nodo-desplegar.py
++++ b/pi/nodo-desplegar.py
+@@ -148,7 +148,7 @@ MONTAJE = Path("/opt/nodo/datos")
+ ARRANQUE = Path("/proc/sys/kernel/random/boot_id")
+ 
+ PERMITIDOS = ("/etc/systemd/system/", "/etc/systemd/user/", "/usr/local/bin/", "/usr/local/lib/go-librespot/",
+-              "/opt/nodo/", "/opt/botv3/", "/opt/captura/", "/opt/nodo/datos/spotify/")
++              "/opt/nodo/", "/opt/botv3/", "/opt/captura/")
+ # No quedan excepciones de archivo único: Spotify usa el prefijo de /etc/systemd/user.
+ PERMITIDOS_EXACTOS: set[str] = set()
+ PROHIBIDOS = ("/etc/sudoers", "/etc/pam.d", "/etc/ssh", "/etc/nodo", "/etc/fstab",
+@@ -171,7 +171,8 @@ RE_ID = re.compile(r"\d{8}-\d{6}-[0-9a-f]{4}")
+ RE_UNIDAD = re.compile(r"[A-Za-z0-9@_.-]{1,64}\.(service|timer|path|socket)")
+ RE_ARG = re.compile(r"[A-Za-z0-9._=/:,@+-]{0,64}")
+ RE_ARRANQUE = re.compile(r"[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}")
+-RE_FUENTE = re.compile(r"[\w ./()-]{1,200}")
++RE_FUENTE = re.compile(r"[\w ./()@-]{1,200}")
++RE_TEMPORAL = re.compile(r"\.[^/]+\.nodo-desplegar-[0-9a-f]{16}")
+ RE_CLAVES_UNIDAD = re.compile(
+     r"^\s*-?(ExecStart\w*|ExecStop\w*|User|Group|DynamicUser|SupplementaryGroups|"
+     r"AmbientCapabilities|CapabilityBoundingSet|NoNewPrivileges|ProtectSystem|ProtectHome|"
+@@ -619,7 +620,8 @@ def validar_despues(acciones: list) -> None:
+ 
+ def leer_fuente(relativa: str) -> bytes:
+     """Lee una fuente del vault como root sin seguir enlaces fuera de el (regla 2)."""
+-    if not RE_FUENTE.fullmatch(relativa) or ".." in relativa.split("/"):
++    if (not RE_FUENTE.fullmatch(relativa) or Path(relativa).is_absolute()
++            or ".." in relativa.split("/")):
+         raise ValueError(f"fuente invalida: {relativa}")
+     if not os.path.ismount("/opt/nodo/datos"):
+         raise ValueError("el volumen cifrado está cerrado: corre sudo abrir-datos")
+@@ -767,6 +769,7 @@ class Escucha:
+             self.guardar()
+             log(f"otro arranque del equipo: {len(self.envios)} cupo(s) de enviar se conservan "
+                 f"{ENVIAR_VENTANA_S // 60} min más")
++        self.limpiar_temporales()
+         self.publicar_catalogo()
+ 
+     @staticmethod
+@@ -830,6 +833,49 @@ class Escucha:
+         ruta.write_text(json.dumps(pub, ensure_ascii=False, indent=1))
+         os.chmod(ruta, 0o644)
+ 
++    def limpiar_temporales(self) -> None:
++        """Quita sólo los temporales huérfanos que este escucha pudo dejar al caer.
++
++        Se deriva cada carpeta del catálogo (más el único enlace cerrado), en vez de recorrer
++        árboles amplios como /opt/nodo. No se sigue ningún enlace al abrir o borrar.
++        """
++        entradas = list(self.cat().values()) + [
++            {"destino": destino} for destino in ENLACES_PERMITIDOS
++        ]
++        padres: set[Path] = set()
++        for entrada in entradas:
++            destino = Path(entrada.get("destino", ""))
++            # validar_destino() rechaza acertadamente el enlace ya publicado. Acá sólo se
++            # necesita decidir si su carpeta es una de las autorizadas; abrir_directorio()
++            # vuelve a verificar cada tramo sin seguir enlaces antes de borrar nada.
++            s = str(destino)
++            if (not destino.is_absolute() or ".." in destino.parts
++                    or (not s.startswith(PERMITIDOS) and s not in PERMITIDOS_EXACTOS)
++                    or s.startswith(PROHIBIDOS)):
++                continue
++            padres.add(destino.parent)
++        borrados = 0
++        for padre_ruta in padres:
++            try:
++                padre = abrir_directorio(padre_ruta)
++            except (FileNotFoundError, NotADirectoryError):
++                continue
++            try:
++                for nombre in os.listdir(padre):
++                    if not RE_TEMPORAL.fullmatch(nombre):
++                        continue
++                    try:
++                        st = os.stat(nombre, dir_fd=padre, follow_symlinks=False)
++                        if stat.S_ISREG(st.st_mode) and st.st_nlink == 1:
++                            os.unlink(nombre, dir_fd=padre)
++                            borrados += 1
++                    except FileNotFoundError:
++                        pass
++            finally:
++                os.close(padre)
++        if borrados:
++            log(f"limpié {borrados} temporal(es) huérfano(s) de nodo-desplegar")
++
+     # ── pedidos ──
+     def procesar_pedidos(self) -> None:
+         for f in sorted(PEDIDOS.iterdir()):
+@@ -908,14 +954,24 @@ class Escucha:
+                 raise ValueError(f"'{n}' no está en el catálogo")
+             e = cat[n]
+             destino = Path(e["destino"])
+-            validar_destino(destino)
+             if e.get("tipo") == "enlace":
+                 if tipo == "probar":
+                     raise ValueError("no se puede probar un enlace como ejecutable")
+                 validar_enlace(destino, e.get("objetivo", ""))
+                 objetivo = e["objetivo"]
+                 h = hashlib.sha256(objetivo.encode()).hexdigest()
++                if esperado and not h.startswith(esperado):
++                    if time.time() - desde > ESPERA_SYNC_S:
++                        raise ValueError(f"{n}: el hash pedido no corresponde al enlace (es {h[:12]})")
++                    return False
+                 actual_enlace = leer_enlace(destino)
++                # El enlace instalado es el único caso válido en que el destino es un enlace.
++                # Se mira antes de validar_destino(), que correctamente rechaza enlaces para
++                # archivos normales. Uno distinto no se reemplaza silenciosamente.
++                if actual_enlace is not None and actual_enlace != objetivo:
++                    raise ValueError(f"enlace existente apunta a otro objetivo: {destino}")
++                if actual_enlace is None:
++                    validar_destino(destino)
+                 items.append({"nombre": n, "tipo": "enlace", "destino": str(destino), "hash": h,
+                               "objetivo": objetivo, "modo": 0, "dueno": "root:root", "despues": [],
+                               "igual": actual_enlace == objetivo})
+@@ -923,6 +979,7 @@ class Escucha:
+                     cambios += 1
+                     diffs.append(f"enlace {destino} → {objetivo}")
+                 continue
++            validar_destino(destino)
+             validar_dueno(e.get("dueno", "root:root"), destino)
+             validar_despues(e.get("despues", []))
+             nuevo = leer_fuente(e["fuente"])
+@@ -1260,6 +1317,10 @@ class Escucha:
+                 dest = Path(it["destino"])
+                 validar_destino(dest)
+                 if it.get("tipo") == "enlace":
++                    # Nunca se reemplaza un enlace previo: preparar sólo deja llegar acá si no
++                    # existía. El respaldo conserva qué enlace alcanzó a publicarse si algo
++                    # posterior obliga a revertir el pedido.
++                    (resp / it["nombre"]).write_text(it["objetivo"] + "\n")
+                     crear_enlace(dest, it["objetivo"])
+                     hechos.append((it, False))
+                     continue
+diff --git a/pi/spotify/LEEME.md b/pi/spotify/LEEME.md
+index 0fa95a3..9a31292 100644
+--- a/pi/spotify/LEEME.md
++++ b/pi/spotify/LEEME.md
+@@ -24,12 +24,37 @@ bajo `ProtectSystem=strict`. La cola debe pedir —sin ejecutarlo desde esta eta
+ comando manual mediante `nodo-desplegar sugerir`:
+ 
+ ```bash
+-nodo-desplegar sugerir --motivo "Preparar directorio root seguro para instalar go-librespot" -- sudo install -d -m 0755 -o root -g root /usr/local/lib/go-librespot && sudo systemctl daemon-reload && sudo systemctl restart desplegar-escucha
++nodo-desplegar sugerir --motivo "Preparar directorio root seguro para instalar go-librespot" -- "sudo install -d -m 0755 -o root -g root /usr/local/lib/go-librespot && sudo install -m 0755 -o root -g root /opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/pi/nodo-desplegar.py /usr/local/bin/nodo-desplegar && sudo install -m 0644 -o root -g root /opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/pi/desplegar-escucha.service /etc/systemd/system/desplegar-escucha.service && sudo systemctl daemon-reload && sudo systemctl restart desplegar-escucha"
+ ```
+ 
+-Sólo después de que Diego confirme ese paso, el catálogo puede instalar el binario y la unidad.
++Sólo después de que el usuario confirme ese paso, el catálogo puede instalar el binario y la unidad.
+ La unidad vive en `/etc/systemd/user`, por lo que el escucha no necesita ver `/home`.
+ 
++### Altas, en este orden
++
++No se ejecutan desde este encargo. Después del bootstrap, el usuario puede pedir estas altas una
++por una; los hashes fijan exactamente cada fuente. La unidad y las configuraciones llevan
++`--despues` vacío para que el escucha del sistema no intente reiniciar una unidad de usuario.
++
++```bash
++nodo-desplegar alta spotify-binario=9130ee00613abeb9620cc06fe9bc7080eba73618d547b0c71ec991f3504dc5ff 10-Proyectos/11-Pi5/pi/spotify/go-librespot-v0.10.5-linux-arm64 /usr/local/lib/go-librespot/v0.10.5/go-librespot --modo 0755 --dueno root:root --motivo "Instalar binario Spotify v0.10.5 verificado"
++nodo-desplegar alta-enlace spotify-enlace=ded4581c06ac51458b67946717f7b7d80c9186aa9394817b9e26319671eed499 /usr/local/bin/go-librespot /usr/local/lib/go-librespot/v0.10.5/go-librespot --motivo "Publicar enlace del binario Spotify v0.10.5"
++nodo-desplegar alta spotify-unidad=2802c2eec07aa6508f659c8ebb8503c0d1109a8189baf41f44fdad9be215ce79 10-Proyectos/11-Pi5/pi/spotify/spotify@.service /etc/systemd/user/spotify@.service --modo 0644 --dueno root:root --despues --motivo "Instalar unidad de usuario Spotify"
++nodo-desplegar alta spotify-jaime=d870872bda05ac186c638a7e5bfe8e596d0231bd72e2773369504fbd6acfe3c0 10-Proyectos/11-Pi5/pi/spotify/config-jaime.yml /opt/nodo/datos/spotify/jaime/config.yml --modo 0600 --dueno dcifu004:dcifu004 --despues --motivo "Instalar configuración privada Spotify Jaime"
++nodo-desplegar alta spotify-pilar=8b0367c7efea4d62842da326babaf02be96f3ca5c2cf667707c839455941d48a 10-Proyectos/11-Pi5/pi/spotify/config-pilar.yml /opt/nodo/datos/spotify/pilar/config.yml --modo 0600 --dueno dcifu004:dcifu004 --despues --motivo "Instalar configuración privada Spotify Pilar"
++```
++
++El hash del enlace es el SHA-256 del objetivo literal:
++`ded4581c06ac51458b67946717f7b7d80c9186aa9394817b9e26319671eed499`.
++
++### Subir go-librespot de versión
++
++La versión está fijada tanto en el enlace permitido del `nodo-desplegar` instalado como en estas
++rutas. Para subirla, primero deja en el vault el binario y su hash verificados; luego actualiza
++la versión y el objetivo permitido en `pi/nodo-desplegar.py`, las rutas y documentación Spotify,
++y repite el bootstrap para instalar ese `nodo-desplegar` antes de pedir el binario y el enlace
++nuevos. No se reemplaza el enlace existente: se rechaza si apunta a otro objetivo.
++
+ Después de que la cola haya desplegado todo, como `dcifu004` se habilitan y arrancan las dos
+ instancias una sola vez:
+ 
+@@ -48,7 +73,7 @@ curl -s 127.0.0.1:3679/auth/code
+ ```
+ 
+ Cada respuesta contiene la URL de Spotify y un código temporal. Jaime lo aprueba con la cuenta
+-de Diego; Pilar, con la de Camila. La credencial no se pone en YAML: go-librespot la guarda en
++del usuario; Pilar, con la cuenta asociada a ese perfil. La credencial no se pone en YAML: go-librespot la guarda en
+ `state.json` bajo la carpeta privada del perfil.
+ 
+ ## Desvincular
+diff --git a/pi/test_nodo_desplegar.py b/pi/test_nodo_desplegar.py
+index 3837795..bf43ff8 100644
+--- a/pi/test_nodo_desplegar.py
++++ b/pi/test_nodo_desplegar.py
+@@ -17,6 +17,7 @@ import json
+ import os
+ import pwd
+ import secrets
++import shlex
+ import shutil
+ import stat
+ import subprocess
+@@ -461,6 +462,107 @@ class DuenosSpotifyTests(Base):
+         with self.assertRaisesRegex(ValueError, "lista cerrada"):
+             self.nd.validar_enlace(Path(destino), "/etc/systemd/system/evil.service")
+ 
++    def test_fuente_real_con_arroba_pasa_y_conserva_los_rechazos_de_ruta(self):
++        relativa = "pi/spotify/spotify@.service"
++        fuente = self.nd.VAULT / relativa
++        fuente.parent.mkdir(parents=True)
++        contenido = (PI / "spotify" / "spotify@.service").read_bytes()
++        fuente.write_bytes(contenido)
++        with mock.patch.object(self.nd.os.path, "ismount", return_value=True):
++            self.assertEqual(self.nd.leer_fuente(relativa), contenido)
++            for mala in ("pi/spotify/../spotify@.service", "/pi/spotify/spotify@.service"):
++                with self.subTest(mala=mala), self.assertRaisesRegex(ValueError, "fuente invalida"):
++                    self.nd.leer_fuente(mala)
++
++    def test_unidad_botv3_con_arroba_ya_prepara(self):
++        relativa = "10-Proyectos/11-Pi5/botv3/botv3@.service"
++        fuente = self.nd.VAULT / relativa
++        fuente.parent.mkdir(parents=True)
++        fuente.write_bytes((PROYECTO / "botv3" / "botv3@.service").read_bytes())
++        destino = self.tmp / "etc" / "botv3@.service"
++        self.nd.PERMITIDOS = (str(self.tmp / "etc") + "/",)
++        self.nd.CATALOGO.write_text("[entrada.unidad-botv3-at-service]\n"
++                                   f"fuente = {relativa!r}\ndestino = {str(destino)!r}\n"
++                                   'modo = "0644"\ndueno = "root:root"\ndespues = []\n')
++        pedido = {"tipo": "desplegar", "entradas": [{"nombre": "unidad-botv3-at-service", "hash": ""}],
++                  "motivo": "unidad real"}
++        with mock.patch.object(self.nd.os.path, "ismount", return_value=True):
++            self.assertTrue(self.nd.Escucha().preparar("20261025-120000-eeee", os.getuid(), pedido, 0))
++        self.assertEqual(self.tg.llamadas[-1]["metodo"], "sendMessage")
++
++    def test_bootstrap_entrega_a_sugerir_los_cinco_pasos_en_un_solo_comando(self):
++        linea = next(l for l in (PI / "spotify" / "LEEME.md").read_text().splitlines()
++                     if l.startswith("nodo-desplegar sugerir "))
++        args = shlex.split(linea)
++        self.assertEqual(args[:2], ["nodo-desplegar", "sugerir"])
++        self.assertEqual(len(args[args.index("--") + 1:]), 1)
++        pid = self.cli(self.nd.sugerir, args[2:])
++        pedido = json.loads((self.nd.PEDIDOS / f"{pid}.json").read_text())
++        self.assertEqual(pedido["comando"].count(" && "), 4)
++        for paso in ("install -d", "install -m 0755", "install -m 0644",
++                      "systemctl daemon-reload", "systemctl restart desplegar-escucha"):
++            self.assertIn(paso, pedido["comando"])
++
++    def test_enlace_igual_se_omite_pero_otro_objetivo_o_hash_se_rechaza(self):
++        destino = self.tmp / "usr" / "local" / "bin" / "go-librespot"
++        objetivo = str(self.tmp / "usr" / "local" / "lib" / "go-librespot" / "v0.10.5" / "go-librespot")
++        destino.parent.mkdir(parents=True)
++        destino.symlink_to(objetivo)
++        self.nd.PERMITIDOS = (str(self.tmp / "usr") + "/",)
++        self.nd.ENLACES_PERMITIDOS = {str(destino): objetivo}
++        self.nd.CATALOGO.write_text("[entrada.spotify-bin]\n"
++                                   'tipo = "enlace"\n'
++                                   f"destino = {str(destino)!r}\nobjetivo = {objetivo!r}\n")
++        bueno = {"tipo": "desplegar", "entradas": [{"nombre": "spotify-bin", "hash": hashlib.sha256(objetivo.encode()).hexdigest()}],
++                 "motivo": "repetir enlace"}
++        escucha = self.nd.Escucha()
++        self.assertTrue(escucha.preparar("20261025-120000-eeee", os.getuid(), bueno, 0))
++        self.assertEqual(self.resultado("20261025-120000-eeee")["estado"], "sin cambios")
++        destino.unlink()
++        destino.symlink_to("/otro/objetivo")
++        with self.assertRaisesRegex(ValueError, "otro objetivo"):
++            self.nd.Escucha().preparar("20261025-120001-eeee", os.getuid(), bueno, 0)
++        destino.unlink()
++        mal_hash = {**bueno, "entradas": [{"nombre": "spotify-bin", "hash": "00000000"}]}
++        with self.assertRaisesRegex(ValueError, "hash pedido"):
++            self.nd.Escucha().preparar("20261025-120002-eeee", os.getuid(), mal_hash, 0)
++
++    def test_revertir_un_enlace_conserva_su_respaldo(self):
++        destino = self.tmp / "usr" / "local" / "bin" / "go-librespot"
++        objetivo = self.tmp / "usr" / "local" / "lib" / "go-librespot" / "v0.10.5" / "go-librespot"
++        destino.parent.mkdir(parents=True)
++        objetivo.parent.mkdir(parents=True)
++        objetivo.write_bytes(b"binario real")
++        self.nd.PERMITIDOS = (str(self.tmp / "usr") + "/",)
++        self.nd.ENLACES_PERMITIDOS = {str(destino): str(objetivo)}
++        item = {"nombre": "spotify-bin", "tipo": "enlace", "destino": str(destino),
++                "objetivo": str(objetivo), "hash": hashlib.sha256(str(objetivo).encode()).hexdigest(),
++                "modo": 0, "dueno": "root:root", "despues": [], "igual": False}
++        self.nd.RESPALDOS.mkdir()
++        escucha = self.nd.Escucha()
++        escucha.despues = mock.Mock(side_effect=RuntimeError("falla posterior"))
++        estado, _ = escucha.aplicar({"id": "enlace-prueba", "tipo": "desplegar", "items": [item]})
++        self.assertEqual(estado, "revertido")
++        self.assertFalse(destino.exists() or destino.is_symlink())
++        self.assertEqual((self.nd.RESPALDOS / "desplegar-enlace-prueba" / "spotify-bin").read_text(),
++                         str(objetivo) + "\n")
++
++    def test_al_arrancar_limpia_solo_temporales_huerfanos_del_catalogo(self):
++        destino = self.tmp / "usr" / "local" / "bin" / "programa"
++        destino.parent.mkdir(parents=True)
++        temporal = destino.parent / ".programa.nodo-desplegar-0123456789abcdef"
++        conservar = destino.parent / ".programa.nodo-desplegar-no-es-un-hex"
++        temporal.write_text("a medio escribir")
++        conservar.write_text("no tocar")
++        destino.symlink_to("/bin/true")
++        self.nd.PERMITIDOS = (str(self.tmp / "usr") + "/",)
++        self.nd.CATALOGO.write_text("[entrada.programa]\n"
++                                   'fuente = "x"\n'
++                                   f"destino = {str(destino)!r}\nmodo = \"0755\"\ndueno = \"root:root\"\ndespues = []\n")
++        self.nd.Escucha()
++        self.assertFalse(temporal.exists())
++        self.assertEqual(conservar.read_text(), "no tocar")
++
+     def test_escucha_tolera_ruta_de_binario_aun_no_creada_y_no_lee_home(self):
+         unidad = (PI / "desplegar-escucha.service").read_text()
+         self.assertIn("-/usr/local/lib/go-librespot", unidad)

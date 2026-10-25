@@ -47,6 +47,9 @@ voz = "/opt/piper/voces/es_MX-claude-high.onnx"
 # en rango; si la clave falta o es invalida, el perfil queda sin clima (la hora no la usa).
 clima = { lugar = "Las Condes", lat = -33.41, lon = -70.57 }
 
+# Receptor Connect local de este perfil; el otro sólo se pausa para no superponer audio.
+spotify = { api = "http://127.0.0.1:3679", otros = ["http://127.0.0.1:3678"] }
+
 # Mensajes y documentos de las IA (encargo 70, 19-10-2026): `mensaje --a pilar` deja el envio en
 # casa/para-pilar/ y este bot lo entrega SOLO con el ✅ de Diego (firma root de `nodo-desplegar
 # sugerir`, de un solo uso y dentro de 30 min). Sin esta llave el hilo no arranca; jaime no la lleva.

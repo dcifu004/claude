@@ -79,6 +79,9 @@ voz_habla_agenda = true
 # en rango; si la clave falta o es invalida, el perfil queda sin clima (la hora no la usa).
 clima = { lugar = "Las Condes", lat = -33.41, lon = -70.57 }
 
+# Receptor Connect local de este perfil; el otro sólo se pausa para no superponer audio.
+spotify = { api = "http://127.0.0.1:3678", otros = ["http://127.0.0.1:3679"] }
+
 # Quien paga cada ruta de agente, en orden: la primera contesta y las demas son
 # el respaldo si falla o se agota (29-09-2026, pagina 🤖 → 💳 Cuentas). Reemplaza a
 # `web_codex = true` y `claude_config_web`, que decian lo mismo en dos llaves:
