@@ -109,8 +109,9 @@ pi/test_cuentas_uso Ran 74 tests · FAILED (failures=1, errors=9, skipped=4)    
 - Los archivos son 0644 en una carpeta 0755 dentro del estado de cada bot. No traen texto, pero sí cuándo y qué
   se usó. Si eso se considera sensible, bajar a 0640 con un grupo compartido.
 - Los envoltorios de `MARCAS` y de `audit`/`send_text` se aplican por nombre al final del bloque. Si alguien
-  renombra un manejador, la línea queda como `desconocido`, pero el bot no se cae: el `globals()[nombre]` de
-  un nombre que ya no existe **sí** fallaría al importar. Eso lo pilla `test_frases_marcadas_por_su_manejador`.
+  renombra un manejador de la tabla, el bot falla al importarse (`KeyError` en `globals()`), así que no queda
+  en silencio: lo pilla cualquier prueba. Un manejador nuevo que no esté en la tabla cuenta sus frases como
+  `desconocido` (o `consulta:auto`) hasta que se agregue.
 
 ## Qué cambiar en la guía (doc 35, lo hace el 93)
 
