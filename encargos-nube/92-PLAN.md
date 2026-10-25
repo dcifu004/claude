@@ -18,7 +18,7 @@
       `atender_compras`, `submit_query` (→ `consulta:<ruta>`)… Las que devuelven bool marcan sólo si
       devuelven verdadero.
   - **Resultado:** `error` si el manejador lanzó, si `audit` se llamó con `status="error"` o si se mandó un
-    texto que parte con «❌».
+    texto que parte con «❌» o «No pude».
 - **Nunca se guarda el texto del mensaje**: sólo `{t, bot, funcion, canal, resultado}`, con las funciones de
   una lista cerrada. Un mensaje no autorizado no se cuenta.
 - **Escritor que no falla nunca:** `botv3/usos.py` (módulo puro, que también usa `bots-info`).

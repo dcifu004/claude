@@ -17,6 +17,8 @@ import hashlib
 from email.utils import parsedate_to_datetime
 import json
 import logging
+import contextlib
+import functools
 import math
 import os
 from pathlib import Path
@@ -8133,6 +8135,8 @@ def handle_message(message: dict[str, Any]) -> None:
         comando_estado(chat_id)
     elif command == "/uso":
         comando_uso(chat_id)
+    elif command == "/usos":
+        comando_usos(chat_id)
     elif command == "/remoto" and PERFIL == "jaime":
         comando_remoto(chat_id)
     elif ruta_interna(command[1:]) in RUTAS_CONOCIDAS:
@@ -8165,14 +8169,170 @@ def handle_message(message: dict[str, Any]) -> None:
 
 
 def handle_update(update: dict[str, Any]) -> None:
-    message = update.get("message")
-    if isinstance(message, dict):
-        handle_message(message)
-        return
+    with contando_uso(update):      # encargo 92: el único punto de registro del contador
+        message = update.get("message")
+        if isinstance(message, dict):
+            handle_message(message)
+            return
+        query = update.get("callback_query")
+        if isinstance(query, dict):
+            handle_callback(query)
+            return
+
+
+# --- Contador de uso (encargo 92) ------------------------------------------------------
+# Una línea por uso en STATE_DIR/usos/usos-AAAA-MM.jsonl: bot, función, canal y resultado; NUNCA
+# el texto. Se escribe en UN solo lugar, `handle_update`, que es la puerta de cada mensaje y cada
+# botón. El canal y, para comandos y botones, la función salen de la actualización misma; en una
+# frase o una nota de voz la pone el primer manejador que la toma (MARCAS, abajo, que envuelve por
+# nombre sin tocar las ramas del despachador). Si no se puede escribir, el bot contesta igual.
+try:
+    import usos as usos_mod
+except ImportError:  # pragma: no cover - despliegue parcial
+    usos_mod = None
+USOS_DIR = Path(os.environ.get("BOTV3_USOS_DIR", str(STATE_DIR / "usos")))
+# Jaime ve también los de Pilar si se le monta su carpeta: BOTV3_USOS_OTROS="pilar=/run/usos-pilar".
+USOS_OTROS = {k.strip(): v.strip() for k, _, v in (x.partition("=") for x in
+              os.environ.get("BOTV3_USOS_OTROS", "").split(",")) if k.strip() and v.strip()} \
+    if PERFIL == "jaime" else {}
+REGISTRO_USOS = usos_mod.Registro(USOS_DIR, PERFIL) if usos_mod else None
+_USO = threading.local()
+ALIAS_COMANDOS = {
+    "/menu": "menu", "/ayuda": "ayuda", "/help": "ayuda", "/acciones": "acciones", "/olvidar": "olvidar",
+    "/nuevo": "olvidar", "/compras": "compras", "/gastos": "gastos", "/buscar": "buscar",
+    "/temporizadores": "temporizadores", "/timer": "temporizadores", "/alarmas": "temporizadores",
+    "/ordenes": "ordenes", "/recurrentes": "ordenes", "/estado": "estado", "/uso": "uso", "/usos": "usos",
+    "/remoto": "remoto", **{c: "mercadolibre" for c in COMANDOS_ML},
+}
+PREFIJOS_BOTON = {"gas": "gastos", "remoto": "remoto", "ggm": "google", "mem": "memoria", "cmp": "compras",
+                  "ggl": "google", "cal": "calificar", "ord": "ordenes", "mlv": "mercadolibre", "bol": "boleta",
+                  "clm": "clima", "cmn": "comuna"}
+
+
+def funcion_de_update(update: dict[str, Any]) -> tuple[str, str | None]:
+    """(canal, función o None) de una actualización, sin guardar nada de lo escrito."""
     query = update.get("callback_query")
     if isinstance(query, dict):
-        handle_callback(query)
+        cabeza, _, resto = str(query.get("data", "")).partition(":")
+        return "boton", (resto.partition(":")[0] if cabeza == "menu" else PREFIJOS_BOTON.get(cabeza, "desconocido"))
+    message = update.get("message") or {}
+    if isinstance(message.get("voice") or message.get("audio"), dict):
+        return "voz", None
+    text = message.get("text")
+    if isinstance(text, str) and text.lstrip().startswith("/"):
+        command, argument = parse_command(text)
+        if command == "/start":
+            return "texto", "ayuda" if argument else "menu"
+        if command in ALIAS_COMANDOS:
+            return "texto", ALIAS_COMANDOS[command]
+        ruta = ruta_interna(command[1:])
+        if ruta in RUTAS_CONOCIDAS:
+            return "texto", "google" if ruta == "google" and not argument else f"consulta:{ruta}"
+        return "texto", "desconocido"
+    return "texto", None
+
+
+@contextlib.contextmanager
+def contando_uso(update: dict[str, Any]):
+    """Abre el uso de esta actualización y, al salir, escribe su línea. Un no autorizado no se cuenta."""
+    origen = update.get("callback_query") or update.get("message") or {}
+    chat = (origen.get("message") or {}).get("chat", {}) if update.get("callback_query") else origen.get("chat", {})
+    try:
+        cuenta = authorized(int((chat or {}).get("id", 0)), int((origen.get("from") or {}).get("id", 0)))
+    except (TypeError, ValueError):
+        cuenta = False
+    if REGISTRO_USOS is None or not cuenta or getattr(_USO, "actual", None) is not None:
+        yield
         return
+    canal, funcion = funcion_de_update(update)
+    _USO.actual = {"funcion": funcion, "error": False}
+    try:
+        yield
+    except BaseException:
+        _USO.actual["error"] = True
+        raise
+    finally:
+        actual, _USO.actual = _USO.actual, None
+        REGISTRO_USOS.anotar(actual["funcion"] or "desconocido", canal, "error" if actual["error"] else "ok")
+
+
+def _marcar(funcion: str) -> None:
+    actual = getattr(_USO, "actual", None)
+    if actual is not None and actual["funcion"] is None:
+        actual["funcion"] = funcion
+
+
+def _marcador(original: Callable[..., Any], funcion, condicional: bool) -> Callable[..., Any]:
+    """Envuelve un manejador: marca la función del uso en curso (la primera gana). `condicional`: sólo
+    si devuelve verdadero (los atender_* que contestan «¿la tomé?»)."""
+    @functools.wraps(original)
+    def envuelta(*args, **kwargs):
+        actual = getattr(_USO, "actual", None)
+        nueva = actual is not None and actual["funcion"] is None
+        if nueva:
+            _marcar(funcion(*args) if callable(funcion) else funcion)
+        resultado = original(*args, **kwargs)
+        if nueva and condicional and not resultado:
+            actual["funcion"] = None
+        return resultado
+    return envuelta
+
+
+def _ruta_de_consulta(ruta, *_):
+    return f"consulta:{ruta_interna(ruta)}" if isinstance(ruta, str) else "desconocido"
+
+
+# (función, condicional) de cada manejador de frases y voz, por nombre.
+MARCAS = {
+    "atender_ubicacion": ("comuna", True), "proponer_memoria": ("memoria", False),
+    "atender_temporizador": ("temporizadores", True), "atender_hora": ("hora", False),
+    "atender_comuna": ("comuna", False), "atender_clima": ("clima", False),
+    "atender_gasto_dicho": ("gastos", False), "atender_gasto_texto": ("gastos", False),
+    "correccion_boleta": ("boleta", True), "atender_frase_google": ("google", True),
+    "atender_nodo": (lambda chat_id, intencion, *_: intencion if intencion in ("estado", "uso") else "desconocido", False),
+    "atender_compras": ("compras", False), "submit_query": (_ruta_de_consulta, False),
+}
+for _nombre, (_funcion, _condicional) in MARCAS.items():
+    globals()[_nombre] = _marcador(globals()[_nombre], _funcion, _condicional)
+
+
+def _con_error(original: Callable[..., Any], es_error: Callable[..., bool]) -> Callable[..., Any]:
+    @functools.wraps(original)
+    def envuelta(*args, **kwargs):
+        actual = getattr(_USO, "actual", None)
+        if actual is not None and es_error(*args, **kwargs):
+            actual["error"] = True
+        return original(*args, **kwargs)
+    return envuelta
+
+
+# Un error que el manejador atrapó y contestó igual también cuenta como error.
+audit = _con_error(audit, lambda event, adapter="", status="ok": status == "error")
+send_text = _con_error(send_text, lambda chat_id, message, *a, **k: str(message).startswith(("❌", "No pude")))
+
+
+def catalogo_usos() -> set[str]:
+    """Lo que ESTE bot tiene, para «sin usar nunca»: lo de todos, más lo que su perfil activa."""
+    base = {"menu", "ayuda", "acciones", "olvidar", "compras", "temporizadores", "ordenes", "buscar",
+            "estado", "uso", "usos", "memoria", "hora", "calificar"}
+    base |= {a for a, _, _ in areas_del_perfil()}
+    if CLIMA is not None:
+        base.add("comuna")
+    if not ml_falta():
+        base.add("mercadolibre")
+    return base | {f"consulta:{r}" for r in ALLOWED_AUTO_ROUTES | {"auto"}}
+
+
+def comando_usos(chat_id: int) -> None:
+    """/usos: los últimos 7 días por bot y función, y lo que no se usó nunca. Pilar ve lo suyo; Jaime, los dos
+    (el de Pilar sólo si tiene montada su carpeta)."""
+    if usos_mod is None:
+        send_text(chat_id, "El contador de usos no está instalado en este bot.")
+        return
+    carpetas = {PERFIL: USOS_DIR, **({"pilar": USOS_OTROS.get("pilar")} if PERFIL == "jaime" else {})}
+    res = usos_mod.resumen(carpetas, {PERFIL: catalogo_usos()}, ahora_santiago())
+    send_text(chat_id, usos_mod.texto_resumen(res))
+
 
 
 def load_offset() -> int:
@@ -8368,6 +8528,8 @@ def main() -> int:
              ",".join(sorted(p for p in CLAVES if _clave(p))) or "ninguno",
              " → ".join(GENERAL_GRATIS))
     sincronizar_menu()
+    if REGISTRO_USOS is not None:       # encargo 92: lo que este bot tiene, para «sin usar nunca»
+        REGISTRO_USOS.publicar_catalogo(catalogo_usos())
     poll_forever()
     return 0
 
