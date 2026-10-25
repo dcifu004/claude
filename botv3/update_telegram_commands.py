@@ -20,7 +20,14 @@ def rutas_del_perfil() -> list[str]:
         return list(tomllib.load(f).get("rutas", []))
 
 
-def comandos(rutas, perfil: str | None = None) -> list[dict[str, str]]:
+def spotify_del_perfil() -> bool:
+    perfil = os.environ.get("BOTV3_PERFIL", "jaime")
+    carpeta = Path(os.environ.get("BOTV3_PERFILES_DIR", Path(__file__).parent / "perfiles"))
+    with open(carpeta / f"{perfil}.toml", "rb") as f:
+        return isinstance(tomllib.load(f).get("spotify"), dict)
+
+
+def comandos(rutas, perfil: str | None = None, spotify_activo: bool = False) -> list[dict[str, str]]:
     """El menú de un perfil según sus rutas. Única lista: la usan el bot y este script."""
     rutas = set(rutas)
     perfil = os.environ.get("BOTV3_PERFIL", "jaime") if perfil is None else perfil
@@ -39,6 +46,8 @@ def comandos(rutas, perfil: str | None = None) -> list[dict[str, str]]:
         *([{"command": "google", "description": "Agenda y correo (crear pide confirmar)"}]
           if "google" in rutas else []),
         {"command": "temporizadores", "description": "Temporizadores y alarmas activos"},
+        *([{"command": "spotify", "description": "Vincular y ver Spotify de este perfil"}]
+          if spotify_activo else []),
         {"command": "buscar", "description": "Buscar en internet (sin IA)"},
         # Remote Control abre una sesión de la cuenta de Diego: Pilar no debe verla
         # ni aunque sus rutas de agente sean parecidas.
@@ -54,7 +63,7 @@ if __name__ == "__main__":
     token = os.environ["BOTV3_TOKEN"]
     response = requests.post(
         f"https://api.telegram.org/bot{token}/setMyCommands",
-        json={"commands": comandos(rutas_del_perfil())}, timeout=20,
+        json={"commands": comandos(rutas_del_perfil(), spotify_activo=spotify_del_perfil())}, timeout=20,
     )
     response.raise_for_status()
     if not response.json().get("ok"):

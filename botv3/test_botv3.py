@@ -6255,7 +6255,8 @@ class SincronizarMenuTests(unittest.TestCase):
 
     def _deseado(self):
         from update_telegram_commands import comandos
-        return comandos(botv3.ALLOWED_AUTO_ROUTES, botv3.PERFIL)
+        return comandos(botv3.ALLOWED_AUTO_ROUTES, botv3.PERFIL,
+                        bool(botv3.PERFIL_CFG.get("spotify")))
 
     def test_escribe_si_difiere(self):
         self.actual = [{"command": "compras", "description": "Lista de compras de la casa"}]

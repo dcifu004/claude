@@ -34,7 +34,52 @@ for clave, nombre in (("BOTV3_USO_RUTAS", "uso-rutas.json"), ("BOTV3_USO_CUENTAS
 
 import usos  # noqa: E402
 
+# 92b: nada de esta suite puede abrir una conexión real. Cualquier intento (DNS, TCP o urlopen) se
+# anota y la prueba en curso FALLA en su tearDown, aunque el bot haya atrapado el error y seguido.
+import socket  # noqa: E402
+import urllib.request  # noqa: E402
+
+INTENTOS_DE_RED: list[str] = []
+_connect_real = socket.socket.connect
+
+
+def _sin_red(que):
+    def bloqueo(*args, **kwargs):
+        INTENTOS_DE_RED.append(f"{que} {args[:2]!r}"[:200])
+        raise OSError(f"test_contador: {que} bloqueado, la suite no sale a la red")
+    return bloqueo
+
+
+def _connect_guardado(self, direccion):
+    if self.family in (socket.AF_INET, socket.AF_INET6):
+        return _sin_red("socket.connect")(direccion)
+    return _connect_real(self, direccion)              # los sockets Unix del temporal sí
+
+
+socket.socket.connect = _connect_guardado
+socket.create_connection = _sin_red("socket.create_connection")
+socket.getaddrinfo = _sin_red("socket.getaddrinfo")
+urllib.request.urlopen = _sin_red("urllib.request.urlopen")
+
 SECRETO = "mi-clave-del-banco-4321"
+OPEN_METEO = (AQUI / "fixtures" / "open-meteo-las-condes-2026-10-21.json").read_text(encoding="utf-8")
+
+
+def open_meteo_de_hoy(hoy):
+    """La respuesta real guardada, con sus fechas corridas para que el 21-10 sea `hoy`."""
+    import re
+    delta = hoy - datetime(2026, 10, 21).date()
+    return json.loads(re.sub(r"\d{4}-\d{2}-\d{2}", lambda m: (datetime.strptime(m.group(), "%Y-%m-%d").date() + delta).isoformat(),
+                             OPEN_METEO))
+
+
+class SesionSinRed:
+    """Reemplaza las sesiones HTTP del bot: cualquier método anota el intento y falla."""
+    def __init__(self, nombre):
+        self.nombre = nombre
+
+    def __getattr__(self, metodo):
+        return _sin_red(f"{self.nombre}.{metodo}")
 
 
 def cargar_bot(perfil, usos_dir, otros=""):
@@ -50,10 +95,22 @@ def cargar_bot(perfil, usos_dir, otros=""):
             os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
 
 
-class Base(unittest.TestCase):
+class SinRed(unittest.TestCase):
+    """Base de todas las clases: falla si la prueba intentó salir a la red."""
+    def setUp(self):
+        INTENTOS_DE_RED.clear()
+        self.addCleanup(self._sin_intentos_de_red)
+
+    def _sin_intentos_de_red(self):
+        intentos, INTENTOS_DE_RED[:] = list(INTENTOS_DE_RED), []
+        self.assertEqual(intentos, [], "la prueba intentó salir a la red")
+
+
+class Base(SinRed):
     perfil = "jaime"
 
     def setUp(self):
+        super().setUp()
         self.tmp = tempfile.TemporaryDirectory(dir=_TMP.name)
         self.addCleanup(self.tmp.cleanup)
         self.dir = Path(self.tmp.name) / "usos"
@@ -66,6 +123,26 @@ class Base(unittest.TestCase):
         # La consulta a los motores no sale: se reemplaza lo que hay DEBAJO de la marca, no la marca.
         b.submit_query = b._marcador(lambda ruta, texto="", *a, **k: self.consultas.append(ruta), b._ruta_de_consulta, False)
         b.transcribir_voz = lambda *a, **k: self.dicho
+        # 92b: los transportes que pueden llegar a la red, simulados. Los de abajo de todo (las sesiones)
+        # fallan y se anotan: si alguno se usa, la guarda de SinRed hace fallar la prueba.
+        self.climas, self.voces, self.busquedas = [], [], []
+
+        def clima(*a, **k):
+            self.climas.append(k.get("donde"))
+            datos = b._leer_open_meteo(open_meteo_de_hoy(b.ahora_santiago().date()))
+            datos["consultado"] = b.ahora_santiago()
+            return datos
+        b.datos_clima = clima
+        b.send_voice = lambda chat_id, audio: self.voces.append(chat_id)
+        # Sin Piper (esta copia) `sintetizar` da None y la voz no se ejercita; en la Pi sí. Igual en los dos.
+        b.sintetizar = lambda texto: b"OggS-simulado"
+        # La foto (clima, /uso) y los documentos van por SES_TELEGRAM.post, no por `telegram`.
+        b.send_photo = lambda chat_id, png, pie, reply_markup=None: self.enviados.append(("sendPhoto", {"caption": pie}))
+        b.send_document = lambda chat_id, nombre, datos, pie: self.enviados.append(("sendDocument", {"caption": pie}))
+        b.buscar_searxng = lambda consulta: self.busquedas.append(len(consulta)) or "sin resultados (simulado)"
+        for nombre in ("SES_TELEGRAM", "SES_GROQ", "SES_SEARXNG", "SES_CLIMA"):
+            setattr(b, nombre, SesionSinRed(nombre))
+        b.SES_PROVEEDOR = {pid: SesionSinRed(f"SES_PROVEEDOR[{pid}]") for pid in b.SES_PROVEEDOR}
 
     def mensaje(self, texto=None, voz=False, extra=None):
         m = {"chat": {"id": 7}, "from": {"id": 7}}
@@ -132,6 +209,9 @@ class CadaUsoDejaUnaLinea(Base):
                 pass
         lineas = self.lineas()
         self.assertEqual([x["funcion"] for x in lineas], areas + ["gastos", "compras", "calificar", "desconocido"])
+        if "clima" in areas:
+            self.assertEqual(len(self.climas), 1)                 # el botón pidió el clima simulado, una vez
+            self.assertTrue(any(m == "sendPhoto" for m, _ in self.enviados))
         self.assertTrue(all(x["canal"] == "boton" for x in lineas))
 
     def test_frases_marcadas_por_su_manejador(self):
@@ -155,6 +235,7 @@ class Canal(Base):
         self.mensaje(voz=True)
         self.mensaje("agrega huevos a la lista")
         self.assertEqual([(x["funcion"], x["canal"]) for x in self.lineas()], [("compras", "voz"), ("compras", "texto")])
+        self.assertEqual(self.voces, [7])                         # sólo la de voz contestó con audio (simulado)
 
     def test_voz_que_no_se_entiende(self):
         self.dicho = ""
@@ -173,6 +254,7 @@ class SinTexto(Base):
             except Exception:
                 pass
         self.mensaje(voz=True)
+        self.assertEqual(len(self.busquedas), 1)                  # /buscar usó el buscador simulado
         self.assertGreaterEqual(len(self.lineas()), 6)
         self.assertNotIn(SECRETO, self.crudo())
         self.assertNotIn("4321", self.crudo())
@@ -218,10 +300,55 @@ class EscritorQueNoFalla(Base):
         self.assertEqual(self.lineas()[-1]["resultado"], "ok")
 
 
-class Resumen(unittest.TestCase):
+class CatalogoSinUsar(Base):
+    """92b: `boleta` y `spotify` entran a «Sin usar nunca» sólo si este bot los tiene."""
+    def con_spotify(self, si):
+        b = self.bot
+        cfg = {k: v for k, v in b.PERFIL_CFG.items() if k != "spotify"}
+        if si:
+            cfg["spotify"] = {"api": "http://127.0.0.1:8765", "otros": []}
+            b.spotify_mod = types.SimpleNamespace()        # spotify.py no viene en esta copia
+        b.PERFIL_CFG = cfg
+
+    def test_boleta_con_y_sin_la_ruta(self):
+        b = self.bot
+        self.assertIn("boleta", b.ALLOWED_AUTO_ROUTES)        # jaime.toml la trae
+        self.assertIn("boleta", b.catalogo_usos())
+        b.ALLOWED_AUTO_ROUTES = b.ALLOWED_AUTO_ROUTES - {"boleta"}
+        self.assertNotIn("boleta", b.catalogo_usos())
+
+    def test_spotify_con_y_sin_configurar(self):
+        self.con_spotify(False)
+        self.assertNotIn("spotify", self.bot.catalogo_usos())
+        self.con_spotify(True)
+        self.assertIn("spotify", self.bot.catalogo_usos())
+        # Configurado pero sin spotify.py desplegado: el bot no lo puede contestar.
+        self.bot.spotify_mod = None
+        self.assertNotIn("spotify", self.bot.catalogo_usos())
+
+    def test_usos_los_muestra_como_sin_usar(self):
+        self.con_spotify(True)
+        enviados = []
+        self.bot.send_text = lambda chat, t: enviados.append(t)
+        self.bot.REGISTRO_USOS.anotar("menu", "texto", "ok")     # con registro, no «sin dato»
+        self.bot.comando_usos(7)
+        nunca = next(x for x in enviados[-1].splitlines() if x.startswith("Sin usar nunca"))
+        self.assertIn("🧾 boleta", nunca)
+        self.assertIn("🎵 Spotify", nunca)
+        # Usados, dejan de estar en «sin usar nunca».
+        self.bot.REGISTRO_USOS.anotar("boleta", "texto", "ok")
+        self.bot.REGISTRO_USOS.anotar("spotify", "voz", "ok")
+        self.bot.comando_usos(7)
+        nunca = next((x for x in enviados[-1].splitlines() if x.startswith("Sin usar nunca")), "")
+        self.assertNotIn("🧾 boleta", nunca)
+        self.assertNotIn("🎵 Spotify", nunca)
+
+
+class Resumen(SinRed):
     AHORA = datetime(2026, 10, 25, 18, 0, tzinfo=timezone.utc)
 
     def setUp(self):
+        super().setUp()
         self.tmp = tempfile.TemporaryDirectory(dir=_TMP.name)
         self.addCleanup(self.tmp.cleanup)
         self.d = Path(self.tmp.name)
@@ -299,7 +426,7 @@ class Resumen(unittest.TestCase):
         json.dumps(out, ensure_ascii=False)
 
 
-class Rotacion(unittest.TestCase):
+class Rotacion(SinRed):
     def test_rotar_no_pierde_lineas_y_borra_solo_lo_vencido(self):
         with tempfile.TemporaryDirectory(dir=_TMP.name) as t:
             carpeta = Path(t) / "usos"
