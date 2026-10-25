@@ -1,0 +1,145 @@
+/*
+ * Lo propio de 📰 Noticias. La base de página (cuerpo, barra, cabecera, pestañas, tarjetas,
+ * botones, avisos, tablas) es ../comun/base.css y los colores del tema, ../comun/tokens.css
+ * (encargo 18). Acá no se redefine ningún color del tema; la paleta de los gráficos
+ * (--s1…, --div-…, --ord-…, --sin) es sólo de esta página y sigue acá.
+ */
+
+/* Ajustes de esta página sobre base.css: se dejan para que se vea como antes del encargo 18. */
+h1 { margin: 0 0 2px; }
+h2 { margin: 0 0 10px; }
+h3 { font-size: 13.5px; margin: 14px 0 6px; }
+p { margin: 6px 0 0; }
+code { font-size: 12.5px; }
+.rejilla { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+td, th { vertical-align: middle; }
+td.acciones { text-align: right; white-space: nowrap; }
+.dato { grid-template-columns: auto 1fr; gap: 3px 12px; }
+.dato dd { text-align: right; font-variant-numeric: tabular-nums; word-break: normal; }
+/* Acá el chip es una etiqueta chica (evento, tema), no un chip con botón. */
+.chip { display: inline-block; border: 0; background: var(--chip); padding: 0 8px; font-size: 12px; margin-right: 4px; }
+
+.fila { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.noticia { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--borde); }
+.noticia:last-child { border-bottom: 0; }
+.noticia input { margin-top: 4px; width: 18px; height: 18px; flex: none; accent-color: var(--acento); }
+.noticia .meta { color: var(--tenue); font-size: 12.5px; }
+
+/* ===================== Noticias: portada, gráficos y medios ===================== */
+/* Paleta de datos: la instancia de referencia de la guía dataviz (validada). Tipo de
+   medio = categórica en orden FIJO; tendencia = divergente azul↔rojo con gris al medio;
+   alcance/audiencia = ordinal de un solo matiz. "Sin clasificar" = trama, nunca un color. */
+:root {
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300;
+    --div-izq: #2a78d6; --div-cizq: #86b6ef; --div-centro: #d9d8d3; --div-cder: #f09897; --div-der: #e34948;
+    --ord-1: #86b6ef; --ord-2: #5598e7; --ord-3: #2a78d6; --ord-4: #184f95;
+    --sin: #bdbcb6;
+}
+:root[data-theme="dark"] {
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300;
+    --div-izq: #3987e5; --div-cizq: #256abf; --div-centro: #4a4a46; --div-cder: #b24b4b; --div-der: #e66767;
+    --ord-1: #184f95; --ord-2: #256abf; --ord-3: #3987e5; --ord-4: #86b6ef;
+    --sin: #55554f;
+}
+
+.controles { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; font-size: 14px; }
+.controles label { display: flex; align-items: center; gap: 6px; }
+select, input[type=search] {
+    font: inherit; padding: 5px 8px; border-radius: 7px;
+    border: 1px solid var(--borde); background: var(--tarjeta); color: var(--texto);
+}
+.segmento { display: inline-flex; border: 1px solid var(--borde); border-radius: 8px; overflow: hidden; }
+.segmento button { border: 0; border-radius: 0; background: var(--tarjeta); color: var(--texto); font-weight: 500; padding: 5px 11px; border-right: 1px solid var(--borde); }
+.segmento button:last-child { border-right: 0; }
+.segmento button.activo { background: var(--acento); color: var(--acento-texto); font-weight: 600; }
+.segmento button:disabled { opacity: .45; }
+
+.cifras { display: flex; flex-wrap: wrap; gap: 18px; }
+.cifra .n { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cifra .t { color: var(--tenue); font-size: 12.5px; }
+
+.historias { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.historia { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 10px; padding: 12px 14px;
+            display: flex; flex-direction: column; gap: 8px; }
+.historia.elegida { border-color: var(--acento); }
+.historia h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--texto); line-height: 1.35; }
+.historia h3 a { color: inherit; text-decoration: none; }
+.historia h3 a:hover { text-decoration: underline; }
+.historia .meta { color: var(--tenue); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.historia .medios { font-size: 13px; color: var(--tenue); }
+.insignia { margin-left: 0; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 1px 8px; background: var(--chip); color: var(--texto); }
+.insignia.ciego { background: var(--ojo-fondo); color: var(--ojo); }
+.insignia.agente { background: var(--ok-fondo); color: var(--ok); }
+.sube { color: var(--ok); font-weight: 700; }
+.baja { color: var(--mal); font-weight: 700; }
+
+/* Barra de cobertura: segmentos con 2px de separación del color de la superficie. */
+.cobertura { display: flex; height: 10px; gap: 2px; border-radius: 4px; overflow: hidden; }
+.cobertura span { min-width: 6px; }
+.sin-clasificar { background: repeating-linear-gradient(135deg, var(--sin) 0 3px, transparent 3px 6px); }
+.leyenda { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--tenue); }
+.leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+/* Gráficos SVG */
+.grafico svg { width: 100%; height: auto; display: block; overflow: visible; }
+.grafico .eje { stroke: var(--borde); stroke-width: 1; }
+.grafico text { fill: var(--tenue); font-size: 11px; font-family: inherit; }
+.grafico text.valor { fill: var(--texto); font-weight: 600; }
+.grafico .marca:hover { opacity: .8; }
+.tip { position: fixed; z-index: 10; pointer-events: none; background: var(--texto); color: var(--fondo);
+       font-size: 12.5px; padding: 5px 9px; border-radius: 6px; max-width: 280px; }
+
+.tabla-medios td select { font-size: 13px; padding: 3px 5px; }
+.tabla-medios td { padding: 5px 4px; }
+.pref button { padding: 2px 7px; font-size: 13px; }
+.pref button.on { background: var(--acento); color: var(--acento-texto); border-color: transparent; }
+.tabla-medios { display: block; overflow-x: auto; }
+.tabla-medios td input[type=text] { width: 100%; min-width: 150px; font-size: 13.5px; padding: 3px 6px; }
+.tabla-medios td .tenue { font-size: 11.5px; }
+.controles input[type=search] { min-width: 200px; padding: 5px 8px; }
+.segmento { flex-wrap: wrap; }
+
+/* 📌 Seguimientos (27-09-2026) */
+.franja h2 { margin: 0; }
+.franja > .fila { margin-bottom: 6px; }
+.hilo-fila { display: grid; grid-template-columns: minmax(180px, 1.1fr) auto minmax(200px, 2fr) auto; gap: 4px 14px;
+             align-items: center; padding: 8px 0; border-top: 1px solid var(--borde); }
+.hilo-fila.apagado { opacity: .7; }
+.hilo-nombre { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.hilo-ultimo { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hilo-acciones { display: flex; gap: 6px; justify-content: flex-end; }
+@media (max-width: 720px) {
+    .hilo-fila { grid-template-columns: 1fr auto; }
+    .hilo-ultimo { grid-column: 1 / -1; white-space: normal; }
+    .hilo-acciones { grid-column: 1 / -1; justify-content: flex-start; }
+}
+button.enlace { background: none; border: 0; padding: 0; color: var(--acento); font-weight: inherit; cursor: pointer; text-align: left; }
+button.enlace:hover { text-decoration: underline; }
+.chispa { display: block; }
+.chispa .barra-chispa { fill: var(--acento); }
+.chispa .barra-chispa.cero { fill: var(--borde); }
+button.chip.hilo { border: 0; cursor: pointer; background: var(--ojo-fondo); color: var(--ojo); font-weight: 600; padding: 0 8px; }
+.acciones-historia { display: flex; flex-wrap: wrap; gap: 6px; }
+.acciones-historia button.mini { padding: 1px 8px; font-size: 12px; }
+
+dialog.editor { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto;
+                border: 1px solid var(--borde); border-radius: 12px; background: var(--tarjeta); color: var(--texto);
+                padding: 16px 18px; }
+dialog.editor::backdrop { background: rgba(0, 0, 0, .45); }
+.editor label.campo { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; font-size: 13.5px; color: var(--tenue); }
+.editor input[type=text] { font: inherit; padding: 5px 8px; border-radius: 7px; border: 1px solid var(--borde);
+                           background: var(--tarjeta); color: var(--texto); }
+.editor .propuestas { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0 8px; }
+.editor .grupo { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 7px 9px; margin: 6px 0;
+                 border: 1px solid var(--borde); border-radius: 8px; cursor: pointer; }
+.editor .grupo.activo { border-color: var(--acento); }
+.editor .grupo.excluir { cursor: default; }
+.editor .grupo-etq { font-size: 12.5px; color: var(--tenue); margin-right: 2px; }
+.editor .entrada-termino { width: 130px; font-size: 13px; padding: 3px 6px; }
+.termino { display: inline-flex; align-items: center; gap: 2px; background: var(--chip); border-radius: 999px;
+           padding: 1px 4px 1px 9px; font-size: 13px; }
+.termino .quitar { background: none; border: 0; color: var(--tenue); padding: 0 4px; font-size: 14px; line-height: 1; }
+.editor .vista-previa { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--borde); }
+.editor .ejemplos { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; }
+.editor .pie { margin-top: 14px; }

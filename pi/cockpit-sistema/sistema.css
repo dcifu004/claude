@@ -1,0 +1,84 @@
+/*
+ * Lo propio de 🍇 Raspberry Pi. La base de página (cuerpo, barra, cabecera, pestañas,
+ * tarjetas, botones, avisos, punto de estado, tablas) es ../comun/base.css y los colores,
+ * ../comun/tokens.css (encargo 18). Acá no se redefine ningún color del tema.
+ */
+
+/* Ajustes de esta página sobre base.css: se dejan para que Estado, Servicios y Respaldo
+   se vean como antes del encargo 18. */
+h1 { margin: 0 0 2px; }
+h2 { margin: 0 0 10px; }
+h3 { font-size: 13.5px; margin: 14px 0 6px; }
+p { margin: 6px 0 0; }
+code { font-size: 12.5px; }
+.rejilla { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+td, th { vertical-align: middle; }
+td.acciones { text-align: right; white-space: nowrap; }
+.dato { grid-template-columns: auto 1fr; gap: 3px 12px; }
+.dato dd { text-align: right; font-variant-numeric: tabular-nums; word-break: normal; }
+/* Acá el chip es una etiqueta chica dentro de una tabla, no un chip con botón. */
+.chip { display: inline-block; border: 0; background: var(--chip); padding: 0 8px; font-size: 12px; margin-right: 4px; }
+
+/* 🏠 Inicio: el bento (documento 26). `auto-fit` da tres columnas en pantalla ancha y una
+   sola en el teléfono, que es la lista de estado pura. 🍇 es la baldosa alta y 📰 va a lo
+   ancho, abajo. Nada tiene ancho fijo mayor que el del teléfono. */
+.bento { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.baldosa { cursor: pointer; min-width: 0; }
+.baldosa:hover, .baldosa:focus-visible { border-color: var(--acento); outline: none; }
+.baldosa.alta { grid-row: span 2; }
+.baldosa.ancha { grid-column: 1 / -1; }
+.baldosa h2 { display: flex; align-items: center; margin: 0 0 8px; }
+/* Cada baldosa es una lista de estado: filas «dato → valor». */
+.lista-estado { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: 14px; }
+.lista-estado dt { color: var(--tenue); }
+.lista-estado dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.lista-estado dd.ojo { color: var(--ojo); font-weight: 600; }
+.lista-estado dd.gris { color: var(--tenue); font-style: italic; }
+@media (max-width: 640px) {
+    .baldosa.alta { grid-row: auto; }
+}
+
+.resumen { display: flex; align-items: center; gap: 14px; font-size: 18px; font-weight: 700; }
+.resumen .tenue { font-weight: 400; }
+
+.medidor { margin: 8px 0; }
+.medidor .fila { display: flex; justify-content: space-between; font-size: 13.5px; }
+.medidor .barra-cont { height: 8px; background: var(--chip); border-radius: 999px; overflow: hidden; margin-top: 4px; }
+.medidor .barra { height: 100%; border-radius: 999px; background: var(--ok); }
+.medidor .barra.am { background: var(--ojo); }
+.medidor .barra.ro { background: var(--mal); }
+
+/* 🌀 Temperatura y ventilador: vino de 🌈 Luces (encargo 18). El ancho de la barra va por CSSOM. */
+.ventilador { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.ventilador .grande { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ventilador .barra-cont { width: 160px; max-width: 100%; height: 10px; background: var(--borde); border-radius: 999px; overflow: hidden; }
+.ventilador .barra { height: 100%; width: 0; background: var(--acento); transition: width .4s; }
+
+pre.log {
+    background: var(--terminal); color: var(--terminal-texto); border-radius: 8px; padding: 10px 12px;
+    font: 12px/1.45 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+    max-height: 360px; overflow: auto; white-space: pre-wrap; word-break: break-word; margin: 8px 0 0;
+}
+
+.migas { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 13.5px; }
+.migas button { padding: 2px 8px; }
+.fila { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* ⏰ Programados (encargo 22): la fila abre su detalle; el color del estado va por data-estado. */
+.prog-filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.prog-tabla { width: 100%; }
+.prog-fila { cursor: pointer; }
+.prog-fila:hover, .prog-fila:focus-visible { background: var(--chip); outline: none; }
+.prog-fila[data-estado="fallo"] td:first-child, .prog-fila[data-estado="huerfano"] td:first-child { color: var(--mal); font-weight: 600; }
+.prog-fila[data-estado="vencido"] td:first-child, .prog-fila[data-estado="nunca"] td:first-child { color: var(--ojo); font-weight: 600; }
+.prog-extra > td { background: var(--fondo); padding: 10px 12px; }
+.prog-datos { grid-template-columns: 170px 1fr; }
+.prog-datos dd { text-align: left; overflow-wrap: anywhere; }
+.prog-acciones { justify-content: flex-start; margin: 12px 0 4px; }
+.prog-acciones button:disabled { cursor: not-allowed; opacity: .55; }
+@media (max-width: 640px) {
+    /* En el teléfono la tabla pasa a tarjetas: se ocultan las columnas secundarias. */
+    .prog-tabla th:nth-child(3), .prog-tabla td:nth-child(3), .prog-tabla th:nth-child(6), .prog-tabla td:nth-child(6),
+    .prog-tabla th:nth-child(7), .prog-tabla td:nth-child(7) { display: none; }
+    .prog-datos { grid-template-columns: 1fr; }
+}

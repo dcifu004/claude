@@ -1,0 +1,17 @@
+nombre = "cola91n"
+motivo = "Encargo 91n: revisión cruzada (Codex) del aviso de temblores que escribió Claude (Diego) en la nube; sin arreglos en la Pi."
+resumen = "Codex revisa pi/temblores.py, sus unidades y su suite; los arreglos vuelven a la nube."
+esperar = ["cola88"]
+despliegue = "nada"
+paciencia_h = 6
+aprobado_por = "usuario, 25-10-2026 America/Santiago: traer el 91 de la nube al vault y que revise Codex en la Pi"
+pruebas = ["pi/test_temblores.py"]
+
+[[etapa]]
+id = "91n"
+encargo = "91n-revision-nube.md"
+resumen = "Revisión de Codex del 91 (archivos nuevos: pi/temblores.*, pi/test_temblores.py, pi/fixtures/temblores/)."
+autor = "claude_diego"
+revisor = "codex"
+vueltas = 0
+naturaleza = "bot"

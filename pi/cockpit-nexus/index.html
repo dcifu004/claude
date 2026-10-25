@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nexus</title>
+    <link href="nexus.css" rel="stylesheet" />
+    <script src="../base1/cockpit.js"></script>
+</head>
+<body>
+    <main>
+        <header class="cabeza">
+            <div>
+                <div class="titulo-linea">
+                    <h1>🧭 Nexus</h1>
+                    <span class="insignia">MVP · sólo lectura</span>
+                </div>
+                <p class="sub">Compara rutas y explica cuál conviene. Nexus observa y recomienda;
+                    n8n conserva la decisión operativa.</p>
+            </div>
+            <div class="acciones">
+                <span id="leido" class="tenue">sin leer</span>
+                <button id="actualizar" class="secundario">↻ Actualizar</button>
+            </div>
+        </header>
+
+        <div id="error" class="aviso rojo" hidden></div>
+        <div id="advertencias"></div>
+
+        <nav class="pestanas" id="pestanas" aria-label="Vistas de Nexus">
+            <button data-p="recomendar" class="activa">Recomendar</button>
+            <button data-p="uso">Uso y estado</button>
+            <button data-p="mapa">Mapa</button>
+            <button data-p="diagnostico">Diagnóstico</button>
+        </nav>
+
+        <section data-panel="recomendar">
+            <div class="rejilla principal">
+                <article class="tarjeta">
+                    <h2>¿Qué necesitas resolver?</h2>
+                    <div class="formulario">
+                        <label>Perfil
+                            <select id="perfil"></select>
+                        </label>
+                        <label>Tipo de tarea
+                            <select id="tarea">
+                                <option value="programacion">Programación y mantenimiento</option>
+                                <option value="investigacion">Investigación web</option>
+                                <option value="automatizacion">Automatizaciones</option>
+                            </select>
+                        </label>
+                        <label>Prioridad
+                            <select id="prioridad">
+                                <option value="equilibrio">Equilibrio</option>
+                                <option value="calidad">Calidad y razonamiento</option>
+                                <option value="velocidad">Velocidad</option>
+                            </select>
+                        </label>
+                        <label>Datos involucrados
+                            <select id="datos">
+                                <option value="vault">Puede incluir vault autorizado</option>
+                                <option value="sin_vault">No incluye contenido del vault</option>
+                                <option value="local">No puede salir del nodo</option>
+                            </select>
+                        </label>
+                    </div>
+                    <p class="tenue pie-formulario">La disponibilidad se mide cuando existe una fuente;
+                        una fuente ausente se muestra como no verificada, nunca como cero.</p>
+                </article>
+
+                <article class="tarjeta resultado" id="resultado">
+                    <p class="tenue">Cargando recomendación…</p>
+                </article>
+            </div>
+
+            <article class="tarjeta limite">
+                <strong>Frontera de esta versión</strong>
+                <span>Nexus no ejecuta la recomendación, no cambia modelos, no edita n8n y no amplía permisos.</span>
+            </article>
+        </section>
+
+        <section data-panel="uso" hidden>
+            <div id="resumen-estado" class="rejilla"></div>
+            <article class="tarjeta">
+                <div class="seccion-cabeza">
+                    <div><h2>Uso de rutas hoy</h2><p class="tenue">Consultas registradas por los perfiles desplegados.</p></div>
+                </div>
+                <div id="tabla-rutas"></div>
+            </article>
+            <article class="tarjeta">
+                <h2>Comparación operativa</h2>
+                <div id="tabla-modelos"></div>
+            </article>
+        </section>
+
+        <section data-panel="mapa" hidden>
+            <article class="tarjeta">
+                <h2>Mapa de decisión</h2>
+                <p class="tenue">Vista simplificada. Graphify explica relaciones del código; Archify publica la arquitectura validada.</p>
+                <div class="mapa-flujo" role="img" aria-label="Flujo desde la tarea hasta las rutas y la observabilidad">
+                    <div class="nodo entrada"><strong>Tarea</strong><span>tipo · prioridad · datos</span></div>
+                    <div class="flecha">→</div>
+                    <div class="nodo politica"><strong>Nexus</strong><span>observa · compara · explica</span></div>
+                    <div class="flecha">→</div>
+                    <div class="nodo router"><strong>n8n</strong><span>router operativo actual</span></div>
+                    <div class="flecha">→</div>
+                    <div class="ramas">
+                        <div class="nodo">Claude</div>
+                        <div class="nodo">Codex</div>
+                        <div class="nodo">Groq</div>
+                        <div class="nodo">SQL / HA</div>
+                    </div>
+                    <div class="flecha vertical">↓</div>
+                    <div class="nodo telemetria"><strong>Observabilidad</strong><span>estado · uso · latencia · errores</span></div>
+                </div>
+            </article>
+            <div class="rejilla">
+                <article class="tarjeta"><h2>Graphify</h2><p>Traza qué funciones, rutas y pruebas están conectadas.</p><p class="tenue">Se actualiza después de cambios, no en cada consulta.</p></article>
+                <article class="tarjeta"><h2>Archify</h2><p>Convierte una selección del grafo en una arquitectura legible.</p><p class="tenue">Sólo se publica una versión que pase validación y revisión visual.</p></article>
+            </div>
+        </section>
+
+        <section data-panel="diagnostico" hidden>
+            <div id="fuentes" class="rejilla"></div>
+            <article class="tarjeta">
+                <h2>Límites conocidos</h2>
+                <ul class="lista-limites">
+                    <li>La cuota restante de Claude y Codex no está disponible por estas fuentes.</li>
+                    <li>Codex no tiene aún un adaptador de consumo verificado.</li>
+                    <li>El catálogo de modelos todavía no se consulta automáticamente.</li>
+                    <li>Las recomendaciones iniciales son reglas transparentes, no aprendizaje automático.</li>
+                    <li>Antes del despliegue deben cerrarse las seis puertas de verificación.</li>
+                </ul>
+            </article>
+        </section>
+    </main>
+
+    <script src="nexus-logic.js"></script>
+    <script src="nexus.js"></script>
+</body>
+</html>

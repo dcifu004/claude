@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Luces</title>
+    <!-- tokens, base, tema, el() y la barra son del paquete `comun`: una sola fuente para las seis páginas. -->
+    <link href="../comun/tokens.css" rel="stylesheet" />
+    <link href="../comun/base.css" rel="stylesheet" />
+    <link href="luces.css" rel="stylesheet" />
+    <script src="../base1/cockpit.js"></script>
+    <script src="../comun/tema.js"></script>
+</head>
+<body>
+    <main>
+        <nav id="barra" data-pagina="luces"></nav>
+
+        <header class="cabeza">
+            <div>
+                <h1>🌈 Luces</h1>
+                <p class="sub">Los 6 LED del case, por el comando <code>luces</code>. Cada cambio se aplica
+                   al tiro y vuelve solo cuando la Pi se reinicia.</p>
+            </div>
+        </header>
+
+        <div id="error" class="aviso rojo" hidden></div>
+
+        <section class="tarjeta vista">
+            <div class="tira" id="tira"></div>
+            <div>
+                <div id="estado-texto" class="estado-texto">leyendo…</div>
+                <div id="estado-sub" class="tenue"></div>
+            </div>
+        </section>
+
+        <div class="rejilla">
+            <section class="tarjeta">
+                <h2>Colores <span class="tenue" id="cuenta"></span></h2>
+                <p class="tenue arriba">Toca para sumar o quitar. Cada uno se agrega al final, y ese es su
+                   orden en la tira. El arcoíris va solo.</p>
+                <div class="muestras" id="muestras"></div>
+                <div class="fila">
+                    <button class="secundario" id="apagar">⚫ Apagar</button>
+                </div>
+            </section>
+
+            <section class="tarjeta">
+                <h2>Movimiento</h2>
+                <label class="deslizador">
+                    <span class="rotulo">🔄 Giro</span>
+                    <input type="range" id="girar" min="0" max="10" step="1" value="0" />
+                    <span class="valor" id="girar-txt">quieto</span>
+                </label>
+                <label class="deslizador">
+                    <span class="rotulo">💨 Respiración</span>
+                    <input type="range" id="respira" min="0" max="10" step="1" value="0" />
+                    <span class="valor" id="respira-txt">no</span>
+                </label>
+                <label class="deslizador">
+                    <span class="rotulo">☀️ Brillo</span>
+                    <input type="range" id="brillo" min="5" max="100" step="5" value="100" />
+                    <span class="valor" id="brillo-txt">100 %</span>
+                </label>
+                <p class="tenue">0 es quieto o sin respirar; de 1 a 10 va de lento a rápido. Con un solo color,
+                   el giro no se nota.</p>
+            </section>
+        </div>
+
+        <section class="tarjeta reglas-tarjeta">
+            <div id="config-error" class="aviso rojo" hidden></div>
+            <div class="interruptor-reglas">
+                <label><input type="checkbox" id="reglas-activas" /> <span id="reglas-estado">Reglas: prendidas</span></label>
+                <span id="reglas-error" class="error-detalle" role="alert"></span>
+            </div>
+            <p id="reglas-apagadas" class="tenue" hidden>Reglas apagadas: las luces muestran sólo lo elegido arriba.</p>
+            <div id="contenido-reglas">
+            <div class="titulo-reglas">
+                <div>
+                    <h2>Reglas</h2>
+                    <p class="tenue">Se guardan solas. Los eventos sin fuente conectada quedan señalados.</p>
+                </div>
+                <div class="fila">
+                    <button class="secundario mini" id="regla-agregar">＋ Agregar regla</button>
+                    <button class="secundario mini" id="reglas-defecto">Volver a valores por defecto</button>
+                </div>
+            </div>
+            <div class="tabla-desborde"><table id="tabla-reglas" class="tabla-reglas"></table></div>
+            </div>
+        </section>
+
+        <section class="tarjeta reglas-tarjeta">
+            <div id="contenido-horario">
+            <div class="titulo-reglas">
+                <div>
+                    <h2>Horario de brillo</h2>
+                    <p class="tenue">La última hora vigente aplica su brillo; cambiarlo a mano dura hasta la próxima marca.</p>
+                </div>
+                <button class="secundario mini" id="horario-agregar">＋ Agregar hora</button>
+            </div>
+            <div class="tabla-desborde"><table id="tabla-horario" class="tabla-horario"></table></div>
+            </div>
+        </section>
+
+        <p class="tenue">🌀 La temperatura y el ventilador están en 🍇 Raspberry Pi → Estado.</p>
+    </main>
+    <script src="../comun/dom.js"></script>
+    <script src="../comun/barra.js"></script>
+    <script src="luces.js"></script>
+</body>
+</html>

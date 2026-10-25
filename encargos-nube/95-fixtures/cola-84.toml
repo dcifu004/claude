@@ -1,0 +1,34 @@
+nombre = "cola84"
+motivo = "Encargo 84: 🧵 Encargos pasa a ser la consola del nodo (C · Híbrida): 84a marco y navegación doble; 84b portada Flujo con la red de encargos y sus luces."
+resumen = "Consola C dentro de Cockpit: módulos arriba, submódulos de Encargos al costado y la red con luces como portada."
+esperar = []
+despliegue = "pedir"
+afinado = "completo"
+alcance = "completo"
+paciencia_h = 12
+aprobado_por = "usuario, 24-10-2026 14:53 America/Santiago, en el chat de Claude (Diego): eligió la C; reparto Recomendado (Claude (Cami) escribe, Codex revisa), sin experimento; lanzar ahora como excepción a la pausa general; la 84 va antes que la 36b (pausada)"
+pruebas = ["pi/test_cockpit_paginas.py"]
+
+
+[paginas]
+encargos = "cockpit-encargos"
+
+[[etapa]]
+id = "84a"
+encargo = "84a-consola-marco.md"
+resumen = "Marco de la consola: módulos arriba (cockpit.jump), submódulos al costado con badges, pulso, cuentas, Ctrl+K, hash y anchos."
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "pagina"
+
+
+[[etapa]]
+id = "84b"
+encargo = "84b-consola-red-luces.md"
+resumen = "Portada Flujo: red de cinco capas con luces (Ambiente, Foco, En vivo real), franja Ahora, KPI e Historial filtrado."
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "pagina"
+

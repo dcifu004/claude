@@ -1,0 +1,16 @@
+nombre = "cola9092n"
+motivo = "Encargo 9092n: revisión cruzada (Codex) de /uso como imagen (90) y del contador de uso (92), escritos por Claude (Diego) en la nube y mezclados sobre la 88b."
+resumen = "Codex revisa el 90+92 ya mezclado en botv3.py y bots-info.py; los arreglos vuelven a la nube."
+despliegue = "nada"
+paciencia_h = 6
+aprobado_por = "usuario, 25-10-2026 America/Santiago: escribir el 90+92 mezclado en el vault y que revise Codex; la línea se muestra antes de lanzar"
+pruebas = ["botv3/test_botv3.py", "botv3/test_contador.py", "botv3/test_uso_imagen.py", "botv3/test_spotify.py", "botv3/test_clima_imagen.py", "pi/test_margen_panel.py", "pi/test_uso.py", "pi/test_cuentas_uso.py"]
+
+[[etapa]]
+id = "9092n"
+encargo = "9092n-revision-nube.md"
+resumen = "Revisión de Codex sobre 9092n-diff-nube.txt (90 + 92 + mezcla con la 88b)."
+autor = "claude_diego"
+revisor = "codex"
+vueltas = 0
+naturaleza = "bot"

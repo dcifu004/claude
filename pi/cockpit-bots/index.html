@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asistentes</title>
+    <!-- tokens, base, tema, el(), la barra y comun.js son del paquete `comun`: una sola fuente. -->
+    <link href="../comun/tokens.css" rel="stylesheet" />
+    <link href="../comun/base.css" rel="stylesheet" />
+    <link href="bots.css" rel="stylesheet" />
+    <script src="../base1/cockpit.js"></script>
+    <script src="../comun/tema.js"></script>
+</head>
+<body>
+    <main>
+        <!-- La barra trae «leído hace X» (#leido) y el botón Actualizar (#actualizar). -->
+        <nav id="barra" data-pagina="bots"></nav>
+
+        <header class="cabeza">
+            <div>
+                <h1>🤖 Asistentes</h1>
+                <p class="sub">Lo que cada bot es, lo que de verdad ve y cómo suena. Acá se
+                   <strong>proponen</strong> cambios; se aplican por SSH con
+                   <code>sudo aplicar-propuesta</code>.</p>
+            </div>
+        </header>
+
+        <div id="error" class="aviso rojo" hidden></div>
+        <div id="deriva"></div>
+
+        <nav class="pestanas" id="pestanas"></nav>
+
+        <div id="perfil"></div>
+
+        <section class="tarjeta" id="casa"><h2>🏠 Casa</h2><p class="tenue">cargando…</p></section>
+
+        <section class="tarjeta">
+            <h2>📝 Propuestas</h2>
+            <p class="tenue">Se aplican por SSH en la Pi. El script vuelve a validar todo, muestra el
+               diff real, respalda y revierte solo si el bot no arranca.</p>
+            <div id="propuestas"></div>
+        </section>
+
+        <section class="tarjeta" id="proximo"></section>
+    </main>
+
+    <script src="../comun/dom.js"></script>
+    <script src="../comun/barra.js"></script>
+    <script src="../comun/comun.js"></script>
+    <script src="bots.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Ops</title>
+    <link href="../comun/tokens.css" rel="stylesheet" />
+    <link href="../comun/base.css" rel="stylesheet" />
+    <link href="encargos.css" rel="stylesheet" />
+    <script src="../base1/cockpit.js"></script>
+    <script src="../comun/tema.js"></script>
+</head>
+<body class="consola">
+    <header class="consola-barra">
+        <div class="consola-identidad"><strong data-term="AI Ops">🏭 AI Ops</strong><span id="pulso" class="consola-pulso" role="img"></span></div>
+        <nav id="pestanas" class="consola-pestanas" role="tablist" aria-label="Secciones de AI Ops"><button class="consola-pestana" role="tab" data-p="flujo" data-term="Flow">Flow</button><button class="consola-pestana" role="tab" data-p="ahora" data-term="Runs">Runs <span class="riel-badge viva" hidden></span></button><button class="consola-pestana" role="tab" data-p="tiempo" data-term="Timeline">Timeline</button><button class="consola-pestana" role="tab" data-p="historial" data-term="Traces">Traces</button><button class="consola-pestana" role="tab" data-p="bitacora" data-term="Logs">Logs</button><button class="consola-pestana" role="tab" data-p="avisos" data-term="Alerts">Alerts <span class="riel-badge" hidden></span></button><button class="consola-pestana" role="tab" data-p="config" data-term="Policies">Policies</button></nav>
+        <select id="pestanas-select" class="consola-pestanas-select" aria-label="Sección de AI Ops"></select>
+        <button id="buscar" class="consola-buscar" title="Buscar (Ctrl+K)" aria-label="Buscar (Ctrl+K)"><span aria-hidden="true">⌕</span><span class="consola-buscar-texto">Buscar</span><kbd>Ctrl K</kbd></button>
+        <div id="cuentas" class="consola-cuentas"></div>
+        <button id="releer" class="mini" data-releer="si" aria-label="Actualizar" title="Actualizar los datos">↻</button>
+        <button id="campana" class="consola-redondo" aria-label="Avisos pendientes" title="Avisos pendientes">🔔<span id="campana-badge" class="riel-badge" hidden></span></button>
+        <button id="tema" class="consola-redondo" data-tema="corto"></button>
+    </header>
+        <main class="consola-trabajo">
+            <nav class="consola-migas" aria-label="Ubicación">Nodo <span aria-hidden="true">›</span> AI Ops <span aria-hidden="true">›</span> <span id="miga">Flow</span></nav>
+            <header class="cabeza"><div><h1 id="titulo">Flow</h1><p class="sub">Colas de trabajo, su avance y la bitácora. Sólo ⚙️ propone cambios; lo demás es de lectura.</p></div></header>
+            <div id="error" class="aviso rojo" hidden></div>
+            <section data-panel="flujo"></section><section data-panel="ahora" hidden></section><section data-panel="tiempo" hidden></section><section data-panel="historial" hidden></section><section data-panel="bitacora" hidden></section><section data-panel="avisos" hidden></section><section data-panel="config" hidden></section>
+        </main>
+    <div id="term-tooltip" class="term-tooltip" role="tooltip" hidden></div>
+<script src="../comun/dom.js"></script><script src="../comun/barra.js"></script><script src="../comun/comun.js"></script><script src="glosario.js"></script><script src="red.js"></script><script src="encargos.js"></script></body>
+</html>

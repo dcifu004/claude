@@ -1,0 +1,37 @@
+"use strict";
+// Términos fijos del paquete; no recibe texto desde el nodo.
+const GLOSARIO = {
+    "AI Ops": "Operación de tareas de IA: corridas, trazas, alertas y reglas del flujo.",
+    "Flow": "Mapa del trabajo y gasto entre cuentas, modelos, pasos y resultados.",
+    "Runs": "Corridas concretas de un pipeline de pasos de agentes.",
+    "Timeline": "Secuencia temporal de actividad, pausas y eventos operativos.",
+    "Traces": "Detalle paso a paso de una corrida, con tiempo, costo y veredictos.",
+    "Logs": "Registro técnico cronológico de eventos y diagnósticos.",
+    "Alerts": "Avisos y condiciones que requieren atención o aprobación.",
+    "Policies": "Reglas de asignación, límites y controles que gobiernan las corridas.",
+    "Task": "Encargo o unidad de trabajo que la cola debe completar.",
+    "Run": "Corrida concreta de un pipeline, con sus pasos y resultado.",
+    "Minutes": "Minutos efectivamente usados por los pasos medidos.",
+    "Tokens": "Claude y Codex cuentan tokens de forma distinta; compararlos entre proveedores es orientativo.",
+    "Steps": "Pasos del workflow de agentes, como autoría, revisión y arreglo.",
+    "Rework rate": "Porcentaje de tiempo destinado a arreglar y volver a revisar.",
+    "Estimation error": "Desvío entre los minutos pronosticados y los realmente usados.",
+    "Cost per task": "Costo medio de una tarea; se muestra por proveedor cuando existe la medida.",
+    "Worker": "Agente que ejecuta los pasos que le asigna el orquestador.",
+    "Orchestrator": "Agente que reparte la tarea, elige quién la hace y controla los pasos.",
+    "Cross-model review": "Evaluación hecha por un modelo distinto del que produjo el trabajo.",
+    "HITL": "Human in the loop: punto donde una persona revisa o autoriza antes de continuar.",
+    "Release gate": "Compuerta de aprobación antes de desplegar a producción.",
+    "Model routing": "Reglas para elegir modelo, cuenta y alternativa de respaldo.",
+    "Guardrails": "Límites técnicos y operativos que una corrida no puede cruzar.",
+    "Home": "Resumen del estado del nodo y de lo que espera respuesta.",
+    "Providers": "Proveedores de modelos, con su consumo, límites y capacidad.",
+    "Agents": "Agentes y asistentes del nodo, con sus sesiones y configuración.",
+    "Infrastructure": "Servicios, respaldos, tareas programadas y señales de la máquina.",
+    "News": "Noticias recolectadas y clasificadas, separadas de la operación de IA.",
+    "Memory health": "Salud de la base de conocimiento: índice, enlaces y vigencia.",
+    "Scope": "Alcance del filtro: decide qué encargos alimentan la red, los indicadores y la tabla.",
+    "Pipeline": "Secuencia ordenada de fases de un encargo, desde autoría hasta revisiones y arreglos.",
+    "Forecast": "Pronóstico publicado por la cola para fases que aún no se ejecutan; no se inventa si falta."
+};
+const GLOSARIO_MAPEO = [["Flujo", "Flow", "Mapa del trabajo y gasto"], ["Scope", "Scope", "Alcance del filtro"], ["Pipeline", "Pipeline", "Camino del encargo"], ["Forecast", "Forecast", "Pronóstico publicado"], ["Ahora", "Runs", "Corridas activas y recientes"], ["Línea de tiempo", "Timeline", "Secuencia de actividad"], ["Historial", "Traces", "Detalle paso a paso"], ["Bitácora", "Logs", "Registro técnico cronológico"], ["Avisos", "Alerts", "Condiciones que requieren atención"], ["Reparto y modelos", "Policies", "Reglas y controles de operación"], ["encargo", "Task", "Especificación de una tarea"], ["cola", "Run", "Corrida concreta del pipeline"], ["fases autor → rev → fix", "Steps", "Pasos del workflow de agentes"], ["revisión cruzada", "Cross-model review", "Otro modelo evalúa al autor"], ["pedido de despliegue", "Release gate", "Compuerta antes de producción"], ["retrabajo", "Rework rate", "Tiempo en arreglar y revisar"], ["precisión del pronóstico", "Estimation error", "Desvío real contra pronóstico"], ["reparto", "Model routing", "Selección de cuenta y modelo"], ["Memoria", "Memory health", "Salud de la base de conocimiento"]];

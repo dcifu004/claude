@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Noticias</title>
+    <!-- tokens, base, tema, el() y la barra son del paquete `comun`: una sola fuente para las seis páginas. -->
+    <link href="../comun/tokens.css" rel="stylesheet" />
+    <link href="../comun/base.css" rel="stylesheet" />
+    <link href="noticias.css" rel="stylesheet" />
+    <script src="../base1/cockpit.js"></script>
+    <script src="../comun/tema.js"></script>
+</head>
+<body>
+    <main>
+        <nav id="barra" data-pagina="noticias"></nav>
+
+        <header class="cabeza">
+            <div>
+                <h1>📰 Noticias</h1>
+                <p class="sub">Qué cosecha el agente de noticias, quién lo cubre y qué te sirve.
+                   Proyecto <code>13-Agente-Noticias</code>.</p>
+            </div>
+        </header>
+
+        <nav class="pestanas" id="pestanas">
+            <button data-p="portada" class="activa">🗞️ Portada</button>
+            <button data-p="graficos">📊 Gráficos</button>
+            <button data-p="medios">🏷️ Medios</button>
+            <button data-p="entregas">🗳️ Entregas</button>
+        </nav>
+
+        <div id="error" class="aviso rojo" hidden></div>
+
+        <section data-panel="portada"></section>
+        <section data-panel="graficos" hidden></section>
+        <section data-panel="medios" hidden></section>
+        <section data-panel="entregas" hidden></section>
+    </main>
+    <div id="tip" class="tip" hidden></div>
+    <script src="../comun/dom.js"></script>
+    <script src="../comun/barra.js"></script>
+    <script src="noticias.js"></script>
+</body>
+</html>

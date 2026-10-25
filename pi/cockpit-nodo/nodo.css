@@ -1,0 +1,84 @@
+/*
+ * Lo propio de 👾 IA Agents: las tarjetas de los agentes y la consola. La base de página
+ * (cuerpo, barra compartida, cabecera, botones, chips) es ../comun/base.css y los colores
+ * del tema, ../comun/tokens.css (encargo 18). Acá no se redefine ningún color del tema;
+ * --apagado y --term-fondo son sólo de esta página.
+ */
+:root {
+    --apagado: #b5b5ae;
+    --term-fondo: #1b1b1a;
+}
+:root[data-theme="dark"] {
+    --apagado: #55554f;
+    --term-fondo: #0f0f0e;
+}
+
+/* Ajustes de esta página sobre base.css: la consola ocupa el alto que sobra. */
+html, body { height: 100%; }
+main { padding: 20px 16px 24px; gap: 18px; min-height: 100%; }
+h2 { font-size: 17px; margin: 0; }
+.sub { margin: 0; }
+
+.tarjetas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+}
+.tarjeta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.fila { display: flex; align-items: center; justify-content: space-between; }
+/* Acá el punto parte apagado y se enciende con .vivo (en base.css parte verde). */
+.punto {
+    width: 10px; height: 10px; margin-right: 0;
+    background: var(--apagado);
+}
+.punto.vivo { background: var(--ok); }
+/* El estado de la sesión es una frase, no la etiqueta corta de base.css. */
+.estado { margin: 0; font-weight: 400; white-space: normal; }
+.extra { margin: 0 0 6px; color: var(--tenue); font-size: 13px; min-height: 1em; }
+
+button { padding: 8px 14px; }
+.teclas button {
+    background: transparent;
+    color: var(--texto);
+    border-color: var(--borde);
+    font-weight: 500;
+}
+.tarjeta button { align-self: flex-start; margin-top: auto; }
+.tarjeta .botones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+.tarjeta .botones button { margin-top: 0; }
+
+#consola {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 360px;
+}
+#consola[hidden] { display: none; }
+/* La barra de título de la consola (no es la barra compartida de arriba, que está en base.css). */
+.barra { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#consola-titulo { font-weight: 600; }
+#terminal {
+    flex: 1;
+    min-height: 300px;
+    background: var(--term-fondo);
+    border-radius: 8px;
+    padding: 6px;
+    overflow: hidden;
+}
+.teclas { display: flex; flex-wrap: wrap; gap: 6px; }
+.teclas button { padding: 6px 10px; font-size: 13px; }
+
+/* En pantalla ancha la fila de teclas sobra: el teclado físico las tiene. */
+@media (hover: hover) and (pointer: fine) {
+    .teclas { display: none; }
+}
+
+/* Cuenta de la sesión interactiva de Claude (29-09-2026). */
+.cuenta { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 4px 0; }
+.cuenta select { font: inherit; padding: 4px 6px; border-radius: 6px;
+                 border: 1px solid var(--borde, #ccc); background: inherit; color: inherit; }

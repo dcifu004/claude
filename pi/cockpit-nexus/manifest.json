@@ -1,0 +1,16 @@
+{
+    "version": 0,
+    "name": "nexus",
+    "requires": {
+        "cockpit": "300"
+    },
+    "tools": {
+        "index": {
+            "label": "🧭 Nexus",
+            "order": 3,
+            "keywords": [
+                { "matches": ["nexus", "modelos", "ia", "groq", "claude", "codex", "n8n", "rutas", "uso"] }
+            ]
+        }
+    }
+}

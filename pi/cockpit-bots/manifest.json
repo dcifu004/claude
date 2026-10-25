@@ -1,0 +1,16 @@
+{
+    "version": 0,
+    "name": "bots",
+    "requires": {
+        "cockpit": "300"
+    },
+    "tools": {
+        "index": {
+            "label": "🤖 Asistentes",
+            "order": 2,
+            "keywords": [
+                { "matches": ["jaime", "pilar", "bot", "botv3", "voz", "perfil", "permisos"] }
+            ]
+        }
+    }
+}

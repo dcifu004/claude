@@ -1,0 +1,16 @@
+{
+    "version": 0,
+    "name": "memoria",
+    "requires": {
+        "cockpit": "300"
+    },
+    "tools": {
+        "index": {
+            "label": "🧠 Memoria",
+            "order": 3,
+            "keywords": [
+                { "matches": ["memoria", "notas", "wikilinks", "grafo", "campo", "enlaces rotos", "syncthing"] }
+            ]
+        }
+    }
+}

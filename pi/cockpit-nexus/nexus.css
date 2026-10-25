@@ -1,0 +1,90 @@
+:root {
+    --fondo: #f4f5f7; --tarjeta: #fff; --borde: #dedfe3; --texto: #202124;
+    --tenue: #676b73; --acento: #5367e9; --acento2: #764bd4; --acento-texto: #fff;
+    --ok: #248553; --ok-fondo: #e5f5ec; --mal: #c23838; --mal-fondo: #fbe9e9;
+    --ojo: #996000; --ojo-fondo: #fff3d7; --chip: #eceef4; --sombra: 0 7px 22px rgba(36, 40, 58, .06);
+}
+:root[data-theme="dark"] {
+    --fondo: #141519; --tarjeta: #1d1f25; --borde: #343741; --texto: #f0f1f5;
+    --tenue: #a1a5af; --acento: #8290ff; --acento2: #a886f2; --acento-texto: #101117;
+    --ok: #55c989; --ok-fondo: #153426; --mal: #f07a7a; --mal-fondo: #3b1d20;
+    --ojo: #efb54a; --ojo-fondo: #3a2c12; --chip: #292c34; --sombra: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--fondo); color: var(--texto); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 22px 18px 38px; display: flex; flex-direction: column; gap: 15px; }
+h1 { margin: 0; font-size: 24px; letter-spacing: -.02em; }
+h2 { margin: 0 0 9px; font-size: 16px; }
+h3 { margin: 14px 0 6px; font-size: 13px; color: var(--tenue); text-transform: uppercase; letter-spacing: .05em; }
+p { margin: 0 0 9px; }
+.sub, .tenue { color: var(--tenue); font-size: 13.5px; }
+.cabeza, .titulo-linea, .acciones, .seccion-cabeza, .resultado-linea, .mini-titulo { display: flex; align-items: center; gap: 10px; }
+.cabeza, .seccion-cabeza, .resultado-linea, .mini-titulo { justify-content: space-between; }
+.cabeza { align-items: flex-start; flex-wrap: wrap; }
+.insignia, .estado-pill { border-radius: 999px; padding: 3px 9px; font-size: 11.5px; font-weight: 700; }
+.insignia { background: var(--chip); color: var(--acento); }
+.tarjeta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 13px; padding: 16px 18px; box-shadow: var(--sombra); }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.rejilla.principal { grid-template-columns: minmax(300px, .9fr) minmax(360px, 1.1fr); }
+.formulario { display: grid; gap: 11px; }
+label { display: grid; gap: 4px; color: var(--tenue); font-size: 13px; }
+select, button { font: inherit; border-radius: 8px; }
+select { width: 100%; padding: 8px 10px; border: 1px solid var(--borde); background: var(--fondo); color: var(--texto); }
+button { padding: 7px 13px; border: 1px solid transparent; cursor: pointer; background: var(--acento); color: var(--acento-texto); font-weight: 650; }
+button.secundario { background: transparent; color: var(--texto); border-color: var(--borde); }
+button:disabled { opacity: .55; cursor: default; }
+.pie-formulario { margin-top: 13px; }
+.resultado { border-top: 3px solid var(--acento); }
+.resultado-titulo { margin: 2px 0 4px; font-size: 25px; }
+.resultado-foco { font-size: 15px; }
+.eyebrow { color: var(--acento); font-size: 11px; font-weight: 800; letter-spacing: .1em; }
+.razones { margin: 5px 0 13px; padding-left: 19px; }
+.razones li { margin: 4px 0; }
+.no-accion { border-top: 1px solid var(--borde); padding-top: 10px; margin: 11px 0 0; color: var(--tenue); font-size: 12.5px; }
+.limite { display: flex; gap: 9px 18px; flex-wrap: wrap; border-left: 4px solid var(--ojo); }
+.limite span { color: var(--tenue); }
+.pestanas { display: flex; gap: 5px; overflow-x: auto; }
+.pestanas button { white-space: nowrap; color: var(--texto); background: transparent; border-color: var(--borde); }
+.pestanas button.activa { color: var(--acento-texto); background: var(--acento); border-color: transparent; }
+.aviso { border-radius: 9px; padding: 10px 13px; font-size: 13.5px; }
+.aviso.rojo { color: var(--mal); background: var(--mal-fondo); }
+.aviso.ojo { color: var(--ojo); background: var(--ojo-fondo); }
+.estado-pill.disponible, .estado-pill.configurada { color: var(--ok); background: var(--ok-fondo); }
+.estado-pill.no_verificada { color: var(--ojo); background: var(--ojo-fondo); }
+.estado-pill.bloqueada, .estado-pill.caida { color: var(--mal); background: var(--mal-fondo); }
+.estado { font-weight: 700; font-size: 12.5px; }
+.estado.ok { color: var(--ok); } .estado.mal { color: var(--mal); } .estado.ojo { color: var(--ojo); }
+.mini-tarjeta { min-height: 118px; }
+.mini-titulo h2 { margin: 0; }
+.dato { display: grid; grid-template-columns: 120px 1fr; gap: 5px 9px; font-size: 13.5px; }
+.dato dt { color: var(--tenue); } .dato dd { margin: 0; }
+.dato.compacto { margin-top: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { padding: 8px 6px; border-bottom: 1px solid var(--borde); text-align: left; vertical-align: top; }
+th { color: var(--tenue); font-size: 12px; font-weight: 650; }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; }
+.tabla-ancha td:nth-child(2) { min-width: 250px; }
+.recorte { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lista-limites { margin: 0; padding-left: 20px; }
+.lista-limites li { margin: 6px 0; }
+.mapa-flujo { display: grid; grid-template-columns: minmax(130px, 1fr) auto minmax(160px, 1.1fr) auto minmax(150px, 1fr) auto minmax(180px, 1.2fr); align-items: center; gap: 10px; margin: 24px 0 8px; }
+.nodo { border: 1px solid var(--borde); border-radius: 11px; background: var(--fondo); padding: 12px; text-align: center; }
+.nodo span { display: block; margin-top: 3px; color: var(--tenue); font-size: 12px; }
+.nodo.politica { border-color: var(--acento); background: color-mix(in srgb, var(--acento) 10%, var(--tarjeta)); }
+.nodo.router { border-color: var(--acento2); }
+.nodo.telemetria { grid-column: 5 / 8; }
+.ramas { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.ramas .nodo { padding: 7px; font-size: 12.5px; }
+.flecha { color: var(--acento); font-size: 23px; font-weight: 800; text-align: center; }
+.flecha.vertical { grid-column: 6; }
+[hidden] { display: none !important; }
+@media (max-width: 850px) {
+    .rejilla.principal { grid-template-columns: 1fr; }
+    .mapa-flujo { grid-template-columns: 1fr; }
+    .flecha { transform: rotate(90deg); }
+    .flecha.vertical, .nodo.telemetria { grid-column: auto; }
+    .tabla-ancha { min-width: 720px; }
+    #tabla-modelos { overflow-x: auto; }
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memoria</title>
+    <!-- tokens, base, tema, el() y la barra son del paquete `comun`: una sola fuente. -->
+    <link href="../comun/tokens.css" rel="stylesheet" />
+    <link href="../comun/base.css" rel="stylesheet" />
+    <link href="memoria.css" rel="stylesheet" />
+    <script src="../base1/cockpit.js"></script>
+    <script src="../comun/tema.js"></script>
+</head>
+<body><main>
+    <!-- La barra trae «leído hace X» (#leido) y el botón Actualizar (#actualizar). -->
+    <nav id="barra" data-pagina="memoria"></nav>
+    <header class="cabeza"><div><h1>🧠 Memoria</h1><p class="sub">La memoria de los asistentes de un vistazo: notas, enlaces y lo que se está pudriendo. Sólo lectura.</p></div></header>
+    <div id="error" class="aviso rojo" hidden></div>
+    <!-- Volumen cerrado o lector sin datos: se muestra esto y NO las pestañas (nunca una cuenta en cero). -->
+    <section id="sin-datos" class="tarjeta mem-cerrado"><p class="tenue">leyendo la memoria…</p></section>
+    <div id="pestanas" class="pestanas" role="tablist" hidden><button class="activa" data-p="campo">🌌 Campo</button><button data-p="salud">🩺 Salud</button><button data-p="notas">📋 Notas</button><button data-p="actividad">🕒 Actividad</button></div>
+    <section data-panel="campo" hidden>
+        <div id="cifras" class="mem-cifras"></div>
+        <div id="leyenda" class="mem-leyenda"></div>
+        <div class="mem-filtros">
+            <select id="campo-tipo" aria-label="Filtrar el campo por tipo"></select>
+            <input id="campo-buscar" type="text" list="campo-notas" placeholder="Buscar una nota en el campo" aria-label="Buscar una nota en el campo" autocomplete="off" />
+            <datalist id="campo-notas"></datalist>
+            <span id="campo-cuenta" class="tenue"></span>
+        </div>
+        <div class="mem-campo">
+            <div class="mem-lienzo"><svg id="grafo" tabindex="0" role="application" aria-label="Campo de la memoria: cada punto es una nota y cada línea un enlace. Flechas para pasar al vecino, corchetes para recorrer todas, Enter para centrar, más y menos para el zoom, cero para encuadrar, Escape para soltar"></svg><button id="centrar" class="secundario mini">Centrar</button></div>
+            <p class="tenue mem-franja">↕ desliza por aquí para mover la página</p>
+            <aside id="ficha" class="tarjeta mem-ficha" aria-live="polite"></aside>
+        </div>
+        <p class="tenue mem-teclas">Con el teclado: Tab llega al campo · flechas = vecino más cercano en esa dirección · [ y ] recorren todas las notas · Enter centra la elegida · + y − acercan · 0 encuadra todo · Esc suelta.</p>
+    </section>
+    <section data-panel="salud" hidden></section>
+    <section data-panel="notas" hidden></section>
+    <section data-panel="actividad" hidden></section>
+</main><script src="../comun/dom.js"></script><script src="../comun/barra.js"></script><script src="vendor/d3.min.js"></script><script src="memoria.js"></script></body>
+</html>

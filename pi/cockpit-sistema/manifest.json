@@ -1,0 +1,16 @@
+{
+    "version": 0,
+    "name": "sistema",
+    "requires": {
+        "cockpit": "300"
+    },
+    "tools": {
+        "index": {
+            "label": "🍇 Raspberry Pi",
+            "order": 0,
+            "keywords": [
+                { "matches": ["estado", "servicios", "respaldo", "restic", "programados", "cron", "timers", "raspberry", "pi", "turno", "reiniciar"] }
+            ]
+        }
+    }
+}

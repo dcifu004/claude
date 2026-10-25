@@ -1,0 +1,172 @@
+{
+ "nombre": "cola85",
+ "motivo": "Encargo 85: consola v2 en 🏭 AI Ops: 85a una sola barra con pestañas y nombres de la industria con glosario; 85b Flow con selector de alcance y pipeline del encargo activo.",
+ "estado": "corriendo",
+ "lanzada": "2026-10-24T17:56:08-03:00",
+ "etapas": [
+  "85a",
+  "85b"
+ ],
+ "escrito": "2026-10-24T18:25:12-03:00",
+ "esperando": null,
+ "inicio_trabajo": "2026-10-24T17:56:39-03:00",
+ "etapa": "85b",
+ "fase": "autor",
+ "cuenta": "Codex",
+ "modelo": "gpt-5.6-terra medium",
+ "inicio_fase": "2026-10-24T18:25:12-03:00",
+ "pronostico_fase_min": 8.7,
+ "remoto": null,
+ "restante_min": {
+  "esperado": 24.5,
+  "min": 15.7,
+  "max": 33.7
+ },
+ "prob_rechazo": 0.61,
+ "progreso_pct": 53.8,
+ "eta": {
+  "esperado": "2026-10-24T18:49-03:00",
+  "min": "2026-10-24T18:40-03:00",
+  "max": "2026-10-24T18:58-03:00"
+ },
+ "cuentas_en_uso": [
+  "claude_cami",
+  "codex"
+ ],
+ "proximo": {
+  "cuenta": "claude_cami",
+  "etapa": "85b",
+  "fase": "rev1",
+  "pct_5h": 10.0,
+  "pct_sem": 1.0,
+  "debil": false
+ },
+ "proximo_por_cuenta": {
+  "claude_cami": {
+   "cuenta": "claude_cami",
+   "etapa": "85b",
+   "fase": "rev1",
+   "pct_5h": 10.0,
+   "pct_sem": 1.0,
+   "debil": false
+  },
+  "codex": {
+   "cuenta": "codex",
+   "etapa": "85b",
+   "fase": "fix1",
+   "pct_5h": 1.0,
+   "pct_sem": 0.0,
+   "debil": false
+  }
+ },
+ "fases_hechas": [
+  {
+   "etapa": "85a",
+   "fase": "autor",
+   "cuenta": "Codex",
+   "min": 9.5,
+   "pronostico_min": 8.7
+  },
+  {
+   "etapa": "85a",
+   "fase": "rev1",
+   "cuenta": "Claude (Cami)",
+   "min": 4.2,
+   "pronostico_min": 6.0
+  },
+  {
+   "etapa": "85a",
+   "fase": "fix1",
+   "cuenta": "Codex",
+   "min": 8.1,
+   "pronostico_min": 2.8
+  },
+  {
+   "etapa": "85a",
+   "fase": "rev2",
+   "cuenta": "Claude (Cami)",
+   "min": 6.6,
+   "pronostico_min": 5.9
+  }
+ ],
+ "fases_restantes": [
+  {
+   "etapa": "85b",
+   "fase": "autor",
+   "rol": "autor",
+   "cuenta": "codex",
+   "modelo": "gpt-5.6-terra",
+   "min": 8.7,
+   "pct_5h": 11.0,
+   "pct_sem": 2.0,
+   "prob": 1.0,
+   "inicio_esperado": "2026-10-24T18:25:12-03:00",
+   "debil": false
+  },
+  {
+   "etapa": "85b",
+   "fase": "rev1",
+   "rol": "rev",
+   "cuenta": "claude_cami",
+   "modelo": "claude-opus-5-5",
+   "min": 6.0,
+   "pct_5h": 10.0,
+   "pct_sem": 1.0,
+   "prob": 1.0,
+   "inicio_esperado": "2026-10-24T18:33:54-03:00",
+   "debil": false
+  },
+  {
+   "etapa": "85b",
+   "fase": "fix1",
+   "rol": "fix",
+   "cuenta": "codex",
+   "modelo": "gpt-reserve",
+   "min": 3.0,
+   "pct_5h": 1.0,
+   "pct_sem": 0.0,
+   "prob": 0.61,
+   "inicio_esperado": "2026-10-24T18:39:54-03:00",
+   "debil": false
+  },
+  {
+   "etapa": "85b",
+   "fase": "rev2",
+   "rol": "rev",
+   "cuenta": "claude_cami",
+   "modelo": "claude-opus-5-5",
+   "min": 6.0,
+   "pct_5h": 10.0,
+   "pct_sem": 1.0,
+   "prob": 0.61,
+   "inicio_esperado": "2026-10-24T18:41:43-03:00",
+   "debil": false
+  },
+  {
+   "etapa": "85b",
+   "fase": "fix2",
+   "rol": "fix",
+   "cuenta": "codex",
+   "modelo": "gpt-reserve",
+   "min": 3.0,
+   "pct_5h": 1.0,
+   "pct_sem": 0.0,
+   "prob": 0.3721,
+   "inicio_esperado": "2026-10-24T18:45:23-03:00",
+   "debil": false
+  },
+  {
+   "etapa": "85b",
+   "fase": "rev3",
+   "rol": "rev",
+   "cuenta": "claude_cami",
+   "modelo": "claude-opus-5-5",
+   "min": 6.0,
+   "pct_5h": 10.0,
+   "pct_sem": 1.0,
+   "prob": 0.3721,
+   "inicio_esperado": "2026-10-24T18:46:30-03:00",
+   "debil": false
+  }
+ ]
+}

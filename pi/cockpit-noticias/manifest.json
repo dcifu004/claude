@@ -1,0 +1,16 @@
+{
+    "version": 0,
+    "name": "noticias",
+    "requires": {
+        "cockpit": "300"
+    },
+    "tools": {
+        "index": {
+            "label": "📰 Noticias",
+            "order": 5,
+            "keywords": [
+                { "matches": ["noticias", "cosecha", "seleccion", "agente", "votar", "prensa"] }
+            ]
+        }
+    }
+}

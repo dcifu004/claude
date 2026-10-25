@@ -1,0 +1,17 @@
+nombre = "cola93n"
+motivo = "Encargo 93n: revisión cruzada (Codex) de la guía de Jaime y Pilar que puso al día Claude (Diego) en la nube."
+resumen = "Codex contrasta la guía nueva (doc 35) con el código del bot; los arreglos vuelven a la nube."
+esperar = ["cola88", "cola91n"]
+despliegue = "nada"
+paciencia_h = 6
+aprobado_por = "usuario, 25-10-2026 America/Santiago: traer el 93 de la nube al vault y que revise Codex en la Pi"
+pruebas = []
+
+[[etapa]]
+id = "93n"
+encargo = "93n-revision-nube.md"
+resumen = "Revisión de Codex de la guía 35 (.md y .html) contra botv3/."
+autor = "claude_diego"
+revisor = "codex"
+vueltas = 0
+naturaleza = "menor"

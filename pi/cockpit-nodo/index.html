@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IA Agents</title>
+    <link href="vendor/xterm.css" rel="stylesheet" />
+    <!-- tokens, base, tema, el(), la barra y comun.js son del paquete `comun`: una sola fuente. -->
+    <link href="../comun/tokens.css" rel="stylesheet" />
+    <link href="../comun/base.css" rel="stylesheet" />
+    <link href="nodo.css" rel="stylesheet" />
+    <script src="../base1/cockpit.js"></script>
+    <script src="../comun/tema.js"></script>
+    <script src="vendor/xterm.js"></script>
+    <script src="vendor/addon-fit.js"></script>
+</head>
+<body>
+    <main>
+        <nav id="barra" data-pagina="nodo"></nav>
+
+        <header class="cabeza">
+            <div>
+                <h1>👾 IA Agents</h1>
+                <p class="sub">Cada botón entra a su sesión de tmux o la crea. Cerrar la terminal
+                   sólo te desancla: el agente sigue trabajando.</p>
+            </div>
+        </header>
+
+        <section class="tarjetas">
+            <article class="tarjeta" id="t-claude">
+                <div class="fila">
+                    <h2>Claude</h2>
+                    <span class="punto" data-rol="punto"></span>
+                </div>
+                <p class="estado" data-rol="estado">revisando…</p>
+                <p class="extra" data-rol="extra"></p>
+                <label class="cuenta">Cuenta <select id="cuenta-claude"></select></label>
+                <div id="cuenta-margen"></div>
+                <p class="extra" id="cuenta-nota"></p>
+                <div class="botones">
+                    <button data-agente="claude">Abrir Claude</button>
+                    <button id="remoto" class="secundario" hidden>📱 Remote Control</button>
+                </div>
+            </article>
+
+            <article class="tarjeta" id="t-codex">
+                <div class="fila">
+                    <h2>Codex</h2>
+                    <span class="punto" data-rol="punto"></span>
+                </div>
+                <p class="estado" data-rol="estado">revisando…</p>
+                <p class="extra" data-rol="extra"></p>
+                <button data-agente="codex">Abrir Codex</button>
+            </article>
+        </section>
+
+        <section id="consola" hidden>
+            <div class="barra">
+                <span id="consola-titulo"></span>
+                <button id="cerrar" class="secundario">Desanclar</button>
+            </div>
+            <div id="terminal"></div>
+            <div class="teclas" id="teclas">
+                <button data-tecla="esc">Esc</button>
+                <button data-tecla="tab">Tab</button>
+                <button data-tecla="stab">⇧Tab</button>
+                <button data-tecla="ctrlc">Ctrl+C</button>
+                <button data-tecla="arriba">↑</button>
+                <button data-tecla="abajo">↓</button>
+                <button data-tecla="enter">Enter</button>
+                <button data-paginar="subir" title="Subir una página (tmux)">⇞</button>
+                <button data-paginar="bajar" title="Bajar una página (tmux)">⇟</button>
+            </div>
+        </section>
+    </main>
+    <script src="../comun/dom.js"></script>
+    <script src="../comun/barra.js"></script>
+    <script src="../comun/comun.js"></script>
+    <script src="nodo.js"></script>
+</body>
+</html>

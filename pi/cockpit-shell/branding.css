@@ -1,0 +1,35 @@
+/*
+ * Branding del nodo (doc 26, 03-10-2026). Reemplaza a
+ * /usr/share/cockpit/branding/debian/branding.css, que es del paquete cockpit-ws: el original
+ * queda desviado con dpkg-divert en branding.css.debian, así una actualización escribe ahí
+ * y no pisa éste. (cockpit-ws busca antes <ID>-<VARIANT_ID>, pero Debian no tiene VARIANT_ID:
+ * una carpeta debian-13/ no se lee nunca, se probó.) Lo de arriba es copia textual del
+ * original; ${NAME} lo sustituye cockpit-ws, no tocarlo.
+ */
+#badge {
+    inline-size: 80px;
+    block-size: 80px;
+    background-image: url("logo.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+#brand::before {
+    content: "${NAME}";
+}
+
+/* Barra lateral de 200 px (de serie, 15rem = 240 px). El shell de Cockpit 337 no usa el
+   sidebar de PatternFly sino su propia rejilla `.page` con --nav-width; la columna es
+   minmax(min-content, --nav-width), así que un nombre largo la puede ensanchar. Bajo 768 px
+   el menú es desplegable por diseño de Cockpit, no por esto. El selector doble gana a la
+   regla de shell.css (y a la de 14rem en pantallas bajas apaisadas). */
+.page.page { --nav-width: 12.5rem; }
+
+/* Entradas más juntas y un punto más chicas. */
+.page .sidebar .pf-v6-c-nav {
+    --pf-v6-c-nav__link--PaddingBlockStart: 0.3rem;
+    --pf-v6-c-nav__link--PaddingBlockEnd: 0.3rem;
+    --pf-v6-c-nav__link--PaddingInlineStart: 0.75rem;
+    --pf-v6-c-nav__link--PaddingInlineEnd: 0.5rem;
+    font-size: 0.875rem;
+}

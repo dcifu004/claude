@@ -1,0 +1,6 @@
+{
+    "version": 0,
+    "name": "encargos",
+    "requires": { "cockpit": "300" },
+    "tools": { "index": { "label": "🏭 AI Ops", "order": 4 } }
+}

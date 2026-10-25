@@ -1,0 +1,16 @@
+{
+    "version": 0,
+    "name": "luces",
+    "requires": {
+        "cockpit": "300"
+    },
+    "tools": {
+        "index": {
+            "label": "🌈 Luces",
+            "order": 6,
+            "keywords": [
+                { "matches": ["luces", "led", "ventilador", "color", "arcoiris", "rgb"] }
+            ]
+        }
+    }
+}

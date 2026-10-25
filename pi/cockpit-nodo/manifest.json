@@ -1,0 +1,17 @@
+{
+    "version": 0,
+    "name": "nodo",
+    "requires": {
+        "cockpit": "300"
+    },
+    "tools": {
+        "index": {
+            "label": "👾 IA Agents",
+            "order": 1,
+            "keywords": [
+                { "matches": ["claude", "codex", "agentes", "ia", "ai", "tmux"] }
+            ]
+        }
+    },
+    "content-security-policy": "style-src 'self' 'unsafe-inline'"
+}
