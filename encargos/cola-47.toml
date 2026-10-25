@@ -1,0 +1,25 @@
+# Cola 47: economía de encargos (balance, trampas, Fase 0 y experimento de esfuerzo). Claude (Diego), 11-10-2026.
+nombre = "cola47"
+motivo = "Economía de encargos: balance.py + trampas.md (47a) y Fase 0 «Afinar» + experimento esfuerzo-v1 en una copia de la skill encargar (47b)."
+esperar = []
+despliegue = "nada"
+paciencia_h = 12
+afinado = "completo"
+aprobado_por = "usuario, 11-10-2026 America/Santiago, en el chat de Claude (Diego): pidió encargarlo a Claude (Cami) ignorando el límite semanal, con revisión de Codex y el tope semanal subido a 90 % desde el panel."
+pruebas = ["encargos/test_balance.py"]
+
+[[etapa]]
+id = "47a"
+encargo = "47a-balance-y-trampas.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"
+
+[[etapa]]
+id = "47b"
+encargo = "47b-fase0-encargar.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "menor"

@@ -1,0 +1,20 @@
+# Cola 36b — frontera aceptada y blindaje del panel publicado (23-10-2026). Claude (Diego).
+nombre = "cola36b"
+motivo = "Encargo 36b: FRONTERA=cuenta-cloudflare-es-raiz + vigilante de /config, Cockpit sin modo administrativo por el túnel y ✅ por Telegram vía PAM en la ruta del panel."
+resumen = "Blindaje del panel.dcspi5.com antes de activarlo: vigilante, Cockpit sin admin por el túnel, ✅ PAM; activar exige las tres."
+esperar = ["cola82"]
+despliegue = "nada"
+afinado = "completo"
+alcance = "minimo"
+paciencia_h = 12
+aprobado_por = "usuario, 23-10-2026 ~12:10 America/Santiago, en el chat de Claude (Diego): retomar el encargo 36; reparto «Recomendado» (Claude (Cami) escribe con Opus high, Codex revisa con terra xhigh); wrangler logout + MCP de Cloudflare desconectado (excepción a la pausa general); usuario, 23-10-2026 21:40 America/Santiago, pasó el autor a Claude (Diego) para usar su cupo por vencer (renueva 24-10 04:00), con --simular previo dentro del tope"
+pruebas = ["pi/test_tunel_panel.py", "pi/test_escritura_root.py", "pi/test_nodo_servicio.py", "pi/test_nodo_desplegar.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "36b"
+encargo = "36b-frontera-y-blindaje.md"
+resumen = "FRONTERA aceptada (opción 2), teamName real, vigilante, Cockpit sin admin por el túnel, ✅ PAM y activar que exige las tres."
+autor = "claude_diego"
+revisor = "codex"
+vueltas = 2
+naturaleza = "seguridad"

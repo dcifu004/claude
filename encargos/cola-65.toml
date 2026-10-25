@@ -1,0 +1,19 @@
+# Cola 65: menú de botones en /compras (18-10-2026). Claude (Diego). Excepción a la pausa general; espera a la cola64.
+nombre = "cola65"
+motivo = "/compras sin argumento abre un menú: ➕ Agregar, 🗑 Quitar tocando productos, 🛒 Ir a comprar, 📤 Enviar a…, ↩️ Deshacer y 🧹 Vaciar comprados (encargo 65)."
+esperar = ["cola64"]
+despliegue = "pedir"
+paciencia_h = 12
+afinado = "completo"
+alcance = "completo"
+aprobado_por = "usuario, 18-10-2026 23:32 America/Santiago, en el chat de Claude (Diego): eligió A (por defecto de bot): escribe Claude (Cami) (claude-opus-5-5 medium), revisa Codex (gpt-5.6-terra high), arregla Claude (Cami); simulado ~39 min; paciencia 12 h; lanzar como excepción a la pausa, después de la cola64"
+pruebas = ["botv3/test_botv3.py", "botv3/test_compras.py", "pi/test_cuentas_uso.py", "pi/test_uso.py"]
+
+[[etapa]]
+id = "65"
+encargo = "65-compras-menu.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"
+

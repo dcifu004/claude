@@ -1,0 +1,25 @@
+{
+ "relanzamientos": [
+  {"momento": "2026-10-11T23:19:01-03:00", "desde": "43a:rev1"}
+ ],
+ "lanzada": "2026-10-11T23:08:03-03:00",
+ "fases_hechas": [
+  {"etapa": "43a", "fase": "autor", "cuenta": "Codex", "min": 10.3, "pronostico_min": 5.8},
+  {"etapa": "43b", "fase": "rev3", "cuenta": "Claude (Cami)", "min": 15.6, "pronostico_min": 11.2}
+ ],
+ "tiempo_muerto_min": 968.2,
+ "inicio_trabajo": "2026-10-12T15:16:40-03:00",
+ "nombre": "cola43s",
+ "motivo": "Reglas de las luces en 3 etapas: 43a modelo y comandos de luces, 43b vigilante luces-senales y fuentes, 43c página 🌈 y documentación.",
+ "estado": "pausada",
+ "etapas": ["43a", "43b", "43c"],
+ "escrito": "2026-10-12T12:09:00-03:00",
+ "esperando": null,
+ "etapa": "43b",
+ "fase": "rev3",
+ "cuenta": "Claude (Cami)",
+ "modelo": "claude-opus-5-5 high",
+ "motivo_pausa": "Claude (Cami) se quedó sin cuota a mitad de rev3 (15.6 min)",
+ "reanuda_desde": "43b:rev3",
+ "fin": "2026-10-12T12:09:00-03:00"
+}

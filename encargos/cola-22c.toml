@@ -1,0 +1,20 @@
+# Cola 22c — hallazgos bajos de la lista blanca (sobre la 22b). Escrita por Claude (Diego) el 04-10-2026.
+nombre = "cola22c"
+motivo = "⏰ Programados: cierra los 4 hallazgos bajos de la lista blanca (encargo 22c)."
+despliegue = "nada"              # la instalación la manda paginas-pendientes.py
+aprobado_por = "usuario, 04-10-2026 16:15, en el chat de Claude (Diego): opción rápida; escribe Codex (gpt-5.6-terra), revisa Claude (Cami) (Claude Sonnet 5.5)"
+paciencia_h = 12
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py"]
+
+[paginas]
+sistema = "cockpit-sistema"
+
+[[etapa]]
+id = "22c"
+encargo = "22c-bajos-lista-blanca.md"
+autor = "codex"
+revisor = "claude_cami"
+naturaleza = "bot"               # autor y arreglo: gpt-5.6-terra medium (nivel normal)
+modelo_rev = "claude-sonnet-5-5" # opción rápida elegida por el usuario
+esfuerzo_rev = "medium"
+vueltas = 2

@@ -1,0 +1,63 @@
+{
+ "relanzamientos": [
+  {
+   "momento": "2026-10-10T22:48:21-03:00",
+   "desde": "41:rev2"
+  },
+  {
+   "momento": "2026-10-11T00:39:17-03:00",
+   "desde": "41:rev3"
+  }
+ ],
+ "lanzada": "2026-10-10T22:05:22-03:00",
+ "fases_hechas": [
+  {
+   "etapa": "41",
+   "fase": "autor",
+   "cuenta": "Codex",
+   "min": 3.5,
+   "pronostico_min": 5.2
+  },
+  {
+   "etapa": "41",
+   "fase": "rev1",
+   "cuenta": "Claude (Cami)",
+   "min": 8.2,
+   "pronostico_min": 11.2
+  },
+  {
+   "etapa": "41",
+   "fase": "fix1",
+   "cuenta": "Codex",
+   "min": 6.1,
+   "pronostico_min": 6.3
+  },
+  {
+   "etapa": "41",
+   "fase": "rev2",
+   "cuenta": "Claude (Cami)",
+   "min": 10.8,
+   "pronostico_min": 9.7
+  },
+  {
+   "etapa": "41",
+   "fase": "fix2",
+   "cuenta": "Codex",
+   "min": 5.7,
+   "pronostico_min": 6.1
+  }
+ ],
+ "tiempo_muerto_min": 118.6,
+ "inicio_trabajo": "2026-10-11T00:04:23-03:00",
+ "nombre": "cola41",
+ "motivo": "Lista de compras v2: checklist inline en lugar de la encuesta, sacar y agregar en lote, historial, deshacer y frases de voz (encargo 41).",
+ "estado": "pausada",
+ "etapas": [
+  "41"
+ ],
+ "escrito": "2026-10-11T00:39:44-03:00",
+ "esperando": null,
+ "motivo_pausa": "Claude (Cami) sin margen para rev: semanal 75 % + 2.0 % > tope 75 %",
+ "reanuda_desde": "41:rev3",
+ "fin": "2026-10-11T00:39:44-03:00"
+}

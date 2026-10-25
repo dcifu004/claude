@@ -1,0 +1,30 @@
+# Plantillas cerradas para usar capacidad que vence. La etiqueta es el único
+# nombre que puede salir por nodo-desplegar; no se agregan títulos ni rutas.
+
+[plantilla.memoria]
+etiqueta = "Memoria y vault"
+encargo = "memoria.md"
+naturaleza = "investigacion"
+despliegue = "nada"
+vueltas = 1
+
+[plantilla.auditoria]
+etiqueta = "Auditoría de la Pi"
+encargo = "auditoria.md"
+naturaleza = "investigacion"
+despliegue = "nada"
+vueltas = 1
+
+[plantilla.revision]
+etiqueta = "Revisión cruzada"
+encargo = "revision.md"
+naturaleza = "menor"
+despliegue = "nada"
+vueltas = 1
+
+[plantilla.preparar]
+etiqueta = "Preparar encargos"
+encargo = "preparar.md"
+naturaleza = "menor"
+despliegue = "nada"
+vueltas = 1

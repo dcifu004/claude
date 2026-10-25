@@ -1,0 +1,14 @@
+{
+ "nombre": "cola43r",
+ "motivo": "Reglas de las luces: eventos del nodo (encargo, voz, temporizador, despliegue, 🚩, CPU, LUKS, boleta, colas) con repetir/duración/prioridad y horario de brillo, editables en 🌈 (encargo 43).",
+ "estado": "pausada",
+ "lanzada": "2026-10-11T00:41:27-03:00",
+ "etapas": [
+  "43"
+ ],
+ "escrito": "2026-10-11T00:41:55-03:00",
+ "esperando": null,
+ "motivo_pausa": "Claude (Cami) sin margen para autor: semanal 75 % + 4.0 % > tope 75 %",
+ "reanuda_desde": "43:autor",
+ "fin": "2026-10-11T00:41:55-03:00"
+}

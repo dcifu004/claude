@@ -1,0 +1,17 @@
+nombre = "cola77"
+motivo = "Encargo 77: /remoto revisa la sesión de Claude (Diego) antes de abrir y confirma que siguió viva antes de avisar."
+resumen = "Que /remoto no avise «abierto» si Claude no arrancó, y que diga «sin sesión → claude auth login» cuando la cuenta la perdió."
+esperar = ["cola76"]
+despliegue = "nada"
+afinado = "completo"
+aprobado_por = "usuario, 22-10-2026 22:22 America/Santiago, eligió Claude (Cami) como autora y Codex como revisor; lanzar ahora, después de la cola76 (encargo escrito al terminar ella)"
+pruebas = ["pi/test_remoto.py"]
+
+[[etapa]]
+id = "77"
+encargo = "77-remoto-revisa-sesion.md"
+resumen = "pi/remoto.py: claude auth status antes del start y is-active tras 8 s antes del aviso de abierto."
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"

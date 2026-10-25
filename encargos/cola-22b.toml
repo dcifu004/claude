@@ -1,0 +1,28 @@
+# Cola 22b — ⏰ Programados con lista blanca (sobre el encargo 22). Escrita por Claude (Diego) el 04-10-2026.
+nombre = "cola22b"
+motivo = "⏰ Programados: lista blanca en vez de tapar secretos, + revisar la barra (encargo 22b)."
+despliegue = "nada"              # la instalación la manda paginas-pendientes.py, junto con lo de la 20
+aprobado_por = "usuario, 04-10-2026, en el chat de Claude (Diego): opción económica; escribe Codex, revisa Claude (Cami)"
+paciencia_h = 12
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py"]
+
+[paginas]
+sistema = "cockpit-sistema"
+comun = "cockpit-comun"
+encargos = "cockpit-encargos"
+
+[[etapa]]
+id = "22b"
+encargo = "22b-lista-blanca.md"
+autor = "codex"
+revisor = "claude_cami"
+naturaleza = "bot"
+# Opción económica elegida por el usuario: la revisión (Claude Sonnet 5.5) queda al mismo nivel
+# que el autor (gpt-reserve, ágil), no por debajo.
+modelo_autor = "gpt-reserve"
+esfuerzo_autor = "medium"
+modelo_fix = "gpt-reserve"
+esfuerzo_fix = "medium"
+modelo_rev = "claude-sonnet-5-5"
+esfuerzo_rev = "medium"
+vueltas = 2

@@ -1,0 +1,29 @@
+# Cola 50: «Capacidad» — pasado, despacho, tope de encargos y capacidad por vencer. Claude (Diego), 11-10-2026.
+nombre = "cola50"
+motivo = "Capacidad: 50a precisión del pronóstico y despacho (vivo/despacho.json con botón en 🧵); 50b tope de encargos separado del bot y capacidad por vencer («quemar cuota»)."
+esperar = ["cola46"]
+despliegue = "pedir"
+paciencia_h = 12
+afinado = "completo"
+aprobado_por = "usuario, 11-10-2026 19:50 America/Santiago, en el chat de Claude (Diego): pidió para la renovación 49, 50, 43r y el resto, en ese orden; despacho = archivo + botón en 🧵; tope de encargos en cuentas.toml por propuesta; escribe Claude (Cami), revisa Codex"
+pruebas = ["encargos/test_balance.py", "encargos/test_matriz_cuota.py", "encargos/test_acciones_cola.py", "encargos/test_despacho.py", "encargos/test_capacidad_por_vencer.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py"]
+
+[paginas]
+encargos = "cockpit-encargos"
+cuentas = "cockpit-cuentas"
+
+[[etapa]]
+id = "50a"
+encargo = "50a-pasado-y-despacho.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"
+
+[[etapa]]
+id = "50b"
+encargo = "50b-capacidad-por-vencer.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "seguridad"

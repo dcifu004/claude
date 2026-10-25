@@ -1,0 +1,24 @@
+# Cola 52b: cierre del modo descanso (52b) y segunda pasada del pronóstico realista (56b). Claude (Diego), 13-10-2026.
+nombre = "cola52b"
+motivo = "52b: cerrar los hallazgos de 52r3 (nombre del módulo descanso, configuración, pruebas por los caminos reales). 56b: rehacer el pronóstico realista desde el código de hoy (la 56 se revirtió)."
+esperar = []
+despliegue = "pedir"
+paciencia_h = 12
+aprobado_por = "usuario, 13-10-2026 ~19:45 America/Santiago, en el chat de Claude (Diego): pidió encargar la 56b y la 52b. Reparto del 12-10: escribe Codex y revisa Claude (Cami). 16-10-2026 19:40, chat de Claude (Diego): «puedes continuar y terminar encargos (Claude (Diego)), quememos la cuenta». Revisa Claude (Diego) en lugar de Claude (Cami) (97 % semanal)."
+pruebas = ["pi/test_descanso.py", "pi/test_avisos.py", "encargos/test_matriz_cuota.py", "encargos/test_acciones_cola.py", "encargos/test_pronostico.py", "encargos/test_balance.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "52b"
+encargo = "52b-modo-descanso-cierre.md"
+autor = "codex"
+revisor = "claude_diego"
+vueltas = 2
+naturaleza = "bot"
+
+[[etapa]]
+id = "56b"
+encargo = "56b-pronostico-realista-otra-vez.md"
+autor = "codex"
+revisor = "claude_diego"
+vueltas = 2
+naturaleza = "bot"

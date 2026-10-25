@@ -1,0 +1,17 @@
+nombre = "cola75"
+motivo = "Encargo 75: aviso programado del clima como orden recurrente, feriados como fin de semana."
+esperar = ["cola74"]
+despliegue = "nada"
+afinado = "completo"
+alcance = "completo"
+paciencia_h = 12
+aprobado_por = "usuario, 21-10-2026 20:58 America/Santiago, eligió Claude (Cami) como autora y Codex como revisor para las tres etapas 74→75→76; Pillow de apt + Lato; feriados como fin de semana; tabla local de comunas"
+pruebas = ["botv3/test_botv3.py", "botv3/test_temporizadores.py", "botv3/test_clima_imagen.py"]
+
+[[etapa]]
+id = "75"
+encargo = "75-clima-aviso-programado.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"

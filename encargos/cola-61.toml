@@ -1,0 +1,17 @@
+# Cola 61 — /compras entiende frases libres (18-10-2026). Claude (Diego). Excepción a la pausa general.
+nombre = "cola61"
+motivo = "/compras entiende frases libres: sinónimos (carrito), verbos con pronombre, relleno, tipeos y productos sueltos con botón; todo regex local (encargo 61)."
+esperar = []
+despliegue = "pedir"
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 19-10-2026 01:52 America/Santiago, en el chat de Claude (Diego): eligió el reparto 1 (por defecto de bot): escribe Claude (Cami) (claude-opus-5-5 medium), revisa Codex (gpt-5.6-terra high), arregla Claude (Cami); simulado ~38 min. 19-10-2026 01:53: «Haz una excepción a la pausa: copia la cola 61 a encargos/ y lánzala ahora con el reparto 1.»"
+pruebas = ["botv3/test_botv3.py", "botv3/test_compras.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "61"
+encargo = "61-compras-predictivo.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"

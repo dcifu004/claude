@@ -1,0 +1,17 @@
+
+# Cola 42 — boleta por Telegram → fila en Flujo Caja (11-10-2026). Claude (Diego).
+nombre = "cola42"
+motivo = "Boleta por Telegram a fila en Flujo Caja: ruta boleta, socket de hogar y anotar_gasto en google-puente (encargo 42)."
+esperar = ["cola41"]
+despliegue = "pedir"
+paciencia_h = 12   # 10-10 22:30, Diego: si se acaba la cuota de Claude (Cami), esperar de noche en vez de pausar
+aprobado_por = "usuario, 11-10-2026 01:03 America/Santiago, en el chat de Claude (Diego): escribe Codex, revisa Claude (Cami); lanzar la 41 primero y la 42 después (esperar cola41). Decisiones del doc 31 cerradas el 10-10."
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "42"
+encargo = "42-boleta-a-flujo-caja.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "seguridad"

@@ -1,0 +1,18 @@
+# Cola 51: plan de optimización de encargos (12-10-2026). Claude (Diego). La lanza orden-plan cuando no haya colas vivas.
+nombre = "cola51"
+motivo = "Consultas al usuario por Telegram tras una revisión dudosa: aceptar/arreglar/saltar, plazo 2 h, tope 2, respeta el modo descanso (versión mínima)."
+esperar = []
+despliegue = "pedir"
+paciencia_h = 12
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 12-10-2026 12:42 America/Santiago, en el chat de Claude (Diego): aprobó el plan de optimización (53 → 54 → 52 → 51, versiones mínimas, la cadena se detiene si una falla); escribe Codex y revisa Claude (Cami). 16-10-2026 23:20, chat de Claude (Diego): «podemos quemar la cuenta Claude (Diego)… 1» y «dejar en la pi»: escribe Claude (Diego) fuera de la cola (autor51, hasta 03:45) y revisa Codex desde 51:rev1."
+pruebas = ["encargos/test_consultas.py", "pi/test_descanso.py", "encargos/test_matriz_cuota.py", "encargos/test_acciones_cola.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "51"
+encargo = "51-consultas-entre-fases.md"
+autor = "claude_diego"
+revisor = "codex"
+vueltas = 2
+naturaleza = "seguridad"

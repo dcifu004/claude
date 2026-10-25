@@ -1,0 +1,34 @@
+nombre = "cola88"
+motivo = "Encargo 88: Spotify por perfil (diseño 36): 88a dos receptores go-librespot, 88b intención «reproduce … en Spotify» y /spotify en Jaime y Pilar."
+esperar = []
+despliegue = "pedir"
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 25-10-2026 America/Santiago, eligió Codex como autor y Claude (Diego) como revisora (Claude (Cami) en 94 % semanal); preparado sin lanzar: despacho en pausa general desde el 23-10; 25-10: tras 88ar3 el usuario eligió la alternativa A (binario traído por Claude (Diego), etapa 88c de arreglo por Codex, relanzar después de las 15:29)"
+pruebas = ["pi/spotify/test_plantillas.py", "pi/test_nodo_desplegar.py", "botv3/test_botv3.py", "botv3/test_temporizadores.py", "botv3/test_compras.py", "botv3/test_spotify.py"]
+
+[[etapa]]
+id = "88a"
+encargo = "88a-spotify-receptores.md"
+autor = "codex"
+revisor = "claude_diego"
+vueltas = 2
+naturaleza = "seguridad"
+
+[[etapa]]
+id = "88c"
+encargo = "88c-spotify-arreglo-rev3.md"
+autor = "codex"
+revisor = "codex"
+autorrevision = "usuario la aceptó el 25-10-2026 13:23 America/Santiago (chat de Claude (Diego): «hacer este cierre todo con codex, hay que cuidar el uso de Claude (Diego)»)"
+vueltas = 1
+naturaleza = "seguridad"
+
+[[etapa]]
+id = "88b"
+encargo = "88b-spotify-intencion-bot.md"
+autor = "codex"
+revisor = "codex"
+autorrevision = "usuario la aceptó el 25-10-2026 13:23 America/Santiago (chat de Claude (Diego): «hacer este cierre todo con codex, hay que cuidar el uso de Claude (Diego)»)"
+vueltas = 2
+naturaleza = "bot"

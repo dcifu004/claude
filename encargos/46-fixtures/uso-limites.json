@@ -1,0 +1,47 @@
+{
+ "momento": "2026-10-11T18:55:20-03:00",
+ "cuentas_interactivo": {
+  "claude_diego": {
+   "limites": {
+    "momento": "2026-10-11T18:55:24-03:00",
+    "plan": null,
+    "ventana_5h": {
+     "usado_pct": 15,
+     "renueva": "2026-10-12T00:30:00.187989+00:00"
+    },
+    "semanal": {
+     "usado_pct": 28,
+     "renueva": "2026-10-17T07:00:00.188009+00:00"
+    }
+   }
+  },
+  "claude_cami": {
+   "limites": {
+    "momento": "2026-10-11T18:55:27-03:00",
+    "plan": null,
+    "ventana_5h": {
+     "usado_pct": 47,
+     "renueva": "2026-10-12T00:49:59.750945+00:00"
+    },
+    "semanal": {
+     "usado_pct": 81,
+     "renueva": "2026-10-12T00:59:59.750966+00:00"
+    }
+   }
+  },
+  "codex": {
+   "limites": {
+    "momento": "2026-10-11T18:42:18-03:00",
+    "plan": "plus",
+    "ventana_5h": {
+     "usado_pct": 69.0,
+     "renueva": "2026-10-11T21:21:56-03:00"
+    },
+    "semanal": {
+     "usado_pct": 11.0,
+     "renueva": "2026-10-18T16:21:56-03:00"
+    }
+   }
+  }
+ }
+}

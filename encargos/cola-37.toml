@@ -1,0 +1,22 @@
+# Cola 37 — huerta: propuesta de siembra y de sensores (09-10-2026). Claude (Diego).
+nombre = "cola37"
+motivo = "Huerta: revisión de lo proyectado, propuesta de siembra y de sensores (encargo 37). Sólo escribe en 12-Monitoreo-Plantas/Huerta y encargos/."
+esperar = ["cola36"]             # sin cruce de archivos; comparten la cuota de Claude (Cami)
+despliegue = "nada"              # es una nota del vault: no hay nada que instalar
+aprobado_por = "usuario, 09-10-2026 20:27 America/Santiago, en el chat de Claude (Diego): eligió la «Recomendada» (investigacion con buscador): escribe Claude (Cami) con Claude Opus 5.5 high, revisa Codex con gpt-5.6-terra high, arregla Claude (Cami) Opus medium; lanzar tras cola36."
+paciencia_h = 12                 # el arreglo puede llevar a Claude (Cami) sobre el 90 % de 5 h: espera la renovación
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py"]
+
+[[etapa]]
+id = "37"
+encargo = "37-huerta-siembra-y-sensores.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "investigacion"
+modelo_autor = "claude-opus-5-5"
+esfuerzo_autor = "high"
+modelo_rev = "gpt-5.6-terra"
+esfuerzo_rev = "high"
+modelo_fix = "claude-opus-5-5"
+esfuerzo_fix = "medium"
+vueltas = 2

@@ -1,0 +1,19 @@
+# Cola 35 — órdenes recurrentes (07-10-2026). Claude (Diego).
+nombre = "cola35"
+motivo = "Órdenes recurrentes en temporizadores y /ordenes (encargo 35, D43)."
+despliegue = "pedir"
+aprobado_por = "usuario, 07-10-2026 ~23:00 America/Santiago, en el chat de Claude (Diego): eligió el reparto «Recomendada por naturaleza» (bot): escribe Claude (Cami) con Claude Opus 5.5 medium; revisa Codex con gpt-5.6-terra high. Espera a cola32 y cola33 (cola33 toca cola-run y el respaldo)."
+paciencia_h = 12
+esperar = ["cola32", "cola33"]
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py", "pi/test_avisos.py", "pi/test_memoria_cockpit.py", "pi/test_memoria_pagina.py", "pi/test_escritura_root.py"]
+
+[paginas]
+sistema = "cockpit-sistema"
+
+[[etapa]]
+id = "35"
+encargo = "35-ordenes-recurrentes.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "bot"
+vueltas = 2

@@ -1,0 +1,14 @@
+nombre = "cola-plan-fixture"
+motivo = "Fixture de la fase plan."
+esperar = []
+despliegue = "nada"
+pruebas = []
+
+[[etapa]]
+id = "plan-fixture"
+encargo = "54-fase-plan.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 1
+naturaleza = "seguridad"
+plan = true

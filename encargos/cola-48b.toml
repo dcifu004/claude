@@ -1,0 +1,17 @@
+# Cola 48b: quitar diff_skill_instalada() (grave de la 48r3). Claude (Diego), 11-10-2026.
+nombre = "cola48b"
+motivo = "Quitar diff_skill_instalada() de cola-run.py: lee fuera de 11-Pi5 y sigue enlaces de carpeta (48r3)."
+esperar = []
+despliegue = "nada"
+paciencia_h = 1
+afinado = "completo"
+aprobado_por = "usuario, 11-10-2026 18:34 America/Santiago, en el chat de Claude (Diego): pidió lanzar la 48b con el mismo reparto de la 48 (escribe Claude (Cami), revisa Codex) durante la pausa general; la 49 queda pendiente"
+pruebas = ["pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "48b"
+encargo = "48b-quitar-diff-skill.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"

@@ -1,0 +1,17 @@
+# Cola 49: diseño del adaptador de motor. Claude (Diego), 11-10-2026. La lanza la cadena de la renovación.
+nombre = "cola49"
+motivo = "Diseño (sin código) de un adaptador de motor para integrar proveedores nuevos (Mistral u otros), con capacidad en % o en USD."
+esperar = []
+despliegue = "nada"
+paciencia_h = 12
+afinado = "completo"
+aprobado_por = "usuario, 11-10-2026 19:50 America/Santiago, en el chat de Claude (Diego): pidió para la renovación 49, 50, 43r y el resto, en ese orden; reparto por defecto de diseño (escribe Claude (Cami), revisa Codex)"
+pruebas = ["encargos/test_balance.py"]
+
+[[etapa]]
+id = "49"
+encargo = "49-adaptador-de-motor.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "diseno"

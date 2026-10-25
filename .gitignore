@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+vivo/
+*-logs/
+secretos/
+*.env

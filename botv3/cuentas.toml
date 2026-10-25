@@ -1,0 +1,101 @@
+# Registro de las cuentas pagadas (30-09-2026, plan «cuentas: historial y costo») y,
+# al final, de Groq, que es un proveedor SIN cuenta pagada (encargo 10): tier gratis
+# de la API, sin login ni limite semanal. El umbral no lo salta y en el libro y en el
+# costo aparece con USD 0. Su key NO va aca: el bot la lee de su entorno (GROQ_API_KEY).
+# El modelo es el de BOTV3_GROQ_CHAT_MODEL y, en la ruta `web`, el de
+# BOTV3_GROQ_WEB_MODEL (`groq/compound`). Donde puede ir lo fija recetas.py: nunca en
+# una ruta que lee vaults.
+# Encargo 15 (01-10-2026): Gemini (key de AI Studio), OpenRouter (solo modelos `:free`)
+# y Tavily (buscador) se registran igual que Groq: USD 0, sin login ni renovacion. La
+# key de cada uno tampoco va aca: el bot la lee de su entorno (GEMINI_API_KEY,
+# OPENROUTER_API_KEY, TAVILY_API_KEY) y, si no la tiene, el proveedor no existe para
+# ese bot. Se carga con `sudo cargar-clave <VARIABLE> <perfil>`. El modelo se cambia
+# con BOTV3_GEMINI_MODEL y BOTV3_OPENROUTER_MODEL (hasta 3, separados por coma).
+# Desplegado en /opt/botv3/cuentas.toml. Lo leen `bots-info` (historial y reparto del
+# precio) y la pagina 🤖 → 💳 Cuentas. Precio y renovacion se cambian con una propuesta
+# `registro_cuentas` desde esa pagina.
+#
+# `renueva` = dia y hora (America/Santiago) en que se reinicia el LIMITE SEMANAL de la
+# cuenta: ahi empieza cada ciclo del historial. Se lee en la app (Claude: Ajustes →
+# Uso; Codex: chatgpt.com/codex/settings/usage). Vacio = lunes 00:00, marcado como
+# supuesto en la pagina hasta que alguien ponga el real.
+#
+# `precio_mes_usd` se prorratea por semana como precio × 12 / 52 (≈ 4,62 con 20).
+#
+# Umbral por cuenta (encargo 06a): el bot SALTA la cuenta cuando llega al 80 % del
+# limite semanal o al 90 % de la ventana de 5 h (`uso.json`). Se edita desde 💳 Cuentas
+# como `umbral_semanal` y `umbral_5h` (enteros 1-100); el bot lo lee con cache de 60 s,
+# sin reiniciar. Una receta de ruta en el perfil puede ponerle excepcion.
+# 03-10-2026 (Diego, doc 27): las tres pagadas quedan en 75 % semanal y 90 % de 5 h, el
+# mismo tope que usaban los encargos antes de separar sus topes. Esto se debe cambiar desde el panel 💳 Cuentas: el
+# se edita desde 💳 Cuentas.
+#
+# Los topes de los encargos se pueden separar sin cambiar al bot: por cuenta,
+# `tope_encargos_semanal` y `tope_encargos_5h` (1--100) mandan en cola-run.py. Si
+# faltan, usa los `umbral_*` de arriba, tal como hasta ahora. `quemar_horas` (0--48,
+# 0 apagado) y `quemar_tope` (1--100) suben sólo el tope semanal de los encargos en
+# las últimas horas antes de la renovación semanal medida. El bot no lee estas cuatro
+# llaves: sigue usando exclusivamente `umbral_semanal` y `umbral_5h`.
+
+[claude_diego]
+nombre = "Claude (Diego)"
+motor = "claude"
+dueno = "Diego"
+correo = "redactado@example.com"
+precio_mes_usd = 20
+renueva = ""
+umbral_semanal = 90
+umbral_5h = 95
+
+[claude_cami]
+nombre = "Claude (Cami)"
+motor = "claude"
+dueno = "Camila"
+correo = "redactado@example.com"
+precio_mes_usd = 20
+renueva = ""
+umbral_semanal = 95
+umbral_5h = 95
+
+[codex]
+nombre = "Codex"
+motor = "codex"
+dueno = "Diego"
+correo = "redactado@example.com"
+precio_mes_usd = 20
+renueva = ""
+umbral_semanal = 90
+umbral_5h = 95
+
+[groq]
+nombre = "Groq"
+motor = "groq"
+dueno = ""
+correo = "redactado@example.com"
+precio_mes_usd = 0
+renueva = ""
+
+[gemini]
+nombre = "Gemini"
+motor = "gemini"
+dueno = ""
+correo = "redactado@example.com"
+precio_mes_usd = 0
+renueva = ""
+
+[openrouter]
+nombre = "OpenRouter"
+motor = "openrouter"
+dueno = ""
+correo = "redactado@example.com"
+precio_mes_usd = 0
+renueva = ""
+
+[tavily]
+nombre = "Tavily"
+motor = "tavily"
+dueno = ""
+correo = "redactado@example.com"
+precio_mes_usd = 0
+renueva = ""
+busquedas_max_encargo = 30

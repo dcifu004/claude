@@ -1,0 +1,127 @@
+# Modelo y esfuerzo por agente según la naturaleza del encargo (doc 27, sección 7; 03-10-2026).
+# Lo lee cola-run.py. Es configuración: se va a editar desde el panel (🧵 Encargos), no a mano
+# en los scripts. Desde el encargo 23a se cambia con la propuesta `encargos_config` de la pestaña
+# «⚙️ Reparto y modelos», que edita línea por línea y anota el cambio al final.
+#
+# Cómo se elige, de más a menos específico:
+#   1. el manifiesto fija `modelo_<rol>` / `esfuerzo_<rol>` en la etapa (rol: autor, rev, fix);
+#   2. la etapa trae `naturaleza` y se busca su nivel para ese rol en [naturaleza.*];
+#   3. sin naturaleza: no se pasa nada y el CLI usa su default (así corrieron las colas 18–20,
+#      que son la línea base contra la que se compara).
+#
+# Los niveles son HIPÓTESIS hasta que historial.jsonl tenga 3 corridas por (cuenta, rol, modelo).
+# `cola-run.py --simular` muestra qué modelo saldría y si el pronóstico es medido o débil.
+# Verificado el 03-10 en la Pi: los 7 modelos de abajo responden con esas flags.
+
+[niveles.claude]                 # claude -p --model M --effort E
+# 04-10: el usuario no usará Claude Fable 5.1 ni gpt-6-astra, ni se sugieren, hasta que diga lo
+# contrario. «máximo» pasa a Claude Opus 5.5 en xhigh. Siguen en [autorizacion] por si alguien
+# los fija a mano: el candado los frena igual.
+maximo  = { modelo = "claude-opus-5-5",   esfuerzo = "high" }
+fuerte  = { modelo = "claude-opus-5-5",   esfuerzo = "high" }
+normal  = { modelo = "claude-opus-5-5",   esfuerzo = "medium" }
+agil    = { modelo = "claude-sonnet-5-5", esfuerzo = "medium" }  # rápido; la mitad de Opus por token
+liviano = { modelo = "claude-haiku-4-5",  esfuerzo = "" }        # Haiku no acepta esfuerzo
+
+[niveles.codex]                  # codex exec -m M -c model_reasoning_effort="E"
+maximo  = { modelo = "gpt-5.6-terra", esfuerzo = "xhigh" }       # sin gpt-6-astra (04-10)
+fuerte  = { modelo = "gpt-5.6-terra", esfuerzo = "high" }
+normal  = { modelo = "gpt-5.6-terra", esfuerzo = "medium" }      # el default de hoy (config.toml)
+agil    = { modelo = "gpt-reserve",   esfuerzo = "medium" }      # rápido y barato para código
+liviano = { modelo = "gpt-5.6-luna",  esfuerzo = "low" }
+
+# Modelos que NO corren sin autorización explícita del usuario (decidido el 03-10-2026).
+# No basta con que un manifiesto lo diga, porque cualquier agente puede escribir uno. Al
+# empezar, la cola pide la autorización por Telegram (`nodo-desplegar sugerir`) y solo sigue
+# con el ✅. Si vence o se ignora, la cola no corre nada.
+[autorizacion]
+modelos = ["claude-fable-5-1", "gpt-6-astra"]
+patrones = ["fable", "mythos", "astra"]   # también por trozo del nombre: alias y versiones nuevas
+espera_max_min = 30
+
+# Naturaleza del encargo → nivel por rol. El criterio:
+# - La REVISIÓN nunca va por debajo del autor: en 12 encargos fue la que cazó los errores graves
+#   con las pruebas en verde. Gastar ahí rinde más que gastar en escribir.
+# - El ARREGLO es acotado (hay una lista de hallazgos), así que va igual o un nivel bajo el autor.
+# - Lo que toca seguridad (credenciales, sandbox, sudo, despliegue) sube un nivel en todo.
+[naturaleza.seguridad]           # credenciales, sandbox, permisos, nodo-desplegar, systemd
+autor = "fuerte"
+rev   = "maximo"
+fix   = "fuerte"
+
+[naturaleza.diseno]              # arquitectura, decidir enfoque, documentos de diseño
+autor = "maximo"
+rev   = "fuerte"
+fix   = "fuerte"
+
+[naturaleza.bot]                 # Python del bot y CLIs con pruebas (el caso más común)
+autor = "normal"
+rev   = "fuerte"
+fix   = "normal"
+
+[naturaleza.pagina]              # páginas de Cockpit: JS/CSS/HTML con CSP y tokenizador
+autor = "normal"
+rev   = "normal"
+fix   = "agil"
+
+[naturaleza.investigacion]       # comparar productos o fuentes y entregar un informe
+autor = "agil"
+rev   = "normal"
+fix   = "agil"
+
+[naturaleza.menor]               # renombres, textos, comentarios, arreglos de una línea
+autor = "liviano"
+rev   = "agil"
+fix   = "liviano"
+
+# Reparto por defecto: quién escribe y quién revisa según la naturaleza (doc 27, sección 5.7;
+# encargo 23a). Son claves de cuentas.toml. Es una SUGERENCIA: cola-run.py y la skill `encargar`
+# la usan solo cuando la etapa del manifiesto no trae `autor` o `revisor`. Nunca puede quedar
+# autor igual a revisor; esa excepción se escribe en el manifiesto con `autorrevision`.
+# Parte con el reparto de la cola 23, el último que aprobó el usuario: escribe Claude (Cami),
+# revisa Codex.
+[reparto.seguridad]
+autor   = "claude_cami"
+revisor = "codex"
+
+[reparto.diseno]
+autor   = "claude_cami"
+revisor = "codex"
+
+[reparto.bot]
+autor   = "claude_cami"
+revisor = "codex"
+
+[reparto.pagina]
+autor   = "claude_cami"
+revisor = "codex"
+
+[reparto.investigacion]
+autor   = "claude_cami"
+revisor = "codex"
+
+[reparto.menor]
+autor   = "claude_cami"
+revisor = "codex"
+
+# Factor de cuota por modelo (encargo 24): cuánta cuota gasta un modelo RELATIVO al de referencia de su
+# motor (Claude Opus 5.5 = 1,0). cola-run.py lo usa SOLO cuando no hay 3 filas del mismo modelo en
+# historial.jsonl: ahí el pronóstico de % sale de las filas de la cuenta y el rol, cada delta dividido por
+# el factor de su modelo, mediana, por el factor del modelo pedido (sin filas: la BASE por el factor). Va a
+# los % de 5 h y semanal y NO a los minutos. Con factor el pronóstico sale siempre «débil».
+# Parte con la razón de costo medida en un arranque simple: Opus 0,14 USD, Sonnet 0,085 (0,61), Haiku 0,035
+# (0,25). Los modelos de Codex NO tienen medida: sin línea valen 1,0 y el pronóstico dice «sin factor». No
+# se inventa uno. El esfuerzo (medium frente a xhigh) tampoco está medido: no entra al factor. Se cambia
+# desde la pestaña «⚙️ Reparto y modelos» (propuesta `encargos_config`).
+[factor_modelo]
+"claude-opus-5-5"   = 1.0     # referencia de Claude
+"claude-sonnet-5-5" = 0.61
+"claude-haiku-4-5"  = 0.25
+
+# Registro de cambios (fecha · qué · por qué)
+# 03-10-2026 · versión inicial · doc 27, sección 7
+# 03-10-2026 · Claude Fable 5.1 y gpt-6-astra piden autorización por Telegram · pedido del usuario
+# 04-10-2026 · Claude Fable 5.1 y gpt-6-astra salen de los niveles: máximo/fuerte quedan en Claude Opus 5.5 xhigh/high y gpt-5.6-terra xhigh/high · el usuario no los usará ni quiere que se sugieran hasta nuevo aviso
+# 04-10-2026 · tabla [reparto.*]: reparto por defecto por naturaleza, Claude (Cami) escribe y Codex revisa · encargo 23a
+# 05-10-2026 · tabla [factor_modelo]: Claude Opus 5.5 1,0 (referencia), Claude Sonnet 5.5 0,61 y Claude Haiku 4.5 0,25, la razón de costo medida en un arranque simple; los modelos de Codex quedan sin factor · encargo 24 (creada a mano, una vez, como [reparto.*] en el 23a; desde ahora va por la propuesta)
+# 12-10-2026 · niveles.claude.maximo: claude-opus-5-5 xhigh → claude-opus-5-5 high · sin motivo escrito (propuesta desde el panel)

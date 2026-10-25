@@ -1,0 +1,16 @@
+# Cola 63: cierre formal de las encargos 43 y 46 (18-10-2026). Claude (Diego). Exenta de la pausa general por orden del usuario.
+nombre = "cola63"
+motivo = "Cierre formal de los encargos 43 y 46: RESULTADO de cierre con instalación comprobada y costo real. Sin cambios de código."
+esperar = []
+despliegue = "nada"
+afinado = "ligero"
+aprobado_por = "usuario, 18-10-2026 America/Santiago, en el chat de Claude (Diego): «cerrar 46 y 43 con Claude (Cami)»; revisa Codex por el reparto de la naturaleza menor"
+pruebas = []
+
+[[etapa]]
+id = "63"
+encargo = "63-cierre-43-y-46.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "menor"

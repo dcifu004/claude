@@ -1,0 +1,18 @@
+# Cola 64: /gastos v1 en botv3 (18-10-2026). Claude (Diego). Lanzada el 18-10-2026 23:32 como excepción a la pausa general.
+nombre = "cola64"
+motivo = "/gastos en botv3: anotar a mano, saldo y últimos 5 (op. de lectura ultimos_gastos en google-puente-hogar)."
+esperar = []
+despliegue = "pedir"
+paciencia_h = 12
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 18-10-2026 22:52 America/Santiago, eligió Claude (Cami) como autora y Codex como revisor; dejarla lista sin lanzar (pausa general). 18-10-2026 23:32: «Encargar los de /gastos» → lanzar ahora como excepción, con paciencia 12 h; la 65 espera a ésta"
+pruebas = ["botv3/test_botv3.py", "pi/test_boleta.py", "pi/test_cuentas_uso.py", "pi/test_uso.py"]
+
+[[etapa]]
+id = "64"
+encargo = "64-gastos-manual.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"

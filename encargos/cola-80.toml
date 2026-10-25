@@ -1,0 +1,28 @@
+nombre = "cola80"
+motivo = "Encargo 80: centinela del catálogo de modelos (80a) y ruta web a gpt-oss-120b con browser_search (80b)."
+resumen = "Avisa cuando Groq o Gemini retiran un modelo configurado, y arregla la ruta web rota desde que groq/compound dejó de existir."
+esperar = ["cola77"]
+despliegue = "nada"
+paciencia_h = 12
+afinado = "completo"
+alcance = "completo"
+aprobado_por = "usuario, 22-10-2026 22:49 America/Santiago, eligió Codex como autor y Claude (Cami) como revisora para toda la cadena; usuario, 22-10-2026 22:45 America/Santiago, pidió la cadena nocturna 79/80/81 + 78 después de la cola77 con despliegue para mañana; orden 80→81→78→79 para que cola-run.py cambie al final; ruta web: gpt-oss + browser_search (opción elegida 22-10)"
+pruebas = ["botv3/test_botv3.py", "pi/test_avisos.py", "pi/test_escritura_root.py"]
+
+[[etapa]]
+id = "80a"
+encargo = "80a-centinela-modelos.md"
+resumen = "botv3 revisa a diario /models de Groq y Gemini y estado.py alerta por modelo ausente."
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "bot"
+
+[[etapa]]
+id = "80b"
+encargo = "80b-ruta-web-gpt-oss.md"
+resumen = "GROQ_WEB_MODEL = openai/gpt-oss-120b + tools browser_search, sin marcas 【】 y con tope de tokens."
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "bot"

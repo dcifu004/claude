@@ -1,0 +1,19 @@
+# Cola 19 — primera corrida de cola-run.py (doc 27). Lanzada por Claude (Diego) el 03-10-2026.
+nombre = "cola19"
+motivo = "Umbral de cada cuenta editable desde 💳 Cuentas (encargo 19)."
+esperar = ["cockpit18"]          # el rediseño de Cockpit toca las mismas páginas
+despliegue = "pedir"             # pedir | solo-avisar
+aprobado_por = "usuario, 03-10-2026, en el chat de Claude (Diego): escribe Codex, revisa Claude (Cami) (cambiado a las 18:15; antes era al revés)"
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py"]
+
+[paginas]                        # nombre en ~/.local/share/cockpit = carpeta en pi/
+cuentas = "cockpit-cuentas"
+comun = "cockpit-comun"
+bots = "cockpit-bots"
+
+[[etapa]]
+id = "19"
+encargo = "19-umbral-desde-el-panel.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2

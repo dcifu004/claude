@@ -1,0 +1,15 @@
+# Cola 40 — vigilar y cotizar precios de Mercado Libre desde la Pi (10-10-2026). Claude (Diego).
+nombre = "cola40"
+motivo = "Vigilar y cotizar precios de Mercado Libre desde la Pi: ml-puente, ml-vigilar, /vigilar y /cotizar (encargo 40)."
+esperar = []
+despliegue = "pedir"
+aprobado_por = "usuario, 10-10-2026 22:20 America/Santiago, en el chat de Claude (Diego): eligió la «Recomendada» (seguridad): escribe Claude (Cami) con Claude Opus 5.5 high, revisa Codex con gpt-5.6-terra xhigh, arregla Claude (Cami) Opus high; lanzar ahora (sin colas vivas)."
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_escritura_root.py", "pi/test_nodo_servicio.py"]
+
+[[etapa]]
+id = "40"
+encargo = "40-vigilar-precios-mercadolibre.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "seguridad"
+vueltas = 2

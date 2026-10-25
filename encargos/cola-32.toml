@@ -1,0 +1,22 @@
+# Cola 32 — revisión cruzada del encargo 32 (buscador Tavily). Claude (Diego), 07-10-2026.
+nombre = "cola32"
+motivo = "Revisión cruzada del encargo 32 (buscador Tavily), hecho sin cola; y atribuir búsquedas por encargo, no por hora."
+despliegue = "pedir"
+aprobado_por = "usuario, 07-10-2026 ~21:55, en el chat de Claude (Diego): «ok» a mandar el encargo 32 a revisión de Codex después de las colas 31 y 28. Reparto económico: escribe Claude (Cami) con Claude Sonnet 5.5 medium; revisa Codex con gpt-5.6-terra medium (toca cola-run.py y la plantilla de revisión)."
+paciencia_h = 12
+esperar = ["cola31", "cola28"]
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py", "pi/test_avisos.py", "pi/test_memoria_cockpit.py", "pi/test_memoria_pagina.py", "pi/test_escritura_root.py"]
+
+[[etapa]]
+id = "32b"
+encargo = "32b-revisar-buscador.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "bot"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-5.6-terra"
+esfuerzo_rev = "medium"
+vueltas = 2

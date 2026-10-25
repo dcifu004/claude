@@ -1,0 +1,18 @@
+# Cola 52: plan de optimización de encargos (12-10-2026). Claude (Diego). La lanza orden-plan cuando no haya colas vivas.
+nombre = "cola52"
+motivo = "Modo descanso del nodo: en_descanso(), feriados Boostr con copia, avisos no urgentes encolados y resumen al terminar (versión mínima)."
+esperar = []
+despliegue = "pedir"
+paciencia_h = 12
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 12-10-2026 12:42 America/Santiago, en el chat de Claude (Diego): aprobó el plan de optimización (53 → 54 → 52 → 51, versiones mínimas, la cadena se detiene si una falla); escribe Codex y revisa Claude (Cami)"
+pruebas = ["pi/test_descanso.py", "pi/test_avisos.py", "encargos/test_matriz_cuota.py", "encargos/test_acciones_cola.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "52"
+encargo = "52-modo-descanso.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "bot"

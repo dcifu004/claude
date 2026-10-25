@@ -1,0 +1,27 @@
+# Cola 22 — ⏰ Programados en 🍇 (doc 29). Escrita por Claude (Diego) el 03-10-2026.
+nombre = "cola22"
+motivo = "⏰ Programados en 🍇 (doc 29) + barra de progreso de las colas en 🧵 Encargos (encargo 22)."
+despliegue = "solo-avisar"       # solo páginas: llega la línea que instala desde la copia revisada
+aprobado_por = "usuario, 03-10-2026, en el chat de Claude (Diego): pestaña ⏰ en 🍇; escribe Claude (Diego), revisa Codex. 22:40: más barato, y puede correr de noche"
+paciencia_h = 12                 # si falta cuota, espera las renovaciones en vez de pausarse
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py"]
+
+[paginas]                        # nombre en ~/.local/share/cockpit = carpeta en pi/
+sistema = "cockpit-sistema"
+comun = "cockpit-comun"
+encargos = "cockpit-encargos"    # parte B: la barra de progreso
+
+[[etapa]]
+id = "22"
+encargo = "22-tareas-programadas.md"
+autor = "claude_diego"
+revisor = "codex"
+naturaleza = "pagina"
+# Más barato (pedido del usuario, 22:40): Claude Sonnet 5.5 escribe y arregla, en vez de Claude
+# Opus 5.5. La revisión queda en gpt-5.6-terra medium: nunca por debajo del autor, y Codex es
+# la cuenta con más margen (11 % semanal).
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+vueltas = 2

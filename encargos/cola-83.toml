@@ -1,0 +1,21 @@
+# Cola 83: aviso de quema de cupo (23-10-2026). Claude (Diego).
+# RECONSTRUIDO el 24-10-2026 ~14:55 (el original se perdió); reparto y campos reconfirmados el
+# 24-10-2026 ~19:15 con --simular: la A (Claude (Cami) autora) no cabía en el tope semanal.
+nombre = "cola83"
+motivo = "Encargo 83: aviso de quema de cupo antes de la renovación (timer de usuario, consultar A/B/C y lanzamiento de plantillas aprobadas)."
+resumen = "quema.py + plantillas.toml + quema-aviso.timer: viernes 16:00 las dos Claude, miércoles 16:00 Codex; al elegir, lanza la cola sola."
+esperar = ["cola86"]
+despliegue = "pedir"
+afinado = "completo"
+alcance = "completo"
+paciencia_h = 12
+aprobado_por = "usuario, 24-10-2026 ~19:15 America/Santiago, en el chat de Claude (Diego): «lanzar» tras ver la simulación; reparto B recomendado (Codex escribe y Claude (Cami) revisa), encadenada después de la cola86; excepción a la pausa general"
+pruebas = ["encargos/test_capacidad_por_vencer.py", "encargos/test_consultas.py", "encargos/test_acciones_cola.py", "pi/test_nodo_desplegar.py"]
+
+[[etapa]]
+id = "83"
+encargo = "83-quema-de-cupo.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "seguridad"

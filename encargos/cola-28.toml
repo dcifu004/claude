@@ -1,0 +1,68 @@
+# Cola 28 — retomar pendientes (07-10-2026). Claude (Diego).
+nombre = "cola28"
+motivo = "Cerrar el encargo 27 (caché de restic), pruebas inestables, detalles de ⏰ y de 🧠."
+despliegue = "pedir"
+aprobado_por = "usuario, 07-10-2026 ~21:00, en el chat de Claude (Diego): «retomar los encargos pendientes». Mismo reparto que el último que aprobó (05-10): escribe Claude (Cami) en modo económico (Claude Sonnet 5.5 medium); revisa Codex (gpt-5.6-terra medium en seguridad, gpt-reserve medium en el resto). La Fase 2b de 🧠 queda fuera: espera la pregunta 5 del doc 30."
+paciencia_h = 12
+esperar = ["cola31"]   # 07-10 21:50: relanzada desde 27b:rev3 (la rev3 rechazó por una búsqueda de otra sesión)
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py", "pi/test_avisos.py", "pi/test_memoria_cockpit.py", "pi/test_memoria_pagina.py", "pi/test_escritura_root.py"]
+
+[paginas]
+sistema = "cockpit-sistema"
+memoria = "cockpit-memoria"
+
+[[etapa]]
+id = "27b"
+encargo = "27b-restic-cache.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "seguridad"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-5.6-terra"
+esfuerzo_rev = "medium"
+vueltas = 2
+
+[[etapa]]
+id = "27c"
+encargo = "27c-pruebas-inestables.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "menor"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-reserve"
+esfuerzo_rev = "medium"
+vueltas = 2
+
+[[etapa]]
+id = "28"
+encargo = "28-programados-detalles.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "pagina"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-reserve"
+esfuerzo_rev = "medium"
+vueltas = 2
+
+[[etapa]]
+id = "29"
+encargo = "29-memoria-detalles.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "pagina"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-reserve"
+esfuerzo_rev = "medium"
+vueltas = 2

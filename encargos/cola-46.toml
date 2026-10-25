@@ -1,0 +1,38 @@
+# Cola 46: matriz cuentas × encargos, en dos etapas tras la Fase 0 (11-10-2026). Claude (Diego).
+# Lanzada el 11-10 por pedido del usuario: única excepción a la pausa general, junto con la 47 y la 48/48b.
+nombre = "cola46"
+motivo = "Carga vs. capacidad: 46a cola-run publica fases_restantes y colas_fuera, y reglas_cuota suma por ventana; 46b matriz en 🧵 Encargos con proyección «¿y si la reanudo?» y tramos fantasma en 💳 Cuentas; 46c botones Reanudar/Pausar/Detener."
+esperar = []
+despliegue = "pedir"
+paciencia_h = 12
+afinado = "completo"
+aprobado_por = "usuario, 10-10-2026 ~23:30 aprobó la maqueta del 45; 11-10-2026 19:11 America/Santiago, en el chat de Claude (Diego), Fase 0: la matriz suma sólo las colas que corren solas, las detenidas o pausadas se listan con proyección opcional, dos etapas, escribe Claude (Cami) y revisa Codex en ambas; 19:34: pidió lanzar a Claude (Cami) todo lo de la 46, con la 46c incluida (propuesta de timers aceptada)"
+pruebas = ["encargos/test_matriz_cuota.py", "encargos/test_acciones_cola.py", "pi/test_avisos.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py"]
+
+[paginas]
+encargos = "cockpit-encargos"
+cuentas = "cockpit-cuentas"
+
+[[etapa]]
+id = "46a"
+encargo = "46a-matriz-motor.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"
+
+[[etapa]]
+id = "46b"
+encargo = "46b-matriz-paginas.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "pagina"
+
+[[etapa]]
+id = "46c"
+encargo = "46c-botones-de-cola.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "seguridad"

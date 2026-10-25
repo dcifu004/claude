@@ -1,0 +1,18 @@
+# Cola 54: plan de optimización de encargos (12-10-2026). Claude (Diego). La lanza orden-plan cuando no haya colas vivas.
+nombre = "cola54"
+motivo = "Fase plan + revplan antes del código cuando la etapa trae plan = true (versión mínima)."
+esperar = []
+despliegue = "nada"
+paciencia_h = 12
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 12-10-2026 12:42 America/Santiago, en el chat de Claude (Diego): aprobó el plan de optimización (53 → 54 → 52 → 51, versiones mínimas, la cadena se detiene si una falla); escribe Codex y revisa Claude (Cami)"
+pruebas = ["encargos/test_fase_plan.py", "encargos/test_diff_propio.py", "encargos/test_matriz_cuota.py", "encargos/test_acciones_cola.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "54"
+encargo = "54-fase-plan.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "seguridad"

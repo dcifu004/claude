@@ -1,0 +1,14 @@
+# Cola 21 — la skill `encargar` (doc 27, 3.3). Escrita por Claude (Diego) el 03-10-2026.
+nombre = "cola21"
+motivo = "Skill encargar: consulta, pronóstico y lanzamiento de colas (encargo 21, doc 27)."
+despliegue = "solo-avisar"       # la skill la instala Claude (Diego) después de leerla
+aprobado_por = "usuario, 03-10-2026, en el chat de Claude (Diego): que Codex prepare la skill; revisa Claude (Cami)"
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "21"
+encargo = "21-skill-encargar.md"
+autor = "codex"
+revisor = "claude_cami"
+naturaleza = "bot"               # autor gpt-5.6-terra medium, revisión Claude Opus 5.5 high: sin candado
+vueltas = 2

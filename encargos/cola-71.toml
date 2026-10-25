@@ -1,0 +1,19 @@
+nombre = "cola71"
+motivo = "Encargo 71: las consultas de la cola salen como UN mensaje A/B/C con un botón por alternativa (nodo-desplegar consultar)."
+resumen = "Un solo mensaje con botones A/B/C para las consultas de la cola; el escucha root anota la opción y quita el teclado."
+esperar = []
+despliegue = "nada"
+afinado = "completo"
+alcance = "minimo"
+paciencia_h = 12
+aprobado_por = "usuario, 20-10-2026 21:57 America/Santiago, eligió Claude (Cami) como autora y Codex como revisor (excepción a la pausa general)"
+pruebas = ["encargos/test_consultas.py", "pi/test_nodo_desplegar.py", "botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py"]
+
+[[etapa]]
+id = "71"
+encargo = "71-consultas-abc.md"
+resumen = "nodo-desplegar consultar + cola-run.py con una ronda de un mensaje, con caída a los tres sugerir."
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "seguridad"

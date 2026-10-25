@@ -1,0 +1,17 @@
+# Cola 38 — muestra de boletín de noticias en audio con Piper (09-10-2026). Claude (Diego).
+nombre = "cola38"
+motivo = "Muestra de boletín de noticias en audio con Piper (encargo 38). Solo escribe en 13-Agente-Noticias/pi/boletin_audio.py, 13-Agente-Noticias/muestras/ y encargos/."
+esperar = []                     # sin colas vivas al momento de la foto
+despliegue = "nada"              # es una muestra: no hay nada que instalar
+aprobado_por = "usuario, 10-10-2026 01:15 America/Santiago, en el chat de Claude (Diego): eligió la «Recomendada» (bot): escribe Claude (Cami) con Claude Opus 5.5 medium, revisa Codex con gpt-5.6-terra high, arregla Claude (Cami); lanzar ahora."
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py"]
+# Revisión 1, hallazgo 1: la etapa escribe en una carpeta hermana; sin esto el diff del revisor solo ve 11-Pi5.
+arboles_extra = ["13-Agente-Noticias"]
+
+[[etapa]]
+id = "38"
+encargo = "38-boletin-audio-piper-muestra.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "bot"
+vueltas = 2

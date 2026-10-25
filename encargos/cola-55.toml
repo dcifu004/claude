@@ -1,0 +1,18 @@
+# Cola 55: despachador único con lista de prioridad (12-10-2026). Claude (Diego). La lanza orden-plan después de la 53.
+nombre = "cola55"
+motivo = "Despachador único: prioridad.txt + despachador.py (timer de usuario, una cola a la vez, relanza pausas de cuota, respeta despacho y depende) — versión mínima."
+esperar = []
+despliegue = "solo-avisar"
+paciencia_h = 12
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 12-10-2026 12:51 America/Santiago, en el chat de Claude (Diego): pidió agregar la 55 al plan después de la 53, versión mínima; escribe Codex y revisa Claude (Cami)"
+pruebas = ["encargos/test_despachador.py", "encargos/test_acciones_cola.py", "encargos/test_matriz_cuota.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "55"
+encargo = "55-despachador-unico.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "bot"

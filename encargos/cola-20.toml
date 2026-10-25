@@ -1,0 +1,21 @@
+# Cola 20 — 🧵 Encargos, ventana de las colas en Cockpit (doc 28). Escrita por Claude (Diego) el 03-10-2026.
+nombre = "cola20"
+motivo = "🧵 Encargos: ventana de las colas en Cockpit, sólo lectura (encargo 20, doc 28)."
+esperar = ["cola19", "cockpit18"]
+despliegue = "solo-avisar"       # sólo páginas: llega la línea que instala, el ✅ de Diego aprueba
+aprobado_por = "usuario, 03-10-2026, en el chat de Claude (Diego): escribe Codex, revisa Claude (Cami)"
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py"]
+
+[paginas]                        # nombre en ~/.local/share/cockpit = carpeta en pi/
+encargos = "cockpit-encargos"
+comun = "cockpit-comun"
+sistema = "cockpit-sistema"
+noticias = "cockpit-noticias"
+luces = "cockpit-luces"
+
+[[etapa]]
+id = "20"
+encargo = "20-ventana-encargos.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2

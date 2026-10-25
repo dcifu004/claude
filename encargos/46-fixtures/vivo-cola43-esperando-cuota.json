@@ -1,0 +1,69 @@
+{
+ "nombre": "cola43",
+ "motivo": "Señales de las luces: respiración regulable con encargo corriendo, azul para Jaime y rosado para Pilar al escuchar/responder, configurables en 🌈 (encargo 43).",
+ "estado": "esperando_cuota",
+ "lanzada": "2026-10-10T22:07:04-03:00",
+ "etapas": [
+  "43"
+ ],
+ "escrito": "2026-10-10T22:47:40-03:00",
+ "esperando": null,
+ "etapa": "43",
+ "fase": "autor",
+ "cuenta": "Claude (Cami)",
+ "cuenta_clave": "claude_cami",
+ "modelo": "claude-opus-5-5",
+ "calculo": [
+  {
+   "ventana": "5h",
+   "actual": 78.0,
+   "pronostico": 27.0,
+   "tope": 90
+  }
+ ],
+ "calculo_texto": "5 h 78 % + 27.0 % > tope 90 %",
+ "espera_desde": "2026-10-10T22:07:32-03:00",
+ "reanuda": "2026-10-11T00:22:00-03:00",
+ "pronostico_debil": false,
+ "restante_min": {
+  "esperado": 49.0,
+  "min": 27.1,
+  "max": 67.1
+ },
+ "prob_rechazo": 0.66,
+ "eta": {
+  "esperado": "2026-10-11T01:11-03:00",
+  "min": "2026-10-11T00:49-03:00",
+  "max": "2026-10-11T01:29-03:00"
+ },
+ "cuentas_en_uso": [
+  "claude_cami",
+  "codex"
+ ],
+ "proximo": {
+  "cuenta": "claude_cami",
+  "etapa": "43",
+  "fase": "autor",
+  "pct_5h": 27.0,
+  "pct_sem": 4.0,
+  "debil": false
+ },
+ "proximo_por_cuenta": {
+  "claude_cami": {
+   "cuenta": "claude_cami",
+   "etapa": "43",
+   "fase": "autor",
+   "pct_5h": 27.0,
+   "pct_sem": 4.0,
+   "debil": false
+  },
+  "codex": {
+   "cuenta": "codex",
+   "etapa": "43",
+   "fase": "rev1",
+   "pct_5h": 9.0,
+   "pct_sem": 2.0,
+   "debil": false
+  }
+ }
+}

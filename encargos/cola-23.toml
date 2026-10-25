@@ -1,0 +1,73 @@
+# Cola 23 — encargo mayor de cuatro etapas (doc 27 §5.5–5.7, §7.4; doc 29 fase 2). Claude (Diego), 04-10-2026.
+nombre = "cola23"
+motivo = "Reparto editable, 🔔 Avisos, acciones de ⏰ y trabajador de PC-2503 (encargos 23a–23d)."
+despliegue = "pedir"             # aplicar-propuesta, avisos y nodo-servicio van por pedido con botones; las páginas se instalan al aprobar
+aprobado_por = "usuario, 04-10-2026 16:55, en el chat de Claude (Diego): modelos recomendados por naturaleza; escribe Claude (Cami), revisa Codex; ahora («gastar lo más posible de Claude (Cami) antes de que se renueve»). 17:00: sin gpt-6-astra ni Claude Fable 5.1 (rechazó la autorización). 19:35: 23c la escribe Codex (gpt-reserve) y la revisa Claude (Diego), relanzada desde 23c:autor. 20:31: el usuario pidió que Claude (Cami) haga todo lo pendiente y rápido antes de su renovación: 23c rev3 Claude (Cami) Opus high; 23d autor Claude (Cami) Opus high, revisa Codex"
+paciencia_h = 12                 # si Claude (Cami) toca el 75 % semanal, espera la renovación de las 22:00
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py"]
+
+[paginas]
+encargos = "cockpit-encargos"
+sistema = "cockpit-sistema"
+comun = "cockpit-comun"
+cuentas = "cockpit-cuentas"
+
+[[etapa]]
+id = "23a"
+encargo = "23a-reparto-editable.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "pagina"
+vueltas = 2
+
+[[etapa]]
+id = "23b"
+encargo = "23b-panel-avisos.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "bot"
+vueltas = 2
+
+[[etapa]]
+id = "23c"
+encargo = "23c-acciones-programados.md"
+# 19:35: Claude (Cami) en 74 % de 5 h y 70 % semanal (tope 75); el usuario eligió que escriba
+# Codex en modo económico y revise Claude (Diego), para no esperar a las 20:30.
+# 20:31: Claude (Diego) sin margen de 5 h hasta las 21:29; el usuario pidió que Claude (Cami)
+# haga todo lo pendiente, rápido, antes de su renovación semanal (22:00).
+autor = "codex"
+revisor = "claude_cami"
+modelo_rev = "claude-opus-5-5"
+esfuerzo_rev = "high"
+modelo_autor = "gpt-reserve"
+esfuerzo_autor = "medium"
+modelo_fix = "gpt-reserve"
+esfuerzo_fix = "medium"
+naturaleza = "seguridad"
+vueltas = 2
+
+[[etapa]]
+id = "23d"
+encargo = "23d-trabajador-pc2503.md"
+autor = "claude_cami"
+revisor = "codex"
+modelo_autor = "claude-opus-5-5"   # 20:31: rápido (high en vez de xhigh) por pedido del usuario
+esfuerzo_autor = "high"
+modelo_fix = "claude-opus-5-5"
+esfuerzo_fix = "medium"
+naturaleza = "diseno"
+vueltas = 2
+
+# 20:48: 23c quedó NO DESPLEGABLE en rev3. El usuario pidió que Claude (Cami) haga todo lo
+# pendiente antes de su renovación: arreglo de 23c escrito por Claude (Cami), revisa Codex.
+[[etapa]]
+id = "23e"
+encargo = "23e-arreglar-23c.md"
+autor = "claude_cami"
+revisor = "codex"
+modelo_autor = "claude-opus-5-5"
+esfuerzo_autor = "high"
+modelo_fix = "claude-opus-5-5"
+esfuerzo_fix = "medium"
+naturaleza = "seguridad"
+vueltas = 1

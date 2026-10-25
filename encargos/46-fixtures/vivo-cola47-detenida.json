@@ -1,0 +1,94 @@
+{
+ "nombre": "cola47",
+ "motivo": "Economía de encargos: balance.py + trampas.md (47a) y Fase 0 «Afinar» + experimento esfuerzo-v1 en una copia de la skill encargar (47b).",
+ "estado": "detenida",
+ "lanzada": "2026-10-11T16:52:51-03:00",
+ "etapas": [
+  "47a",
+  "47b"
+ ],
+ "escrito": "2026-10-11T17:20:15-03:00",
+ "esperando": null,
+ "inicio_trabajo": "2026-10-11T16:52:54-03:00",
+ "etapa": "47b",
+ "fase": "rev3",
+ "cuenta": "Codex",
+ "modelo": "gpt-reserve medium",
+ "inicio_fase": "2026-10-11T17:19:04-03:00",
+ "pronostico_fase_min": 3.0,
+ "remoto": null,
+ "restante_min": {
+  "esperado": 4.0,
+  "min": 4.0,
+  "max": 4.0
+ },
+ "prob_rechazo": 0.66,
+ "progreso_pct": 100,
+ "eta": {
+  "esperado": "2026-10-11T17:23-03:00",
+  "min": "2026-10-11T17:23-03:00",
+  "max": "2026-10-11T17:23-03:00"
+ },
+ "cuentas_en_uso": [],
+ "proximo": null,
+ "proximo_por_cuenta": {},
+ "fases_hechas": [
+  {
+   "etapa": "47a",
+   "fase": "autor",
+   "cuenta": "Claude (Cami)",
+   "min": 8.9,
+   "pronostico_min": 19.3
+  },
+  {
+   "etapa": "47a",
+   "fase": "rev1",
+   "cuenta": "Codex",
+   "min": 6.3,
+   "pronostico_min": 6.8
+  },
+  {
+   "etapa": "47b",
+   "fase": "autor",
+   "cuenta": "Claude (Cami)",
+   "min": 3.1,
+   "pronostico_min": 8.0
+  },
+  {
+   "etapa": "47b",
+   "fase": "rev1",
+   "cuenta": "Codex",
+   "min": 2.2,
+   "pronostico_min": 3.1
+  },
+  {
+   "etapa": "47b",
+   "fase": "fix1",
+   "cuenta": "Claude (Cami)",
+   "min": 2.3,
+   "pronostico_min": 4.8
+  },
+  {
+   "etapa": "47b",
+   "fase": "rev2",
+   "cuenta": "Codex",
+   "min": 1.2,
+   "pronostico_min": 3.0
+  },
+  {
+   "etapa": "47b",
+   "fase": "fix2",
+   "cuenta": "Claude (Cami)",
+   "min": 1.9,
+   "pronostico_min": 3.5
+  },
+  {
+   "etapa": "47b",
+   "fase": "rev3",
+   "cuenta": "Codex",
+   "min": 1.2,
+   "pronostico_min": 3.0
+  }
+ ],
+ "fin": "2026-10-11T17:20:15-03:00"
+}

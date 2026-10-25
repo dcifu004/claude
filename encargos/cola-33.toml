@@ -1,0 +1,22 @@
+# Cola 33 — git para 11-Pi5, fuera del vault (07-10-2026). Claude (Diego).
+nombre = "cola33"
+motivo = "Historial de versiones con git para 11-Pi5 (repo separado fuera del vault) y fotos automáticas en cola-run (encargo 33)."
+despliegue = "pedir"
+aprobado_por = "usuario, 07-10-2026 ~22:05, en el chat de Claude (Diego): «si, git como encargo después de la cola 32». Reparto económico de las colas 28–32: escribe Claude (Cami) con Claude Sonnet 5.5 medium; revisa Codex con gpt-5.6-terra medium (toca el motor de las colas y el respaldo)."
+paciencia_h = 12
+esperar = ["cola31", "cola28", "cola32"]
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py", "pi/test_avisos.py", "pi/test_memoria_cockpit.py", "pi/test_memoria_pagina.py", "pi/test_escritura_root.py"]
+
+[[etapa]]
+id = "33"
+encargo = "33-git-proyecto.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "diseno"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-5.6-terra"
+esfuerzo_rev = "medium"
+vueltas = 2

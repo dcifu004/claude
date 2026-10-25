@@ -1,0 +1,25 @@
+# Cola 31 — Historial de 🧵 Encargos con orden (07-10-2026). Claude (Diego).
+nombre = "cola31"
+motivo = "Historial de 🧵 Encargos: columna Fecha, lo más reciente primero y «Ordenar por» (encargo 31)."
+despliegue = "pedir"
+aprobado_por = "usuario, 07-10-2026 ~21:05, en el chat de Claude (Diego): pidió ordenar el Historial con lo más reciente primero. Mismo reparto económico de la cola 28: escribe Claude (Cami) con Claude Sonnet 5.5 medium, revisa Codex con gpt-reserve medium. Espera a la cola 28 porque comparte test_cockpit_paginas.py."
+paciencia_h = 12
+esperar = ["cola28", "cola32", "cola33"]
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py", "pi/test_avisos.py", "pi/test_memoria_cockpit.py", "pi/test_memoria_pagina.py", "pi/test_escritura_root.py"]
+
+[paginas]
+encargos = "cockpit-encargos"
+
+[[etapa]]
+id = "31"
+encargo = "31-historial-ordenar.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "pagina"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-reserve"
+esfuerzo_rev = "medium"
+vueltas = 2

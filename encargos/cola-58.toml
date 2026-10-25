@@ -1,0 +1,18 @@
+# Cola 58: pruebas y agentes sin avisos reales (12-10-2026). Claude (Diego). Justo después de la 56.
+nombre = "cola58"
+motivo = "Ningún agente ni prueba manda avisos reales: NODO_PRUEBAS=1 en los agentes, registro_avisos lo respeta y test_buzon aísla todas las vías (versión mínima)."
+esperar = []
+despliegue = "nada"
+paciencia_h = 12
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 12-10-2026 21:42 America/Santiago, en el chat de Claude (Diego): tras los avisos falsos de las 19:07 pidió el encargo 58 justo después de la 56; escribe Codex y revisa Claude (Cami)"
+pruebas = ["encargos/test_matriz_cuota.py", "encargos/test_acciones_cola.py", "pc2503/test_buzon.py", "pi/test_avisos.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "58"
+encargo = "58-pruebas-sin-avisos-reales.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "seguridad"

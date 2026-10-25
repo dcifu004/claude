@@ -1,0 +1,37 @@
+# Cola 43s: reglas de las luces, dividida en 3 etapas por la Fase 0 (11-10-2026). Claude (Diego).
+# Nombre nuevo (antes cola43r): el vivo de cola43r apuntaba a 43:autor, que ya no existe.
+nombre = "cola43s"
+motivo = "Reglas de las luces en 3 etapas: 43a modelo y comandos de luces, 43b vigilante luces-senales y fuentes, 43c página 🌈 y documentación."
+esperar = []
+despliegue = "solo-avisar"
+paciencia_h = 12
+afinado = "completo"
+aprobado_por = "usuario, 10-10-2026 22:55 America/Santiago aprobó el diseño (escribe Claude (Cami), revisa Codex); usuario, 11-10-2026 19:50 America/Santiago, en el chat de Claude (Diego): pidió para la renovación 49, 50, 43r y el resto, en ese orden; 23:07: pidió avanzar más rápido: la 43s se adelanta y la escribe Codex con revisión de Claude (Diego), porque la ventana de 5 h de Claude (Cami) es el cuello de botella; 23:10: el usuario pidió no usar Claude (Diego) por ahora: revisa Claude (Cami)"
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_luces.py"]
+
+[paginas]
+luces = "cockpit-luces"
+
+[[etapa]]
+id = "43a"
+encargo = "43a-luces-reglas-y-comandos.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "bot"
+
+[[etapa]]
+id = "43b"
+encargo = "43b-luces-vigilante.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "bot"
+
+[[etapa]]
+id = "43c"
+encargo = "43c-luces-pagina-y-doc.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "pagina"

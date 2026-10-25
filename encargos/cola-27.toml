@@ -1,0 +1,21 @@
+# Cola 27 — root sin symlinks en /opt/nodo/datos (estado y uso). Claude (Diego), 05-10-2026.
+nombre = "cola27"
+motivo = "Seguridad: estado.service y uso.service escriben como root en una carpeta de dcifu004 siguiendo symlinks (encargo 27)."
+despliegue = "pedir"
+aprobado_por = "usuario, 05-10-2026 ~18:20, en el chat de Claude (Diego): «lanza el encargo de seguridad con Claude (Cami) en modo económico». Escribe Claude (Cami) con Claude Sonnet 5.5 medium; revisa Codex con gpt-5.6-terra medium (seguridad: la revisión no baja del autor)."
+paciencia_h = 12
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py", "pi/test_avisos.py", "pi/test_memoria_cockpit.py", "pi/test_memoria_pagina.py"]
+
+[[etapa]]
+id = "27"
+encargo = "27-root-sin-symlinks.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "seguridad"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-5.6-terra"
+esfuerzo_rev = "medium"
+vueltas = 2

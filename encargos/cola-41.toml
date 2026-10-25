@@ -1,0 +1,16 @@
+# Cola 41 — lista de compras v2: checklist inline, lote, historial y voz (10-10-2026). Claude (Diego).
+nombre = "cola41"
+motivo = "Lista de compras v2: checklist inline en lugar de la encuesta, sacar y agregar en lote, historial, deshacer y frases de voz (encargo 41)."
+esperar = []
+despliegue = "pedir"
+paciencia_h = 12   # 10-10 22:30, Diego: si se acaba la cuota de Claude (Cami), esperar de noche en vez de pausar
+aprobado_por = "usuario, 10-10-2026 21:59 America/Santiago, en el chat de Claude (Diego): eligió la «Económica» (bot): escribe Codex (gpt-5.6-terra medium), revisa Claude (Cami) (Claude Opus 5.5 high), arregla Codex; tomó todas las recomendaciones del plan (sin encuesta, con historial, sin limpieza automática, sacar por voz sin botón si la coincidencia es única, «deshaz eso» sólo del propio perfil). 16-10-2026 19:40, chat de Claude (Diego): «puedes continuar y terminar encargos (Claude (Diego)), quememos la cuenta». Revisa Claude (Diego) en lugar de Claude (Cami) (97 % semanal)."
+pruebas = ["botv3/test_botv3.py", "botv3/test_compras.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "41"
+encargo = "41-compras-v2-checklist-y-voz.md"
+autor = "codex"
+revisor = "claude_diego"
+vueltas = 2
+naturaleza = "bot"

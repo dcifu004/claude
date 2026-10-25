@@ -1,0 +1,19 @@
+nombre = "cola72"
+motivo = "Encargo 72: agente botánico, botón «Analizar con IA» en la ficha del macetero que manda la foto a Gemini y guarda la hipótesis con autor IA."
+resumen = "Botón «Analizar» en la app de captura: Gemini mira la última foto del macetero y deja una nota de IA en el histórico."
+esperar = ["cola71"]
+despliegue = "nada"
+afinado = "completo"
+alcance = "minimo"
+paciencia_h = 12
+aprobado_por = "usuario, 20-10-2026 21:57 America/Santiago, pidió encadenarlo tras la cola71 con el mismo reparto: Claude (Cami) autora y Codex revisor; gatillo = botón «Analizar»; las fotos pueden salir a Gemini (excepción a la pausa general)"
+pruebas = ["captura-web/test_captura_web.py", "botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py"]
+
+[[etapa]]
+id = "72"
+encargo = "72-botanico-gemini.md"
+resumen = "POST /analizar en captura_web.py + botón en formulario.html + pruebas nuevas de captura-web."
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"

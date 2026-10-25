@@ -1,0 +1,17 @@
+nombre = "cola81"
+motivo = "Encargo 81: auditoría de entradas del catálogo con el vault distinto de lo instalado (sólo lectura)."
+resumen = "Tabla de desfases vault vs instalado con origen y clasificación (desplegar, revisar, revertir, formato), y las líneas propuestas sin correrlas."
+esperar = ["cola80"]
+despliegue = "nada"
+paciencia_h = 12
+afinado = "ligero"
+aprobado_por = "usuario, 22-10-2026 22:49 America/Santiago, eligió Codex como autor y Claude (Cami) como revisora para toda la cadena; usuario, 22-10-2026 22:45 America/Santiago, pidió la cadena nocturna 79/80/81 + 78 después de la cola77 con despliegue para mañana; orden 80→81→78→79 para que cola-run.py cambie al final"
+pruebas = []
+
+[[etapa]]
+id = "81"
+encargo = "81-auditoria-desfases.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 1
+naturaleza = "investigacion"

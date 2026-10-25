@@ -1,0 +1,17 @@
+# Cola 48: esfuerzo sin modelo usa el modelo de la naturaleza. Claude (Diego), 11-10-2026.
+nombre = "cola48"
+motivo = "modelo_de(): esfuerzo_<rol> sin modelo_<rol> toma el modelo de la naturaleza (arregla el experimento esfuerzo-v1)."
+esperar = []
+despliegue = "nada"
+paciencia_h = 1
+afinado = "completo"
+aprobado_por = "usuario, 11-10-2026 17:41 America/Santiago, en el chat de Claude (Diego): eligió Claude (Cami) como autora y Codex como revisor, y lanzar sólo la 48 durante la pausa general"
+pruebas = ["pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "48"
+encargo = "48-esfuerzo-sin-modelo.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"

@@ -1,0 +1,17 @@
+nombre = "cola87"
+motivo = "Encargo 87: cierre barato en rev2/rev3 (cierre_barato = true): verificación ágil sobre el diff del arreglo, con escalada determinista a la revisión completa; primer uso de la fase plan."
+esperar = ["cola86"]
+despliegue = "nada"
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 24-10-2026 18:26 America/Santiago, eligió cierre barato en rev2+, alcance mínimo, Codex como autor, Claude (Cami) como revisora y fase plan; preparado sin lanzar"
+pruebas = ["encargos/test_cierre_barato.py", "encargos/test_fase_plan.py", "encargos/test_diff_propio.py", "encargos/test_balance.py", "encargos/test_pronostico.py", "encargos/test_consultas.py", "encargos/test_acciones_cola.py"]
+
+[[etapa]]
+id = "87"
+encargo = "87-revision-escalonada.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "seguridad"
+plan = true

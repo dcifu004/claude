@@ -1,0 +1,28 @@
+nombre = "cola78"
+motivo = "changedetection.io y SearXNG en prueba hasta el 21-12-2026: servicios (78a) y /buscar en los bots (78b)."
+resumen = "Instala changedetection (avisos por Jaime con descanso) y SearXNG en Docker dentro de LUKS, mide el uso a diario y deja un aviso de evaluación para el 21-12; después agrega /buscar a Jaime y Pilar."
+esperar = ["cola81"]
+despliegue = "nada"
+paciencia_h = 12
+afinado = "completo"
+alcance = "completo"
+aprobado_por = "usuario, 22-10-2026 22:49 America/Santiago, eligió Codex como autor y Claude (Cami) como revisora para toda la cadena; usuario, 22-10-2026 22:45 America/Santiago, sumó a la cadena nocturna este encargo (antes 77), renumerado a 78; despliegue para mañana"
+pruebas = ["pi/test_prueba_servicios.py", "pi/test_descanso.py", "botv3/test_botv3.py"]
+
+[[etapa]]
+id = "78a"
+encargo = "78a-servicios-prueba.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "seguridad"
+resumen = "compose con changedetection y SearXNG (127.0.0.1 + tailscale serve), puente de cambios por Jaime con descanso, uso diario y aviso del 21-12."
+
+[[etapa]]
+id = "78b"
+encargo = "78b-buscar-en-bots.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "bot"
+resumen = "/buscar en Jaime y Pilar contra SearXNG local, con contador de uso sin el texto buscado."

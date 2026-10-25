@@ -1,0 +1,25 @@
+nombre = "cola60"
+motivo = "Encargo 60: rediseño del cotizador del matrimonio con historial de decisiones."
+esperar = ["cola59"]
+despliegue = "nada"
+afinado = "completo"
+alcance = "completo"
+arboles_extra = ["14-App-Matrimonio"]
+paciencia_h = 12
+aprobado_por = "usuario, 17-10-2026 23:35 America/Santiago, pidió rediseño con Codex a esfuerzo alto, que pueda correr toda la noche; fuera del experimento esfuerzo-v1; pausa general levantada sólo para esta cola"
+pruebas = ["../14-App-Matrimonio/pruebas/test_cotizador.py"]
+
+[[etapa]]
+id = "60"
+encargo = "60-cotizador-rediseno.md"
+autor = "codex"
+revisor = "codex"
+vueltas = 3
+naturaleza = "pagina"
+modelo_autor = "gpt-5.6-terra"
+esfuerzo_autor = "xhigh"
+modelo_rev = "gpt-5.6-terra"
+esfuerzo_rev = "high"
+modelo_fix = "gpt-5.6-terra"
+esfuerzo_fix = "high"
+autorrevision = "usuario la aceptó el 17-10-2026 23:35 America/Santiago (usar Codex con harto esfuerzo)"

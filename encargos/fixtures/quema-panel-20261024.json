@@ -1,0 +1,32 @@
+{
+  "momento": "2026-10-24T21:17:11-03:00",
+  "capacidad_por_vencer": {
+    "claude_cami": {
+      "cuenta": "claude_cami",
+      "nombre": "Claude (Cami)",
+      "capacidad": 4.0,
+      "por_ventanas": 58.5,
+      "renueva": "2026-10-26T00:59:59+00:00",
+      "debil": false,
+      "colas_que_caben": []
+    },
+    "claude_diego": {
+      "cuenta": "claude_diego",
+      "nombre": "Claude (Diego)",
+      "capacidad": 62.0,
+      "por_ventanas": 259.3,
+      "renueva": "2026-10-31T06:59:59+00:00",
+      "debil": false,
+      "colas_que_caben": ["cola36b", "cola44"]
+    },
+    "codex": {
+      "cuenta": "codex",
+      "nombre": "Codex",
+      "capacidad": 51.0,
+      "por_ventanas": 480.5,
+      "renueva": "2026-10-30T21:32:08-03:00",
+      "debil": false,
+      "colas_que_caben": []
+    }
+  }
+}

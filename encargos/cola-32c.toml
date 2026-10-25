@@ -1,0 +1,16 @@
+# Cola 32c — buzón del buscador y límite aceptado (opción A). Claude (Diego), 09-10-2026.
+nombre = "cola32c"
+motivo = "Encargo 32c: la cola busca por el autor (buzón) y el límite de mismo uid queda aceptado por escrito (opción A)."
+esperar = []
+despliegue = "nada"
+aprobado_por = "usuario, 09-10-2026 America/Santiago, en el chat de Claude (Diego): opción A para la 32c y reparto recomendado por naturaleza seguridad (escribe Claude (Cami) con Claude Opus 5.5 high, revisa Codex con gpt-5.6-terra xhigh)"
+pruebas = ["encargos/test_buscar_web.py", "botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py", "pi/test_avisos.py"]
+
+[[etapa]]
+id = "32c"
+encargo = "32c-permiso-busqueda.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "seguridad"
+

@@ -1,0 +1,19 @@
+nombre = "cola73"
+motivo = "Encargo 73: botón /remoto en Jaime que abre y cierra claude remote-control (8 h, acceptEdits) por una unidad de usuario."
+resumen = "Botón en Telegram para abrir Remote Control de Claude en la Pi y usarlo desde la app del S22; se cierra solo a las 8 h."
+esperar = ["cola72"]
+despliegue = "nada"
+afinado = "completo"
+alcance = "minimo"
+paciencia_h = 12
+aprobado_por = "usuario, 20-10-2026 22:11 America/Santiago, eligió Codex como autor y Claude (Cami) como revisora; lanzar después de la cola72; modo servidor en la app del S22, acceptEdits, cierre a las 8 h sin bloqueo en descanso (excepción a la pausa general)"
+pruebas = ["botv3/test_botv3.py", "pi/test_remoto.py", "pi/test_cuentas_uso.py", "pi/test_uso.py"]
+
+[[etapa]]
+id = "73"
+encargo = "73-remote-control-telegram.md"
+resumen = "pi/remoto.py + unidades de usuario claude-remoto.{service,path} + /remoto en botv3 (sólo jaime)."
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "seguridad"

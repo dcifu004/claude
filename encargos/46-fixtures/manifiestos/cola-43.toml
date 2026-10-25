@@ -1,0 +1,21 @@
+# Cola 43r — reglas de las luces: eventos, repeticiones y horario de brillo (10-10-2026). Claude (Diego).
+# Se llama cola43r porque la cola44 espera la sesión «cola43» (la versión chica, detenida a las 22:40
+# antes de empezar): con el mismo nombre, la 44 quedaría bloqueada detrás de esta mientras espera cuota.
+nombre = "cola43r"
+motivo = "Reglas de las luces: eventos del nodo (encargo, voz, temporizador, despliegue, 🚩, CPU, LUKS, boleta, colas) con repetir/duración/prioridad y horario de brillo, editables en 🌈 (encargo 43)."
+esperar = ["cola44"]
+despliegue = "solo-avisar"
+paciencia_h = 12
+aprobado_por = "usuario, 10-10-2026 22:55 America/Santiago, en el chat de Claude (Diego): fusionó las reglas, los eventos y el horario de brillo en el 43; sin modo noche; eligió «Por defecto, esperar» (escribe Claude (Cami), revisa Codex, modelos por naturaleza bot) aunque las dos cuentas están cerca del tope semanal. Espera a la cola44 para no bloquearla."
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_luces.py"]
+
+[paginas]
+luces = "cockpit-luces"
+
+[[etapa]]
+id = "43"
+encargo = "43-senales-de-luces.md"
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"

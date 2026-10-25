@@ -1,0 +1,14 @@
+{
+ "nombre": "cola46",
+ "motivo": "Matriz cuentas × encargos: cola-run publica fases_restantes y reglas_cuota suma por ventana (5 h / semanal); matriz en 🧵 Encargos y tramos fantasma en 💳 Cuentas (encargo 46).",
+ "estado": "pausada",
+ "lanzada": "2026-10-11T00:42:33-03:00",
+ "etapas": [
+  "46"
+ ],
+ "escrito": "2026-10-11T00:42:58-03:00",
+ "esperando": null,
+ "motivo_pausa": "Claude (Cami) sin margen para autor: semanal 75 % + 4.0 % > tope 75 %",
+ "reanuda_desde": "46:autor",
+ "fin": "2026-10-11T00:42:58-03:00"
+}

@@ -1,0 +1,20 @@
+nombre = "cola59"
+motivo = "Encargo 59: cotizador del matrimonio con guardado (completo)."
+esperar = []
+despliegue = "nada"
+afinado = "completo"
+alcance = "completo"
+experimento = "esfuerzo-v1"
+arboles_extra = ["14-App-Matrimonio"]
+aprobado_por = "usuario, 17-10-2026 23:10 America/Santiago, eligió alcance completo, Codex como autor y revisor, y levantar la pausa general sólo para la cola 59"
+pruebas = ["../14-App-Matrimonio/pruebas/test_cotizador.py"]
+
+[[etapa]]
+id = "59"
+encargo = "59-cotizador-matrimonio.md"
+autor = "codex"
+revisor = "codex"
+vueltas = 2
+naturaleza = "pagina"
+esfuerzo_autor = "low"
+autorrevision = "usuario la aceptó el 17-10-2026 23:10 America/Santiago (todo con Codex)"

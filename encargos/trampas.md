@@ -1,0 +1,57 @@
+# Trampas de los encargos (lo que ya costó una vuelta de revisión)
+
+Para agregar una: después de un rechazo, una línea en la sección del sistema tocado, con la forma `- <trampa en una frase> → <qué exigir en el encargo> (origen: NNrK)`; si ya está, se le suma el origen en vez de duplicarla, y el archivo no pasa de 60 líneas (se funde o se saca la más vieja que no se repitió).
+
+## Cola y encargos
+- Una decisión abierta (`FRONTERA=PENDIENTE`) llegó hasta la tercera revisión y bloqueó el despliegue → ninguna decisión abierta al lanzar: se le pregunta al usuario antes (origen: 36r3)
+- Quedaron criterios sin implementar (F3, F4.1, F4.3) y el informe no lo dijo → criterios numerados C1…Cn y un RESULTADO que diga, uno por uno, cumplido o no; si son muchos, dividir en etapas (origen: 41r1)
+- Las pruebas pedidas no se escribieron, o prueban una copia del regex o una forma inventada del dato → cada prueba llama a la función real con la forma real (fila, JSON o salida del comando copiada) (origen: 41r1, 23cr3, 28r1)
+- La suite escribió en el volumen real (registro de avisos, cerrojo) porque la ruta estaba fija → toda ruta de escritura se puede redirigir y las pruebas la apuntan a un temporal; sin avisos reales (origen: 23cr1, 24r2)
+- El informe afirmó un cierre que no se podía reproducir (seguía el `.git` en el vault, suite en rojo) → cada criterio de cierre se comprueba con un comando y su salida literal va en el RESULTADO (origen: 33br1, 33r3)
+- El autor hizo una búsqueda manual en un encargo sin buscador; el registro no se puede «arreglar» y se marcó en tres revisiones → decir en el encargo si hay buscador; si no lo hay, cero búsquedas (origen: 31r1, 27br3)
+- El permiso, el tope y la atribución de búsquedas confiaban en variables de entorno que el autor puede forjar → el control se decide en la memoria de la cola, nunca en entorno ni en archivos del autor (origen: 32br1, 32br3)
+- Un tope contado con «leer y después escribir» se superó con llamadas concurrentes → contar y reservar bajo candado o creación exclusiva, con prueba de hilos (origen: 32br2)
+- Un archivo de configuración compartido se truncó y reescribió en el mismo inodo; la cola lo releyó vacío y corrió con el modelo por defecto → escritura atómica (`.tmp` propio + `rename`) y un lector que se detiene si llega vacío (origen: 23ar1)
+- Una bandeja que era un FIFO dejó colgado el `open` antes de comprobar el tipo → `O_NONBLOCK` + `O_NOFOLLOW` y `fstat` de archivo regular antes de leer o escribir (origen: 24r1, 23gr1)
+- El trabajo en una carpeta hermana no entró al diff, y al declararla `arboles_extra` aceptó un enlace simbólico y versionó un árbol ajeno → declarar `arboles_extra` cuando la etapa escribe fuera de 11-Pi5, y validar esos nombres con `lstat` y `realpath`, no con `is_dir()` (origen: 38r1, 38r2)
+- La skill salió con un frontmatter que no era YAML válido y un formato de manifiesto sin `[paginas]`, así que la página no se instalaba → validar el frontmatter con un parser, y todo encargo de Cockpit lista sus carpetas en `[paginas]` (origen: 21r1)
+- El producto usó contenido que la fuente autorizada prohíbe o no entrega (agregó «pesos») → nombrar las fuentes permitidas y prohibir todo dato que no venga de ellas (origen: 38r1, 38r2)
+- El producto obligatorio no cumplió el largo ni la duración y se entregó igual → criterio con número medible y qué hacer si no se alcanza (origen: 38r1)
+- El informe libre del trabajador de PC-2503 podía traer datos laborales a la Pi → lo que cruza una frontera va en un esquema cerrado de campos, no en texto libre (origen: 23dr3)
+
+## botv3
+- Una frase nueva se robó la frase siempre («deshaz eso») o se la tragó sin respuesta ni router («compré…») → por cada intención, la lista de frases que captura y las que no, y que devuelva `None` si no hay nada que hacer (origen: 41r1, 41r2)
+- Los regex no reconocieron la forma real de Whisper («¿», punto final, artículo) y uno sin anclar capturó frases ajenas → regex anclados y probados con transcripciones reales y con falsos positivos (origen: 41r1)
+- Buscar por subcadena borró otro producto, y «la leche» no encontró «leche» → coincidencia normalizada y exacta; si hay ambigüedad, preguntar (origen: 41r1, 41r2)
+- El error de Telegram se buscó en `str(exc)`, que no trae la descripción, y un `except OSError` atrapó el `RequestException` → probar con un `Response` real y `raise_for_status()`, como hace `telegram()` (origen: 41r2)
+- `partir()` corrompió las cantidades con decimal y dejó la casilla de Markdown → casos con la forma real del archivo en los criterios (origen: 41r1)
+- Un fallo de envío imprimió y guardó el token dentro del texto de la excepción → nunca registrar la URL ni la excepción cruda; prueba con un token falso que no debe aparecer (origen: 23br2)
+- Otro proceso escribió `temporizadores.json` sin el `flock` y con el mismo `.tmp` que el bot → nombrar en el encargo el candado y exigir un `.tmp` único por proceso (origen: 23cr1)
+- «Reanudar» no reanudaba, lo pausado quedaba fuera de alcance, cambiaba de hora o salía con datos falsos por voz → tabla de estados y transiciones, probada en Telegram, voz y Cockpit (origen: 23cr1, 23cr2)
+- Un cupo por hora medido con la hora de pared se saltó tras un reinicio sin RTC, y un corte de luz podía perder el cupo guardado → ventana con reloj monotónico más `boot_id`, `fsync` del archivo y de la carpeta antes de la acción limitada, y prueba de reinicio (origen: 39br1, 39br2)
+- Quedaron referencias vivas a una función retirada → un `grep` del nombre retirado, con resultado vacío, entre los criterios (origen: 41r1)
+
+## Cockpit
+- Un regex de JavaScript escrito como en Python (`[^]]`) nunca coincidió y la página salió «sin datos» → probar el JS con node sobre los archivos reales (origen: 20r1)
+- La página buscó en `historial.jsonl` la fila de la fase viva, que recién existe cuando termina → decir qué archivo tiene cada dato en cada momento (`vivo/` o historial) (origen: 20r1)
+- El recolector publicó secretos en el comando y en el journal (base64 en minúsculas, con `/`) → lista blanca y no negra, con muestras de cada forma de secreto en las pruebas (origen: 22r1, 22r2, 22r3)
+- La lista blanca ocultó casi todo el journal real (`systemd[1]:`, nombres largos) → probarla contra el journal real de la Pi y contar cuánto oculta (origen: 22br1, 22br2)
+- Un campo (`nombre` de cron) no pasó por el filtro → enumerar en el encargo todos los campos que se publican (origen: 22br1)
+- La pestaña publicó el nombre individual prohibido al copiar un `detalle` sin normalizar → todo texto que viene de otro sistema pasa por la regla de nombres antes de mostrarse (origen: 23br1)
+- Se ofreció un botón cuya acción fallaba siempre o no existía para ese tipo («Reanudar», recurrentes) → cada botón se prueba de punta a punta con el dato real (origen: 28r1, 35r1)
+- Un timer pausado desapareció de la página: `list-unit-files` trae `unit_file`, no `unit` → usar la salida real del comando como fixture (origen: 23cr2, 23cr3)
+- Los botones de sistema quedaron habilitados sin sudoers, y después deshabilitados con sudoers → probar los dos estados con la línea real de sudoers (origen: 23cr1, 23cr3)
+- La lista de protegidos se saltó con un doble sufijo `.timer` y la página tenía otra lista → normalizar el nombre antes de comparar y una sola lista compartida (origen: 23cr2)
+- El interruptor dijo «LISTO» con el túnel arriba y se pudo reabrir durante el caché de estado → leer el estado después de actuar y no autorizar acciones desde un caché (origen: 36r1, 36r2)
+
+## Root, systemd y despliegue
+- Root ejecutó un script que vive en el vault, escribible por el usuario → lo que corre como root se instala en una ruta de root por el catálogo de `nodo-desplegar`, con hash (origen: 23cr1, 36r1)
+- Un escritor de root siguió un enlace simbólico en una carpeta del usuario → enumerar todos los escritores de root y abrir con `O_NOFOLLOW` o `dir_fd` (origen: 23cr2, 27r1, 27r3)
+- Se crearon carpetas fuera del árbol antes de rechazar el enlace, y quedó una carrera entre comprobar y abrir → validar antes de crear y operar sobre el descriptor ya abierto (origen: 33r1, 33r2, 23dr1, 23dr2)
+- El arreglo sacó la caché de restic (nombres de archivos) fuera de LUKS → todo dato derivado de los vaults vive bajo `/opt/nodo/datos`; listar las rutas nuevas en el encargo (origen: 27br1, 27br2)
+- El blindaje rompió el caso feliz (restic no pudo hacer `lchown` sobre `/proc/self/fd`) → prueba del caso feliz con el binario real, no simulado (origen: 27r2)
+- El archivo creado no tenía el dueño ni el modo exigidos → dueño, grupo y modo de cada archivo nuevo escritos en el encargo (origen: 23cr1)
+- El archivo nuevo no tenía entrada de despliegue y la página llamaba a una ruta que no existía en la Pi → alta en el catálogo de `nodo-desplegar` para cada archivo nuevo (origen: 35r2)
+- `crear` borró un recurso remoto ajeno por suponerlo huérfano → no borrar nada que no se haya demostrado propio (origen: 36r1)
+- Una misma cuenta externa podía quitar las dos barreras → nombrar por escrito la raíz de confianza antes de diseñar (origen: 36r1)
+- Las acciones de root no dejaron línea en `avisos.jsonl` → decir qué acciones se registran y probarlo (origen: 23cr3)

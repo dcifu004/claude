@@ -1,0 +1,18 @@
+# Cola 33b — cierre del encargo 33 (git fuera del vault). Claude (Diego), 08-10-2026.
+nombre = "cola33b"
+motivo = "Cierre del encargo 33: repositorio git de 11-Pi5 fuera del vault inicializado y verificado."
+resumen = "La 33 se detuvo solo por la carpeta .git vacía (ya borrada); falta inicializar el repo real y una revisión limpia."
+esperar = []
+despliegue = "nada"
+aprobado_por = "usuario, 08-10-2026 ~23:35 America/Santiago, en el chat de Claude (Diego): «repartir y relanzar, preferir cuota de Claude (Cami) en modo económico». Escribe Claude (Cami) con claude-haiku-4-5 (liviano); revisa Codex con gpt-reserve medium. Despliegue «nada»: el pedido sale el 09-10 a las 15:30 con pedidos-0910.timer."
+paciencia_h = 12
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py", "pi/test_avisos.py", "pi/test_memoria_cockpit.py", "pi/test_memoria_pagina.py", "pi/test_escritura_root.py", "encargos/test_versiones.py"]
+
+[[etapa]]
+id = "33b"
+encargo = "33b-cierre-git.md"
+resumen = "Verificar que no haya .git en el vault, versiones.py init real, foto idempotente y suites."
+autor = "claude_cami"
+revisor = "codex"
+vueltas = 2
+naturaleza = "menor"

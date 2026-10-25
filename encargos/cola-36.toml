@@ -1,0 +1,15 @@
+# Cola 36 — revisión del túnel panel.dcspi5.com (09-10-2026). Claude (Diego).
+nombre = "cola36"
+motivo = "Revisión adversaria del túnel panel.dcspi5.com (pi/cloudflared/) y su línea en /estado (encargo 36)."
+esperar = []
+despliegue = "pedir"
+aprobado_por = "usuario, 09-10-2026 19:46 America/Santiago, en el chat de Claude (Diego): eligió el reparto «Recomendada» (seguridad): escribe Claude (Cami) con Claude Opus 5.5 high; revisa Codex con gpt-5.6-terra xhigh. Sin cruce con cola32c (cola-run/buzón)."
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_escritura_root.py", "pi/test_nodo_servicio.py"]
+
+[[etapa]]
+id = "36"
+encargo = "36-tunel-panel-revision.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "seguridad"
+vueltas = 2

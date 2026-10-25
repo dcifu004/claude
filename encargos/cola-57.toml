@@ -1,0 +1,31 @@
+# Cola 57: reglas de luces robustas, en 2 etapas (13-10-2026). Claude (Diego).
+nombre = "cola57"
+motivo = "Luces: 57a última configuración buena + 🚩 luces:reglas + sin despliegue_esperando + interruptor por comando; 57b interruptor y aviso en la página 🌈 y docs."
+esperar = []
+despliegue = "solo-avisar"
+afinado = "completo"
+experimento = "esfuerzo-v1"
+aprobado_por = "usuario, 13-10-2026 19:34 America/Santiago, en el chat de Claude (Diego): pidió que escriba Codex y revise Claude (Diego); decidió mantener la última configuración guardada desde Cockpit, sacar despliegue_esperando e interruptor por comando y en 🌈. 13-10-2026 19:38: cambió a Codex autor y revisor (autorrevisión) y ordenó lanzar."
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_luces.py"]
+
+[paginas]
+luces = "cockpit-luces"
+
+[[etapa]]
+id = "57a"
+encargo = "57a-luces-reglas-robustas.md"
+autor = "codex"
+revisor = "codex"
+vueltas = 2
+naturaleza = "bot"
+autorrevision = "usuario la aceptó el 13-10-2026 19:38 America/Santiago (chat de Claude (Diego): «carga mayoritaria en codex, incluso auto revisión»)"
+
+[[etapa]]
+id = "57b"
+encargo = "57b-luces-pagina-interruptor.md"
+autor = "codex"
+revisor = "codex"
+vueltas = 2
+naturaleza = "pagina"
+autorrevision = "usuario la aceptó el 13-10-2026 19:38 America/Santiago (chat de Claude (Diego): «carga mayoritaria en codex, incluso auto revisión»)"
+esfuerzo_autor = "low"

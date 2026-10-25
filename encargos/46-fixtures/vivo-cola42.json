@@ -1,0 +1,31 @@
+{
+ "relanzamientos": [
+  {
+   "momento": "2026-10-11T00:40:22-03:00",
+   "desde": "42:rev1"
+  }
+ ],
+ "lanzada": "2026-10-10T22:05:22-03:00",
+ "fases_hechas": [
+  {
+   "etapa": "42",
+   "fase": "autor",
+   "cuenta": "Codex",
+   "min": 22.4,
+   "pronostico_min": 4.1
+  }
+ ],
+ "inicio_trabajo": "2026-10-11T00:17:55-03:00",
+ "tiempo_muerto_min": 113.1,
+ "nombre": "cola42",
+ "motivo": "Boleta por Telegram a fila en Flujo Caja: ruta boleta, socket de hogar y anotar_gasto en google-puente (encargo 42).",
+ "estado": "pausada",
+ "etapas": [
+  "42"
+ ],
+ "escrito": "2026-10-11T00:40:50-03:00",
+ "esperando": null,
+ "motivo_pausa": "Claude (Cami) sin margen para rev: semanal 75 % + 2.0 % > tope 75 %",
+ "reanuda_desde": "42:rev1",
+ "fin": "2026-10-11T00:40:50-03:00"
+}

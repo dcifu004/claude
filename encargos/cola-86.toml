@@ -1,0 +1,23 @@
+nombre = "cola86"
+motivo = "Encargo 86: Traces y la tabla de Flow ordenan por cualquier columna, de mayor a menor y viceversa."
+resumen = "Las 10 columnas del historial (Traces) y de la tabla bajo Flow se ordenan en ambos sentidos; orden en la URL."
+esperar = []
+despliegue = "pedir"
+afinado = "ligero"
+alcance = "completo"
+paciencia_h = 12
+aprobado_por = "usuario, 24-10-2026 21:00 America/Santiago, en el chat de Claude (Diego): ordenar todas las columnas del historial (Traces) de mayor a menor y viceversa; encadenada después de la cola85; reparto: Codex escribe y Claude (Cami) revisa; excepción a la pausa general"
+pruebas = ["pi/test_cockpit_paginas.py"]
+
+[paginas]
+encargos = "cockpit-encargos"
+
+[[etapa]]
+id = "86"
+encargo = "86-traces-ordenar-todas-las-columnas.md"
+resumen = "Orden por las 10 columnas en ambos sentidos (Rol por flujo, Veredicto por rango, numéricas de mayor a menor primero), compartido con la tabla de Flow y en la URL."
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "pagina"
+esfuerzo_autor = "medium"

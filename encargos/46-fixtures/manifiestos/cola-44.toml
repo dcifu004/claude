@@ -1,0 +1,17 @@
+# PENDIENTE (10-10-2026, decisión del usuario): «no tiene por qué aplicarse». Fuera de la cadena reanudar-en-orden; no relanzar sin que el usuario lo pida.
+# Cola 44 — ruta técnica para Pilar en el clasificador de n8n (10-10-2026). Claude (Diego).
+nombre = "cola44"
+motivo = "Ruta técnica para Pilar en el clasificador de n8n: parche idempotente + script de publicación que corre el usuario con sudo (encargo 44)."
+esperar = ["reanudar", "cola41", "cola42", "cola43"]
+despliegue = "nada"
+paciencia_h = 12
+aprobado_por = "usuario, 10-10-2026 22:34 America/Santiago, en el chat de Claude (Diego): pidió encolar el 44 al terminar las colas vivas; escribe Codex y revisa Claude (Diego) (cambió desde Claude (Cami) por falta de cuota semanal), modelos por naturaleza seguridad."
+pruebas = ["botv3/test_botv3.py", "botv3/test_parches_n8n.py", "pi/test_n8n_publicar.py", "pi/test_cuentas_uso.py", "pi/test_uso.py"]
+
+[[etapa]]
+id = "44"
+encargo = "44-tecnica-para-pilar-en-n8n.md"
+autor = "codex"
+revisor = "claude_diego"
+vueltas = 2
+naturaleza = "seguridad"

@@ -1,0 +1,354 @@
+{
+ "vivo": {
+  "corriendo 46a:autor": {
+   "proximo": {
+    "cuenta": "codex",
+    "etapa": "46a",
+    "fase": "rev1",
+    "pct_5h": 9.0,
+    "pct_sem": 2.0,
+    "debil": false
+   },
+   "proximo_por_cuenta": {
+    "codex": {
+     "cuenta": "codex",
+     "etapa": "46a",
+     "fase": "rev1",
+     "pct_5h": 9.0,
+     "pct_sem": 2.0,
+     "debil": false
+    },
+    "claude_cami": {
+     "cuenta": "claude_cami",
+     "etapa": "46a",
+     "fase": "fix1",
+     "pct_5h": 12.5,
+     "pct_sem": 2.0,
+     "debil": false
+    }
+   },
+   "cuentas_en_uso": [
+    "codex",
+    "claude_cami"
+   ],
+   "eta": {
+    "esperado": "2026-10-11T21:04-03:00",
+    "min": "2026-10-11T20:10-03:00",
+    "max": "2026-10-11T21:47-03:00"
+   },
+   "restante_min": {
+    "esperado": 129.4,
+    "min": 74.8,
+    "max": 172.4
+   }
+  },
+  "corriendo 46b:rev2, 4 min": {
+   "proximo": {
+    "cuenta": "claude_cami",
+    "etapa": "46b",
+    "fase": "fix2",
+    "pct_5h": 2.0,
+    "pct_sem": 0.0,
+    "debil": false
+   },
+   "proximo_por_cuenta": {
+    "claude_cami": {
+     "cuenta": "claude_cami",
+     "etapa": "46b",
+     "fase": "fix2",
+     "pct_5h": 2.0,
+     "pct_sem": 0.0,
+     "debil": false
+    },
+    "codex": {
+     "cuenta": "codex",
+     "etapa": "46b",
+     "fase": "rev3",
+     "pct_5h": 9.0,
+     "pct_sem": 2.0,
+     "debil": false
+    }
+   },
+   "cuentas_en_uso": [
+    "claude_cami",
+    "codex"
+   ],
+   "eta": {
+    "esperado": "2026-10-11T19:51-03:00",
+    "min": "2026-10-11T19:23-03:00",
+    "max": "2026-10-11T20:12-03:00"
+   },
+   "restante_min": {
+    "esperado": 56.4,
+    "min": 28.1,
+    "max": 76.9
+   }
+  },
+  "esperando_cuota 46a:fix1": {
+   "proximo": {
+    "cuenta": "claude_cami",
+    "etapa": "46a",
+    "fase": "fix1",
+    "pct_5h": 12.5,
+    "pct_sem": 2.0,
+    "debil": false
+   },
+   "proximo_por_cuenta": {
+    "claude_cami": {
+     "cuenta": "claude_cami",
+     "etapa": "46a",
+     "fase": "fix1",
+     "pct_5h": 12.5,
+     "pct_sem": 2.0,
+     "debil": false
+    },
+    "codex": {
+     "cuenta": "codex",
+     "etapa": "46a",
+     "fase": "rev2",
+     "pct_5h": 9.0,
+     "pct_sem": 2.0,
+     "debil": false
+    }
+   },
+   "cuentas_en_uso": [
+    "claude_cami",
+    "codex"
+   ],
+   "eta": {
+    "esperado": "2026-10-11T22:21-03:00",
+    "min": "2026-10-11T21:35-03:00",
+    "max": "2026-10-11T22:53-03:00"
+   },
+   "restante_min": {
+    "esperado": 115.7,
+    "min": 69.9,
+    "max": 147.8
+   }
+  },
+  "corriendo 43:rev3": {
+   "proximo": null,
+   "proximo_por_cuenta": {},
+   "cuentas_en_uso": [],
+   "eta": {
+    "esperado": "2026-10-11T19:03-03:00",
+    "min": "2026-10-11T19:03-03:00",
+    "max": "2026-10-11T19:03-03:00"
+   },
+   "restante_min": {
+    "esperado": 7.5,
+    "min": 7.5,
+    "max": 7.5
+   }
+  },
+  "partiendo 43": {
+   "proximo": null,
+   "proximo_por_cuenta": null,
+   "cuentas_en_uso": null,
+   "eta": null,
+   "restante_min": null
+  }
+ },
+ "uso_de_cuentas": {
+  "46a:autor actual=True": {
+   "cuentas_en_uso": [
+    "claude_cami",
+    "codex"
+   ],
+   "proximo": {
+    "cuenta": "claude_cami",
+    "etapa": "46a",
+    "fase": "autor",
+    "pct_5h": 22.5,
+    "pct_sem": 3.0,
+    "debil": false
+   },
+   "proximo_por_cuenta": {
+    "claude_cami": {
+     "cuenta": "claude_cami",
+     "etapa": "46a",
+     "fase": "autor",
+     "pct_5h": 22.5,
+     "pct_sem": 3.0,
+     "debil": false
+    },
+    "codex": {
+     "cuenta": "codex",
+     "etapa": "46a",
+     "fase": "rev1",
+     "pct_5h": 9.0,
+     "pct_sem": 2.0,
+     "debil": false
+    }
+   }
+  },
+  "46a:rev1 actual=False": {
+   "cuentas_en_uso": [
+    "claude_cami",
+    "codex"
+   ],
+   "proximo": {
+    "cuenta": "claude_cami",
+    "etapa": "46a",
+    "fase": "fix1",
+    "pct_5h": 12.5,
+    "pct_sem": 2.0,
+    "debil": false
+   },
+   "proximo_por_cuenta": {
+    "claude_cami": {
+     "cuenta": "claude_cami",
+     "etapa": "46a",
+     "fase": "fix1",
+     "pct_5h": 12.5,
+     "pct_sem": 2.0,
+     "debil": false
+    },
+    "codex": {
+     "cuenta": "codex",
+     "etapa": "46a",
+     "fase": "rev2",
+     "pct_5h": 9.0,
+     "pct_sem": 2.0,
+     "debil": false
+    }
+   }
+  },
+  "46c:rev3 actual=False": {
+   "cuentas_en_uso": [],
+   "proximo": null,
+   "proximo_por_cuenta": {}
+  }
+ },
+ "restante": {
+  "46a:autor 0": {
+   "esperado": 129.4,
+   "min": 74.8,
+   "max": 172.4
+  },
+  "46b:fix1 2.5": {
+   "esperado": 60.9,
+   "min": 32.6,
+   "max": 81.4
+  },
+  "46c:rev3 99": {
+   "esperado": 1.5,
+   "min": 1.5,
+   "max": 1.5
+  }
+ },
+ "ventanas": {
+  "claude_cami autor": [
+   {
+    "ventana": "semanal",
+    "etiqueta": "semanal",
+    "actual": 81.0,
+    "pronostico": 3.0,
+    "tope": 75,
+    "renueva": "2026-10-12T00:59:59+00:00",
+    "alcanza": false
+   },
+   {
+    "ventana": "5h",
+    "etiqueta": "5 h",
+    "actual": 47.0,
+    "pronostico": 22.5,
+    "tope": 90,
+    "renueva": "2026-10-12T00:49:59+00:00",
+    "alcanza": true
+   }
+  ],
+  "claude_cami rev": [
+   {
+    "ventana": "semanal",
+    "etiqueta": "semanal",
+    "actual": 81.0,
+    "pronostico": 2.0,
+    "tope": 75,
+    "renueva": "2026-10-12T00:59:59+00:00",
+    "alcanza": false
+   },
+   {
+    "ventana": "5h",
+    "etiqueta": "5 h",
+    "actual": 47.0,
+    "pronostico": 15.0,
+    "tope": 90,
+    "renueva": "2026-10-12T00:49:59+00:00",
+    "alcanza": true
+   }
+  ],
+  "claude_diego autor": [
+   {
+    "ventana": "semanal",
+    "etiqueta": "semanal",
+    "actual": 28.0,
+    "pronostico": 5,
+    "tope": 75,
+    "renueva": "2026-10-17T07:00:00+00:00",
+    "alcanza": true
+   },
+   {
+    "ventana": "5h",
+    "etiqueta": "5 h",
+    "actual": 15.0,
+    "pronostico": 25,
+    "tope": 90,
+    "renueva": "2026-10-12T00:30:00+00:00",
+    "alcanza": true
+   }
+  ],
+  "codex rev": [
+   {
+    "ventana": "semanal",
+    "etiqueta": "semanal",
+    "actual": 11.0,
+    "pronostico": 2.0,
+    "tope": 75,
+    "renueva": "2026-10-18T16:21:56-03:00",
+    "alcanza": true
+   },
+   {
+    "ventana": "5h",
+    "etiqueta": "5 h",
+    "actual": 69.0,
+    "pronostico": 9.0,
+    "tope": 90,
+    "renueva": "2026-10-11T21:21:56-03:00",
+    "alcanza": true
+   }
+  ],
+  "codex fix": [
+   {
+    "ventana": "semanal",
+    "etiqueta": "semanal",
+    "actual": 11.0,
+    "pronostico": 1.0,
+    "tope": 75,
+    "renueva": "2026-10-18T16:21:56-03:00",
+    "alcanza": true
+   },
+   {
+    "ventana": "5h",
+    "etiqueta": "5 h",
+    "actual": 69.0,
+    "pronostico": 7.0,
+    "tope": 90,
+    "renueva": "2026-10-11T21:21:56-03:00",
+    "alcanza": true
+   }
+  ]
+ },
+ "decision": {
+  "claude_cami autor": "pausa: Claude (Cami) sin margen para autor: semanal 81 % + 3.0 % > tope 75 %",
+  "claude_cami rev": "pausa: Claude (Cami) sin margen para rev: semanal 81 % + 2.0 % > tope 75 %",
+  "claude_diego autor": "sigue",
+  "codex rev": "sigue",
+  "codex fix": "sigue"
+ },
+ "borde": {
+  "64.9": true,
+  "65.0": true,
+  "65.1": false
+ }
+}

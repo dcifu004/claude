@@ -1,0 +1,5 @@
+99q20261028160000x · naturaleza: investigacion
+  autor Codex           gpt-reserve medium       [agil]    6.0 min  +1.0 % 5 h (p75 1.0 %; ahora 65.0, tope 95)  +0.0 % sem (ahora 42.0, tope 90)  fresco
+  rev   Claude (Cami)   claude-opus-5-5 medium   [normal]    5.7 min  +7.0 % 5 h (p75 9.0 %; ahora 60.0, tope 95)  +1.0 % sem (ahora 92.0, tope 95)  fresco
+  fix   Codex           gpt-reserve medium       [agil]    3.0 min  +1.0 % 5 h (p75 2.0 %; ahora 65.0, tope 95)  +0.0 % sem (ahora 42.0, tope 90)  fresco
+⏱️ Duración de la cola (sin contar esperas): ~18.0 min, entre 12.7 y 21.4 (rechazo por revisión: 61%)

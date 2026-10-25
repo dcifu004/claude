@@ -1,0 +1,11 @@
+{
+ "nombre": "cola44",
+ "motivo": "Ruta técnica para Pilar en el clasificador de n8n: parche idempotente + script de publicación que corre el usuario con sudo (encargo 44).",
+ "estado": "esperando",
+ "lanzada": "2026-10-10T22:36:42-03:00",
+ "etapas": [
+  "44"
+ ],
+ "escrito": "2026-10-10T22:36:42-03:00",
+ "esperando": "reanudar"
+}

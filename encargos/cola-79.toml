@@ -1,0 +1,18 @@
+nombre = "cola79"
+motivo = "Encargo 79: el pedido de una cola lleva todo lo suyo (también tras --desde) y nada de otra cola en paralelo."
+resumen = "Línea base persistida entre corridas, atribución por cola con los -git.json de las colas vivas, y pedido contra lo instalado con hashes fijos."
+esperar = ["cola78"]
+despliegue = "nada"
+paciencia_h = 12
+afinado = "completo"
+alcance = "completo"
+aprobado_por = "usuario, 22-10-2026 22:49 America/Santiago, eligió Codex como autor y Claude (Cami) como revisora para toda la cadena; usuario, 22-10-2026 22:45 America/Santiago, pidió la cadena nocturna 79/80/81 + 78 después de la cola77 con despliegue para mañana; orden 80→81→78→79 para que cola-run.py cambie al final"
+pruebas = ["encargos/test_diff_propio.py", "encargos/test_despacho.py", "encargos/test_acciones_cola.py", "encargos/test_consultas.py"]
+
+[[etapa]]
+id = "79"
+encargo = "79-pedido-completo-y-atribucion.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "seguridad"

@@ -1,0 +1,84 @@
+# Cola 24 — pendientes de la cola 23, en modo económico. Claude (Diego), 04-10-2026 22:00.
+nombre = "cola24"
+motivo = "Pendientes: cerrar 23b y 23a, encargo 24 (espera de cuota visible) y cierre de 🧠 Memoria para revisión."
+despliegue = "pedir"
+aprobado_por = "usuario, 04-10-2026 ~21:55, en el chat de Claude (Diego): «los pendientes pueden ir a Claude (Cami) en modo económico». Escribe Claude (Cami) con Claude Sonnet 5.5 medium; revisa Codex con gpt-reserve medium (gpt-5.6-terra medium en seguridad), porque Claude (Cami) no puede revisar lo suyo. Parte cuando termine la cola 23. 05-10 ~11:55: la cola 23 se detuvo en la 23d (02:00) y no corrió la 23e; el usuario pidió lanzar ya y sumar la 23e."
+paciencia_h = 12
+esperar = ["cola23"]
+pruebas = ["botv3/test_botv3.py", "pi/test_cuentas_uso.py", "pi/test_uso.py", "pi/test_cockpit_paginas.py", "pi/test_programados.py", "pi/test_avisos.py", "pi/test_memoria_cockpit.py", "pi/test_memoria_pagina.py"]
+
+[paginas]
+encargos = "cockpit-encargos"
+sistema = "cockpit-sistema"
+comun = "cockpit-comun"
+memoria = "cockpit-memoria"
+
+[[etapa]]
+id = "23e"
+encargo = "23e-arreglar-23c.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "seguridad"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-5.6-terra"
+esfuerzo_rev = "medium"
+vueltas = 2
+
+[[etapa]]
+id = "23g"
+encargo = "23g-arreglar-23b.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "seguridad"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-5.6-terra"
+esfuerzo_rev = "medium"
+vueltas = 2
+
+[[etapa]]
+id = "23h"
+encargo = "23h-arreglar-23a.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "bot"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-reserve"
+esfuerzo_rev = "medium"
+vueltas = 2
+
+[[etapa]]
+id = "24"
+encargo = "24-espera-de-cuota-visible.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "bot"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-reserve"
+esfuerzo_rev = "medium"
+vueltas = 2
+
+[[etapa]]
+id = "26b"
+encargo = "26b-memoria-cierre.md"
+autor = "claude_cami"
+revisor = "codex"
+naturaleza = "pagina"
+modelo_autor = "claude-sonnet-5-5"
+esfuerzo_autor = "medium"
+modelo_fix = "claude-sonnet-5-5"
+esfuerzo_fix = "medium"
+modelo_rev = "gpt-reserve"
+esfuerzo_rev = "medium"
+vueltas = 2

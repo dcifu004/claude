@@ -1,0 +1,63 @@
+{
+ "nombre": "cola46",
+ "motivo": "Carga vs. capacidad: 46a cola-run publica fases_restantes y colas_fuera, y reglas_cuota suma por ventana; 46b matriz en 🧵 Encargos con proyección «¿y si la reanudo?» y tramos fantasma en 💳 Cuentas; 46c botones Reanudar/Pausar/Detener.",
+ "estado": "corriendo",
+ "lanzada": "2026-10-11T19:35:49-03:00",
+ "etapas": [
+  "46a",
+  "46b",
+  "46c"
+ ],
+ "escrito": "2026-10-11T19:36:15-03:00",
+ "esperando": null,
+ "inicio_trabajo": "2026-10-11T19:36:15-03:00",
+ "etapa": "46a",
+ "fase": "autor",
+ "cuenta": "Claude (Cami)",
+ "modelo": "claude-opus-5-5 medium",
+ "inicio_fase": "2026-10-11T19:36:15-03:00",
+ "pronostico_fase_min": 18.1,
+ "remoto": null,
+ "restante_min": {
+  "esperado": 129.4,
+  "min": 74.8,
+  "max": 172.4
+ },
+ "prob_rechazo": 0.67,
+ "progreso_pct": 0.0,
+ "eta": {
+  "esperado": "2026-10-11T21:45-03:00",
+  "min": "2026-10-11T20:51-03:00",
+  "max": "2026-10-11T22:28-03:00"
+ },
+ "cuentas_en_uso": [
+  "codex",
+  "claude_cami"
+ ],
+ "proximo": {
+  "cuenta": "codex",
+  "etapa": "46a",
+  "fase": "rev1",
+  "pct_5h": 9.0,
+  "pct_sem": 2.0,
+  "debil": false
+ },
+ "proximo_por_cuenta": {
+  "codex": {
+   "cuenta": "codex",
+   "etapa": "46a",
+   "fase": "rev1",
+   "pct_5h": 9.0,
+   "pct_sem": 2.0,
+   "debil": false
+  },
+  "claude_cami": {
+   "cuenta": "claude_cami",
+   "etapa": "46a",
+   "fase": "fix1",
+   "pct_5h": 12.5,
+   "pct_sem": 2.0,
+   "debil": false
+  }
+ }
+}

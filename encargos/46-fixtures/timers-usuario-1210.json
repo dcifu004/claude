@@ -1,0 +1,8 @@
+{
+ "list_timers": "[{\"next\":null,\"left\":null,\"last\":0,\"passed\":0,\"unit\":\"cola36-reanudar.timer\",\"activates\":\"cola36-reanudar.service\"},{\"next\":null,\"left\":null,\"last\":1791767110788844,\"passed\":123195449399,\"unit\":\"orden-renov-1122.timer\",\"activates\":\"orden-renov.service\"},{\"next\":null,\"left\":null,\"last\":1791570617089772,\"passed\":0,\"unit\":\"pedidos-0910.timer\",\"activates\":\"pedidos-0910.service\"}]\n",
+ "exec_start": {
+  "cola36-reanudar.service": "{ path=/bin/bash ; argv[]=/bin/bash -c tmux has-session -t =cola36 2>/dev/null && exit 0; tmux new-session -d -s cola36 \"python3 /opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/encargos/cola-run.py /opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/encargos/cola-36.toml --desde 36:fix2 2>&1 | tee -a $HOME/encargos-logs/cola36.out\" ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\n",
+  "orden-renov.service": "{ path=/bin/bash ; argv[]=/bin/bash -c tmux new-session -d -s orden-$(date +%d%H%M) \"flock $HOME/encargos-logs/.reanudar-orden.lock bash /opt/nodo/datos/srv/vault_personal/10-Proyectos/11-Pi5/encargos/reanudar-en-orden.sh cola49 cola50 cola43s cola41 cola42\" ; ignore_errors=no ; start_time=[Sun 2026-10-11 22:05:10 -03] ; stop_time=[Sun 2026-10-11 22:05:10 -03] ; pid=577763 ; code=exited ; status=0 }\n",
+  "pedidos-0910.service": "{ path=/home/dcifu004/encargos-logs/pedidos-0910.sh ; argv[]=/home/dcifu004/encargos-logs/pedidos-0910.sh ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\n"
+ }
+}

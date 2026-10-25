@@ -1,0 +1,18 @@
+# Cola 53: plan de optimización de encargos (12-10-2026). Claude (Diego). La lanza orden-plan cuando no haya colas vivas.
+nombre = "cola53"
+motivo = "Diff de cada etapa sólo con lo de sus fases; ajenos por nombre; el despliegue mira lo propio (versión mínima)."
+esperar = []
+despliegue = "nada"
+paciencia_h = 12
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 12-10-2026 12:42 America/Santiago, en el chat de Claude (Diego): aprobó el plan de optimización (53 → 54 → 52 → 51, versiones mínimas, la cadena se detiene si una falla); escribe Codex y revisa Claude (Cami)"
+pruebas = ["encargos/test_diff_propio.py", "encargos/test_matriz_cuota.py", "encargos/test_acciones_cola.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "53"
+encargo = "53-diff-por-fases-propias.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "seguridad"

@@ -1,0 +1,18 @@
+# Cola 56: pronóstico de cuota realista (12-10-2026). Claude (Diego). Primera del plan.
+nombre = "cola56"
+motivo = "Pronóstico de cuota realista: filas por esfuerzo y recientes, fases cortadas como cota inferior, p75 para decidir si parte y mediana para la ETA (versión mínima)."
+esperar = []
+despliegue = "nada"
+paciencia_h = 12
+afinado = "completo"
+alcance = "minimo"
+aprobado_por = "usuario, 12-10-2026 14:45 America/Santiago, en el chat de Claude (Diego): pidió el punto 1 (corregir el pronóstico) primero en el plan; escribe Codex y revisa Claude (Cami)"
+pruebas = ["encargos/test_pronostico.py", "encargos/test_matriz_cuota.py", "encargos/test_balance.py", "pi/test_cockpit_paginas.py"]
+
+[[etapa]]
+id = "56"
+encargo = "56-pronostico-realista.md"
+autor = "codex"
+revisor = "claude_cami"
+vueltas = 2
+naturaleza = "bot"
