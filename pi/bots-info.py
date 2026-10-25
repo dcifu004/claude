@@ -213,6 +213,28 @@ def _cargar_recetas():
 recetas = _cargar_recetas()
 
 
+def _cargar_usos(ruta=None):
+    """usos.py del bot DESPLEGADO (encargo 92), por lo mismo que recetas.py. Sin él no hay `usos_bots`."""
+    import importlib.util
+    try:
+        spec = importlib.util.spec_from_file_location("usos_bots", ruta or f"{BOT_DIR}/usos.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except (OSError, ImportError, SyntaxError):
+        return None
+
+
+def usos_bots(perfiles=None, ahora=None, mod=None, carpeta_de=None):
+    """El resumen de /usos para Cockpit (encargo 92): por bot, los últimos 7 días por función y canal y lo que
+    no se usó nunca. Lo calcula `usos.resumen`, el mismo del bot. None si usos.py no está desplegado."""
+    mod = mod or _cargar_usos()
+    if mod is None:
+        return None
+    carpeta_de = carpeta_de or (lambda p: os.path.join(estado_dir(p), "usos"))
+    return mod.resumen({p: carpeta_de(p) for p in (PERFILES if perfiles is None else perfiles)}, None, ahora)
+
+
 def cuentas_todas(mod=None):
     """CUENTAS mas los proveedores gratis que declara recetas.py (encargo 15: Gemini,
     OpenRouter y Tavily). No se escriben aca: salen de MOTOR_DE_CUENTA y
@@ -1419,6 +1441,8 @@ def reunir(ahora=None):
         # Que proveedor puede ir en que ruta, con su motivo (encargo 10).
         "muros": recetas.muros() if recetas and hasattr(recetas, "muros") else None,
         "lee_cyd": {p: sorted(r) for p, r in LEE_CYD.items()},
+        # Encargo 92: cuánto se usa cada función de cada bot (sin texto de los mensajes).
+        "usos_bots": usos_bots(),
     }
 
 
