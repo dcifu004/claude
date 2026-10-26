@@ -17,6 +17,8 @@ import hashlib
 from email.utils import parsedate_to_datetime
 import json
 import logging
+import contextlib
+import functools
 import math
 import os
 from pathlib import Path
@@ -97,6 +99,18 @@ try:
 except ImportError:  # pragma: no cover - despliegue parcial
     clima_imagen = None
 
+try:
+    import spotify as spotify_mod
+except ImportError:  # pragma: no cover - despliegue parcial
+    spotify_mod = None
+
+# Imagen de /uso (encargo 90): «¿Quién tiene margen?» de 💳 Cuentas. Si falta, /uso manda
+# el texto de uso-agentes, como antes.
+try:
+    import uso_imagen
+except ImportError:  # pragma: no cover - despliegue parcial
+    uso_imagen = None
+
 # Nombre nuevo → interno (`archivos` → `claude`…). Se normaliza AL ENTRAR —lo que
 # llega de n8n, de los comandos y del perfil— y adentro todo sigue con el nombre de hoy.
 ALIAS_RUTA = recetas.ALIAS_RUTA if recetas else {}
@@ -173,6 +187,23 @@ def cargar_perfil(nombre: str) -> dict[str, Any]:
     # "true" entre comillas no puede quedar en un sí ni en un no silencioso.
     if not isinstance(datos.get("recibe_de_ia", False), bool):
         raise RuntimeError(f"recibe_de_ia en {ruta} tiene que ser true o false")
+    spotify = datos.get("spotify")
+    if spotify is not None:
+        if not isinstance(spotify, dict):
+            raise RuntimeError(f"spotify en {ruta} tiene que ser una tabla")
+
+        def api_local(valor: Any) -> str:
+            if not isinstance(valor, str) or not re.fullmatch(r"http://127\.0\.0\.1:[1-9][0-9]{0,4}", valor):
+                raise RuntimeError(f"spotify.api inválida en {ruta}: sólo http://127.0.0.1:<puerto>")
+            if int(valor.rsplit(":", 1)[1]) > 65535:
+                raise RuntimeError(f"spotify.api inválida en {ruta}: puerto fuera de rango")
+            return valor
+
+        spotify["api"] = api_local(spotify.get("api"))
+        otros = spotify.get("otros", [])
+        if not isinstance(otros, list):
+            raise RuntimeError(f"spotify.otros en {ruta} tiene que ser una lista")
+        spotify["otros"] = [api_local(x) for x in otros]
     return datos
 
 
@@ -4982,6 +5013,7 @@ def safe_command(argv: list[str], timeout: int = 45) -> str:
     allowed = {
         ("/usr/local/bin/estado", "--telegram"),
         ("/usr/local/bin/uso-agentes", "--telegram"),
+        ("/usr/local/bin/bots-info", "--margen"),     # encargo 90: el margen de 💳 Cuentas, sin root
     }
     if tuple(argv) not in allowed:
         raise RuntimeError("comando interno no permitido")
@@ -5712,6 +5744,10 @@ def intencion_nodo(texto: str) -> str | None:
 def atender_nodo(chat_id: int, intencion: str, origen: str, en_voz: bool) -> None:
     """Contesta una intención del nodo con el mismo texto que /estado o /uso."""
     programa = {"estado": "/usr/local/bin/estado", "uso": "/usr/local/bin/uso-agentes"}[intencion]
+    if intencion == "uso":
+        # Encargo 90: la misma imagen que /uso, con el mismo respaldo a texto.
+        audit("nodo_uso", origen, "error" if enviar_uso(chat_id) == "error" else "ok")
+        return
     try:
         send_text(chat_id, texto_estado() if intencion == "estado"
                   else safe_command([programa, "--telegram"]))
@@ -6704,6 +6740,112 @@ def atender_temporizador(chat_id: int, texto: str, origen: str, en_voz: bool) ->
     return True
 
 
+# ── Música Spotify por perfil (88b) ───────────────────────────────────────────
+
+def _spotify_suena(estado: dict[str, Any] | None) -> bool:
+    return bool(estado) and not bool(estado.get("stopped")) and not bool(estado.get("paused"))
+
+
+def _spotify_artistas(item: dict[str, Any]) -> str:
+    artistas = item.get("artists", [])
+    return ", ".join(str(a.get("name", "")) for a in artistas
+                     if isinstance(a, dict) and a.get("name"))
+
+
+def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
+    """Atiende Spotify localmente; las órdenes multimedia no se dicen por voz."""
+    if spotify_mod is None:
+        return False
+    cfg = PERFIL_CFG.get("spotify")
+    # Sólo el vocativo del perfil que atiende se elimina. Uno dirigido al otro
+    # asistente queda intacto y debe continuar por su flujo normal.
+    if spotify_mod.vocativo_ajeno(texto, NOMBRE):
+        return False
+    limpio = sin_vocativo(texto)
+    inicial = spotify_mod.interpretar(limpio, sonando=False)
+    if not cfg:
+        if inicial:
+            send_text(chat_id, f"Spotify no está configurado para {NOMBRE}")
+            return True
+        return False
+    # La gran mayoría de las frases no son música. No consultar receptores para
+    # ellas: evita hasta dos timeouts de 3 s antes de compras/temporizadores.
+    # «pausa» sola es el único caso ambiguo y se resuelve después con /status.
+    pausa_sola = spotify_mod._limpiar(limpio) == "pausa"
+    if not inicial and not pausa_sola:
+        return False
+    bases = [cfg["api"], *cfg["otros"]]
+    try:
+        estados = {base: spotify_mod.estado(base) for base in bases}
+    except spotify_mod.SpotifyError:
+        if inicial:
+            send_text(chat_id, "No pude usar Spotify ahora.")
+            return True
+        return False
+    intencion = spotify_mod.interpretar(limpio, sonando=any(_spotify_suena(x) for x in estados.values()))
+    if not intencion:
+        return False
+    propio = estados[cfg["api"]]
+    try:
+        if intencion["accion"] == "pausa":
+            for base, estado_actual in estados.items():
+                if _spotify_suena(estado_actual):
+                    spotify_mod.pausar(base)
+            send_text(chat_id, "⏸️ Spotify en pausa.")
+            return True
+        if propio is None:
+            send_text(chat_id, "Falta vincular tu Spotify: /spotify")
+            return True
+        if intencion["accion"] == "sigue":
+            spotify_mod.reanudar(cfg["api"])
+            send_text(chat_id, f"▶️ Spotify de {PERSONA} sigue.")
+            return True
+        elegido = spotify_mod.elegir(
+            spotify_mod.buscar(intencion, requests.Session()),
+            intencion.get("titulo", ""), intencion.get("artista", ""),
+        )
+        if not elegido or not elegido.get("uri"):
+            send_text(chat_id, "No encontré esa música en Spotify.")
+            return True
+        # El otro receptor se pausa ANTES del play propio, siempre en ese orden.
+        for base in cfg["otros"]:
+            if _spotify_suena(estados.get(base)):
+                spotify_mod.pausar(base)
+        spotify_mod.reproducir(cfg["api"], str(elegido["uri"]))
+        titulo = str(elegido.get("name", intencion.get("artista", "Spotify")))
+        artistas = _spotify_artistas(elegido)
+        send_text(chat_id, f"▶️ {titulo}" + (f" — {artistas}" if artistas else "") +
+                  f" · Spotify de {PERSONA}")
+        return True
+    except spotify_mod.SpotifyError:
+        send_text(chat_id, "No pude usar Spotify ahora.")
+        return True
+
+
+def comando_spotify(chat_id: int) -> None:
+    """Muestra vínculo y canción actual, o el código device_auth pendiente."""
+    if spotify_mod is None or not PERFIL_CFG.get("spotify"):
+        send_text(chat_id, f"Spotify no está configurado para {NOMBRE}")
+        return
+    try:
+        datos = spotify_mod.estado(PERFIL_CFG["spotify"]["api"])
+        if datos is None:
+            pendiente = spotify_mod.codigo(PERFIL_CFG["spotify"]["api"])
+            if pendiente and pendiente.get("url") and pendiente.get("code"):
+                send_text(chat_id, f"Spotify de {PERSONA}: falta vincular.\nAbre {pendiente['url']}\nCódigo: {pendiente['code']}")
+            else:
+                send_text(chat_id, f"Spotify de {PERSONA}: falta vincular. Espera un momento y prueba /spotify.")
+            return
+        track = datos.get("track") if isinstance(datos.get("track"), dict) else {}
+        titulo = str(track.get("name", ""))
+        artistas = ", ".join(str(x) for x in track.get("artist_names", []) if x)
+        detalle = f" · {titulo}" + (f" — {artistas}" if artistas else "") if titulo else ""
+        estado_actual = "en pausa" if datos.get("paused") else "sonando" if not datos.get("stopped") else "sin música"
+        send_text(chat_id, f"Spotify de {PERSONA}: vinculado, {estado_actual}{detalle}.")
+    except spotify_mod.SpotifyError:
+        send_text(chat_id, "No pude ver Spotify ahora.")
+
+
 # --- Órdenes permanentes (encargo 35, D43) ----------------------------------
 # Nivel 1 de D10: todo esto escribe DATOS en casa/temporizadores.json. Ninguna
 # orden crea unidades ni ejecuta nada; quien las hace sonar es el mismo hilo de
@@ -7658,11 +7800,39 @@ def comando_estado(chat_id: int) -> None:
         send_text(chat_id, f"No pude obtener el estado: {redact(exc)}")
 
 
-def comando_uso(chat_id: int) -> None:
+def enviar_uso(chat_id: int) -> str:
+    """/uso, el botón 💳 Uso y «¿cuánta cuota queda?» (encargo 90): la imagen de «¿Quién tiene
+    margen?» con los números que calcula `bots-info --margen`, los mismos de 💳 Cuentas. Ante
+    cualquier falla (sin módulo, sin Pillow, bots-info que falla o trae otra forma, sendPhoto
+    rechazado) manda el texto de uso-agentes de siempre. Si la foto pudo haber llegado, no
+    manda nada más, como `enviar_clima`. Devuelve "imagen", "texto", "incierto" o "error"."""
+    enviando = False
+    try:
+        if uso_imagen is None:
+            raise ImportError("uso_imagen.py no está instalado")
+        datos = json.loads(safe_command(["/usr/local/bin/bots-info", "--margen"]))
+        panel = datos.get("panel") if isinstance(datos, dict) else None
+        png = uso_imagen.tarjeta_png(panel)
+        enviando = True
+        send_photo(chat_id, png, uso_imagen.pie(panel))
+    except Exception as exc:
+        if enviando and not _foto_no_llego(exc):
+            LOG.warning("uso: no se sabe si la imagen llegó; no se manda el texto para no duplicar: %s",
+                        _motivo_clima(exc))
+            return "incierto"
+        LOG.warning("uso: se manda el texto en vez de la imagen: %s", _motivo_clima(exc))
+    else:
+        return "imagen"
     try:
         send_text(chat_id, safe_command(["/usr/local/bin/uso-agentes", "--telegram"]))
     except Exception as exc:
         send_text(chat_id, f"No pude obtener el uso: {redact(exc)}")
+        return "error"
+    return "texto"
+
+
+def comando_uso(chat_id: int) -> None:
+    enviar_uso(chat_id)
 
 
 def _remoto_cerrado() -> dict[str, Any]:
@@ -8009,6 +8179,8 @@ def handle_message(message: dict[str, Any]) -> None:
             return
         if atender_temporizador(chat_id, dicho, "voz", en_voz=True):
             return
+        if atender_spotify(chat_id, dicho, en_voz=True):
+            return
         # 69: hora y clima sin modelo, después de temporizadores («mañana a las 7» es
         # de ellos) y antes de gasto, agenda, nodo y compras.
         if atender_hora_o_clima(chat_id, dicho, en_voz=True):
@@ -8085,6 +8257,8 @@ def handle_message(message: dict[str, Any]) -> None:
             return
         if atender_temporizador(chat_id, text, "telegram", en_voz=False):
             return
+        if atender_spotify(chat_id, text, en_voz=False):
+            return
         if atender_hora_o_clima(chat_id, text, en_voz=False):
             return
         gasto = intencion_gasto(text) if _gastos_activos() else None
@@ -8127,12 +8301,16 @@ def handle_message(message: dict[str, Any]) -> None:
         comando_buscar(chat_id, argument)
     elif command in {"/temporizadores", "/timer", "/alarmas"}:
         comando_temporizadores(chat_id, command, argument)
+    elif command == "/spotify":
+        comando_spotify(chat_id)
     elif command in {"/ordenes", "/recurrentes"}:
         comando_ordenes(chat_id, argument)
     elif command == "/estado":
         comando_estado(chat_id)
     elif command == "/uso":
         comando_uso(chat_id)
+    elif command == "/usos":
+        comando_usos(chat_id)
     elif command == "/remoto" and PERFIL == "jaime":
         comando_remoto(chat_id)
     elif ruta_interna(command[1:]) in RUTAS_CONOCIDAS:
@@ -8165,14 +8343,176 @@ def handle_message(message: dict[str, Any]) -> None:
 
 
 def handle_update(update: dict[str, Any]) -> None:
-    message = update.get("message")
-    if isinstance(message, dict):
-        handle_message(message)
-        return
+    with contando_uso(update):      # encargo 92: el único punto de registro del contador
+        message = update.get("message")
+        if isinstance(message, dict):
+            handle_message(message)
+            return
+        query = update.get("callback_query")
+        if isinstance(query, dict):
+            handle_callback(query)
+            return
+
+
+# --- Contador de uso (encargo 92) ------------------------------------------------------
+# Una línea por uso en STATE_DIR/usos/usos-AAAA-MM.jsonl: bot, función, canal y resultado; NUNCA
+# el texto. Se escribe en UN solo lugar, `handle_update`, que es la puerta de cada mensaje y cada
+# botón. El canal y, para comandos y botones, la función salen de la actualización misma; en una
+# frase o una nota de voz la pone el primer manejador que la toma (MARCAS, abajo, que envuelve por
+# nombre sin tocar las ramas del despachador). Si no se puede escribir, el bot contesta igual.
+try:
+    import usos as usos_mod
+except ImportError:  # pragma: no cover - despliegue parcial
+    usos_mod = None
+USOS_DIR = Path(os.environ.get("BOTV3_USOS_DIR", str(STATE_DIR / "usos")))
+# Jaime ve también los de Pilar si se le monta su carpeta: BOTV3_USOS_OTROS="pilar=/run/usos-pilar".
+USOS_OTROS = {k.strip(): v.strip() for k, _, v in (x.partition("=") for x in
+              os.environ.get("BOTV3_USOS_OTROS", "").split(",")) if k.strip() and v.strip()} \
+    if PERFIL == "jaime" else {}
+REGISTRO_USOS = usos_mod.Registro(USOS_DIR, PERFIL) if usos_mod else None
+_USO = threading.local()
+ALIAS_COMANDOS = {
+    "/menu": "menu", "/ayuda": "ayuda", "/help": "ayuda", "/acciones": "acciones", "/olvidar": "olvidar",
+    "/nuevo": "olvidar", "/compras": "compras", "/gastos": "gastos", "/buscar": "buscar",
+    "/temporizadores": "temporizadores", "/timer": "temporizadores", "/alarmas": "temporizadores",
+    "/ordenes": "ordenes", "/recurrentes": "ordenes", "/estado": "estado", "/uso": "uso", "/usos": "usos",
+    "/remoto": "remoto", "/spotify": "spotify", **{c: "mercadolibre" for c in COMANDOS_ML},
+}
+PREFIJOS_BOTON = {"gas": "gastos", "remoto": "remoto", "ggm": "google", "mem": "memoria", "cmp": "compras",
+                  "ggl": "google", "cal": "calificar", "ord": "ordenes", "mlv": "mercadolibre", "bol": "boleta",
+                  "clm": "clima", "cmn": "comuna"}
+
+
+def funcion_de_update(update: dict[str, Any]) -> tuple[str, str | None]:
+    """(canal, función o None) de una actualización, sin guardar nada de lo escrito."""
     query = update.get("callback_query")
     if isinstance(query, dict):
-        handle_callback(query)
+        cabeza, _, resto = str(query.get("data", "")).partition(":")
+        return "boton", (resto.partition(":")[0] if cabeza == "menu" else PREFIJOS_BOTON.get(cabeza, "desconocido"))
+    message = update.get("message") or {}
+    if isinstance(message.get("voice") or message.get("audio"), dict):
+        return "voz", None
+    text = message.get("text")
+    if isinstance(text, str) and text.lstrip().startswith("/"):
+        command, argument = parse_command(text)
+        if command == "/start":
+            return "texto", "ayuda" if argument else "menu"
+        if command in ALIAS_COMANDOS:
+            return "texto", ALIAS_COMANDOS[command]
+        ruta = ruta_interna(command[1:])
+        if ruta in RUTAS_CONOCIDAS:
+            return "texto", "google" if ruta == "google" and not argument else f"consulta:{ruta}"
+        return "texto", "desconocido"
+    return "texto", None
+
+
+@contextlib.contextmanager
+def contando_uso(update: dict[str, Any]):
+    """Abre el uso de esta actualización y, al salir, escribe su línea. Un no autorizado no se cuenta."""
+    origen = update.get("callback_query") or update.get("message") or {}
+    chat = (origen.get("message") or {}).get("chat", {}) if update.get("callback_query") else origen.get("chat", {})
+    try:
+        cuenta = authorized(int((chat or {}).get("id", 0)), int((origen.get("from") or {}).get("id", 0)))
+    except (TypeError, ValueError):
+        cuenta = False
+    if REGISTRO_USOS is None or not cuenta or getattr(_USO, "actual", None) is not None:
+        yield
         return
+    canal, funcion = funcion_de_update(update)
+    _USO.actual = {"funcion": funcion, "error": False}
+    try:
+        yield
+    except BaseException:
+        _USO.actual["error"] = True
+        raise
+    finally:
+        actual, _USO.actual = _USO.actual, None
+        REGISTRO_USOS.anotar(actual["funcion"] or "desconocido", canal, "error" if actual["error"] else "ok")
+
+
+def _marcar(funcion: str) -> None:
+    actual = getattr(_USO, "actual", None)
+    if actual is not None and actual["funcion"] is None:
+        actual["funcion"] = funcion
+
+
+def _marcador(original: Callable[..., Any], funcion, condicional: bool) -> Callable[..., Any]:
+    """Envuelve un manejador: marca la función del uso en curso (la primera gana). `condicional`: sólo
+    si devuelve verdadero (los atender_* que contestan «¿la tomé?»)."""
+    @functools.wraps(original)
+    def envuelta(*args, **kwargs):
+        actual = getattr(_USO, "actual", None)
+        nueva = actual is not None and actual["funcion"] is None
+        if nueva:
+            _marcar(funcion(*args) if callable(funcion) else funcion)
+        resultado = original(*args, **kwargs)
+        if nueva and condicional and not resultado:
+            actual["funcion"] = None
+        return resultado
+    return envuelta
+
+
+def _ruta_de_consulta(ruta, *_):
+    return f"consulta:{ruta_interna(ruta)}" if isinstance(ruta, str) else "desconocido"
+
+
+# (función, condicional) de cada manejador de frases y voz, por nombre.
+MARCAS = {
+    "atender_ubicacion": ("comuna", True), "proponer_memoria": ("memoria", False),
+    "atender_temporizador": ("temporizadores", True), "atender_hora": ("hora", False),
+    "atender_comuna": ("comuna", False), "atender_clima": ("clima", False),
+    "atender_gasto_dicho": ("gastos", False), "atender_gasto_texto": ("gastos", False),
+    "correccion_boleta": ("boleta", True), "atender_frase_google": ("google", True),
+    "atender_nodo": (lambda chat_id, intencion, *_: intencion if intencion in ("estado", "uso") else "desconocido", False),
+    "atender_compras": ("compras", False), "submit_query": (_ruta_de_consulta, False),
+    "atender_spotify": ("spotify", True),
+}
+for _nombre, (_funcion, _condicional) in MARCAS.items():
+    globals()[_nombre] = _marcador(globals()[_nombre], _funcion, _condicional)
+
+
+def _con_error(original: Callable[..., Any], es_error: Callable[..., bool]) -> Callable[..., Any]:
+    @functools.wraps(original)
+    def envuelta(*args, **kwargs):
+        actual = getattr(_USO, "actual", None)
+        if actual is not None and es_error(*args, **kwargs):
+            actual["error"] = True
+        return original(*args, **kwargs)
+    return envuelta
+
+
+# Un error que el manejador atrapó y contestó igual también cuenta como error.
+audit = _con_error(audit, lambda event, adapter="", status="ok": status == "error")
+send_text = _con_error(send_text, lambda chat_id, message, *a, **k: str(message).startswith(("❌", "No pude")))
+
+
+def catalogo_usos() -> set[str]:
+    """Lo que ESTE bot tiene, para «sin usar nunca»: lo de todos, más lo que su perfil activa."""
+    base = {"menu", "ayuda", "acciones", "olvidar", "compras", "temporizadores", "ordenes", "buscar",
+            "estado", "uso", "usos", "memoria", "hora", "calificar"}
+    base |= {a for a, _, _ in areas_del_perfil()}
+    if CLIMA is not None:
+        base.add("comuna")
+    if not ml_falta():
+        base.add("mercadolibre")
+    # 92b: lo mismo que los deja contestar (la ruta `boleta` del perfil; `comando_spotify`).
+    if "boleta" in ALLOWED_AUTO_ROUTES:
+        base.add("boleta")
+    if spotify_mod is not None and PERFIL_CFG.get("spotify"):
+        base.add("spotify")
+    return base | {f"consulta:{r}" for r in ALLOWED_AUTO_ROUTES | {"auto"}}
+
+
+def comando_usos(chat_id: int) -> None:
+    """/usos: los últimos 7 días por bot y función, y lo que no se usó nunca. Pilar ve lo suyo; Jaime, los dos
+    (el de Pilar sólo si tiene montada su carpeta)."""
+    if usos_mod is None:
+        send_text(chat_id, "El contador de usos no está instalado en este bot.")
+        return
+    carpetas = {PERFIL: USOS_DIR, **({"pilar": USOS_OTROS.get("pilar")} if PERFIL == "jaime" else {})}
+    res = usos_mod.resumen(carpetas, {PERFIL: catalogo_usos()}, ahora_santiago())
+    send_text(chat_id, usos_mod.texto_resumen(res))
+
 
 
 def load_offset() -> int:
@@ -8313,7 +8653,7 @@ def sincronizar_menu() -> None:
     """
     try:
         from update_telegram_commands import comandos
-        deseado = comandos(ALLOWED_AUTO_ROUTES, PERFIL)
+        deseado = comandos(ALLOWED_AUTO_ROUTES, PERFIL, bool(PERFIL_CFG.get("spotify")))
         actual = telegram("getMyCommands") or []
         if [(c.get("command"), c.get("description")) for c in actual] != \
                 [(c["command"], c["description"]) for c in deseado]:
@@ -8368,6 +8708,8 @@ def main() -> int:
              ",".join(sorted(p for p in CLAVES if _clave(p))) or "ninguno",
              " → ".join(GENERAL_GRATIS))
     sincronizar_menu()
+    if REGISTRO_USOS is not None:       # encargo 92: lo que este bot tiene, para «sin usar nunca»
+        REGISTRO_USOS.publicar_catalogo(catalogo_usos())
     poll_forever()
     return 0
 

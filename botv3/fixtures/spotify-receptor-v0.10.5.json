@@ -1,0 +1,21 @@
+{
+  "origen": "Esquema OpenAPI oficial go-librespot v0.10.5; 88a no pudo capturar un receptor aún no instalado.",
+  "status_sonando": {
+    "username": "usuario-prueba", "device_id": "0123456789abcdef", "device_type": "SPEAKER", "device_name": "Casa · Jaime",
+    "play_origin": "go-librespot", "play_origin_device_id": null, "context_uri": null, "context_name": null,
+    "stopped": false, "paused": false, "buffering": false, "volume": 32768, "volume_steps": 65535,
+    "repeat_context": false, "repeat_track": false, "shuffle_context": false,
+    "track": {
+      "uri": "spotify:track:4t2OeILB07eMGTXSUbMPEu", "name": "Oxytocin", "artist_names": ["Billie Eilish"], "artist_uris": ["spotify:artist:6qqNVTkY8uBg9cP3Jd7DAH"],
+      "album_name": "Happier Than Ever", "album_uri": "spotify:album:0JGOiO34nwfUdDrD612dOp", "album_cover_url": "https://i.scdn.co/image/ab67616d0000b273", "position": 0, "duration": 210000,
+      "release_date": "2021-07-30", "track_number": 3, "disc_number": 1, "format": "OGG_VORBIS_160", "codec": "vorbis", "bitrate": 160, "sample_rate": 44100, "bit_depth": null
+    }
+  },
+  "status_detenido": {
+    "username": "usuario-prueba", "device_id": "fedcba9876543210", "device_type": "SPEAKER", "device_name": "Casa · Pilar",
+    "play_origin": null, "play_origin_device_id": null, "context_uri": null, "context_name": null,
+    "stopped": true, "paused": false, "buffering": false, "volume": 32768, "volume_steps": 65535,
+    "repeat_context": false, "repeat_track": false, "shuffle_context": false, "track": null
+  },
+  "auth_code": {"url": "https://www.spotify.com/pair?code=ABCD-EFGH", "code": "ABCD-EFGH", "expires_at": "2026-10-25T17:30:00Z"}
+}

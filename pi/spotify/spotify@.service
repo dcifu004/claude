@@ -1,0 +1,20 @@
+# Receptor Spotify Connect por perfil. Es una unidad de USUARIO de dcifu004, instalada en
+# /etc/systemd/user/spotify@.service (directorio root seguro que leen los gestores de usuario).
+#
+# Cada instancia usa una carpeta distinta porque go-librespot guarda allí state.json
+# (credencial), config.yml y lockfile. Si LUKS está cerrado o falta la plantilla,
+# ConditionPathExists evita un Restart=on-failure en bucle.
+[Unit]
+Description=Spotify Connect (%i)
+After=pipewire-pulse.service
+Wants=pipewire-pulse.service
+ConditionPathExists=/opt/nodo/datos/spotify/%i/config.yml
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/go-librespot --config_dir /opt/nodo/datos/spotify/%i
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

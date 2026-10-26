@@ -16,6 +16,7 @@ El usuario dice cuál. Cada uno tiene su archivo:
 | 91, temblores | `encargos-nube/91-temblores.md` |
 | 92, contador de uso de los bots | `encargos-nube/92-contador-uso-bots.md` |
 | 93, guía de Jaime y Pilar al día | `encargos-nube/93-guia-jaime-pilar.md` |
+| 100, controlador `spotify-web@` (Spotify con el reproductor web oficial) | `encargos-nube/100-spotify-web-controlador.md` (rama base `base-100`) |
 
 ## Reglas comunes
 

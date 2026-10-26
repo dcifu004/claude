@@ -148,7 +148,7 @@ MONTAJE = Path("/opt/nodo/datos")
 ARRANQUE = Path("/proc/sys/kernel/random/boot_id")
 
 PERMITIDOS = ("/etc/systemd/system/", "/etc/systemd/user/", "/usr/local/bin/", "/usr/local/lib/go-librespot/",
-              "/opt/nodo/", "/opt/botv3/", "/opt/captura/", "/opt/nodo/datos/spotify/")
+              "/opt/nodo/", "/opt/botv3/", "/opt/captura/")
 # No quedan excepciones de archivo único: Spotify usa el prefijo de /etc/systemd/user.
 PERMITIDOS_EXACTOS: set[str] = set()
 PROHIBIDOS = ("/etc/sudoers", "/etc/pam.d", "/etc/ssh", "/etc/nodo", "/etc/fstab",
@@ -171,7 +171,8 @@ RE_ID = re.compile(r"\d{8}-\d{6}-[0-9a-f]{4}")
 RE_UNIDAD = re.compile(r"[A-Za-z0-9@_.-]{1,64}\.(service|timer|path|socket)")
 RE_ARG = re.compile(r"[A-Za-z0-9._=/:,@+-]{0,64}")
 RE_ARRANQUE = re.compile(r"[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}")
-RE_FUENTE = re.compile(r"[\w ./()-]{1,200}")
+RE_FUENTE = re.compile(r"[\w ./()@-]{1,200}")
+RE_TEMPORAL = re.compile(r"\.[^/]+\.nodo-desplegar-[0-9a-f]{16}")
 RE_CLAVES_UNIDAD = re.compile(
     r"^\s*-?(ExecStart\w*|ExecStop\w*|User|Group|DynamicUser|SupplementaryGroups|"
     r"AmbientCapabilities|CapabilityBoundingSet|NoNewPrivileges|ProtectSystem|ProtectHome|"
@@ -619,7 +620,8 @@ def validar_despues(acciones: list) -> None:
 
 def leer_fuente(relativa: str) -> bytes:
     """Lee una fuente del vault como root sin seguir enlaces fuera de el (regla 2)."""
-    if not RE_FUENTE.fullmatch(relativa) or ".." in relativa.split("/"):
+    if (not RE_FUENTE.fullmatch(relativa) or Path(relativa).is_absolute()
+            or ".." in relativa.split("/")):
         raise ValueError(f"fuente invalida: {relativa}")
     if not os.path.ismount("/opt/nodo/datos"):
         raise ValueError("el volumen cifrado está cerrado: corre sudo abrir-datos")
@@ -767,6 +769,7 @@ class Escucha:
             self.guardar()
             log(f"otro arranque del equipo: {len(self.envios)} cupo(s) de enviar se conservan "
                 f"{ENVIAR_VENTANA_S // 60} min más")
+        self.limpiar_temporales()
         self.publicar_catalogo()
 
     @staticmethod
@@ -829,6 +832,49 @@ class Escucha:
         ruta = SPOOL / "catalogo.json"
         ruta.write_text(json.dumps(pub, ensure_ascii=False, indent=1))
         os.chmod(ruta, 0o644)
+
+    def limpiar_temporales(self) -> None:
+        """Quita sólo los temporales huérfanos que este escucha pudo dejar al caer.
+
+        Se deriva cada carpeta del catálogo (más el único enlace cerrado), en vez de recorrer
+        árboles amplios como /opt/nodo. No se sigue ningún enlace al abrir o borrar.
+        """
+        entradas = list(self.cat().values()) + [
+            {"destino": destino} for destino in ENLACES_PERMITIDOS
+        ]
+        padres: set[Path] = set()
+        for entrada in entradas:
+            destino = Path(entrada.get("destino", ""))
+            # validar_destino() rechaza acertadamente el enlace ya publicado. Acá sólo se
+            # necesita decidir si su carpeta es una de las autorizadas; abrir_directorio()
+            # vuelve a verificar cada tramo sin seguir enlaces antes de borrar nada.
+            s = str(destino)
+            if (not destino.is_absolute() or ".." in destino.parts
+                    or (not s.startswith(PERMITIDOS) and s not in PERMITIDOS_EXACTOS)
+                    or s.startswith(PROHIBIDOS)):
+                continue
+            padres.add(destino.parent)
+        borrados = 0
+        for padre_ruta in padres:
+            try:
+                padre = abrir_directorio(padre_ruta)
+            except (FileNotFoundError, NotADirectoryError):
+                continue
+            try:
+                for nombre in os.listdir(padre):
+                    if not RE_TEMPORAL.fullmatch(nombre):
+                        continue
+                    try:
+                        st = os.stat(nombre, dir_fd=padre, follow_symlinks=False)
+                        if stat.S_ISREG(st.st_mode) and st.st_nlink == 1:
+                            os.unlink(nombre, dir_fd=padre)
+                            borrados += 1
+                    except FileNotFoundError:
+                        pass
+            finally:
+                os.close(padre)
+        if borrados:
+            log(f"limpié {borrados} temporal(es) huérfano(s) de nodo-desplegar")
 
     # ── pedidos ──
     def procesar_pedidos(self) -> None:
@@ -908,14 +954,24 @@ class Escucha:
                 raise ValueError(f"'{n}' no está en el catálogo")
             e = cat[n]
             destino = Path(e["destino"])
-            validar_destino(destino)
             if e.get("tipo") == "enlace":
                 if tipo == "probar":
                     raise ValueError("no se puede probar un enlace como ejecutable")
                 validar_enlace(destino, e.get("objetivo", ""))
                 objetivo = e["objetivo"]
                 h = hashlib.sha256(objetivo.encode()).hexdigest()
+                if esperado and not h.startswith(esperado):
+                    if time.time() - desde > ESPERA_SYNC_S:
+                        raise ValueError(f"{n}: el hash pedido no corresponde al enlace (es {h[:12]})")
+                    return False
                 actual_enlace = leer_enlace(destino)
+                # El enlace instalado es el único caso válido en que el destino es un enlace.
+                # Se mira antes de validar_destino(), que correctamente rechaza enlaces para
+                # archivos normales. Uno distinto no se reemplaza silenciosamente.
+                if actual_enlace is not None and actual_enlace != objetivo:
+                    raise ValueError(f"enlace existente apunta a otro objetivo: {destino}")
+                if actual_enlace is None:
+                    validar_destino(destino)
                 items.append({"nombre": n, "tipo": "enlace", "destino": str(destino), "hash": h,
                               "objetivo": objetivo, "modo": 0, "dueno": "root:root", "despues": [],
                               "igual": actual_enlace == objetivo})
@@ -923,6 +979,7 @@ class Escucha:
                     cambios += 1
                     diffs.append(f"enlace {destino} → {objetivo}")
                 continue
+            validar_destino(destino)
             validar_dueno(e.get("dueno", "root:root"), destino)
             validar_despues(e.get("despues", []))
             nuevo = leer_fuente(e["fuente"])
@@ -1260,6 +1317,10 @@ class Escucha:
                 dest = Path(it["destino"])
                 validar_destino(dest)
                 if it.get("tipo") == "enlace":
+                    # Nunca se reemplaza un enlace previo: preparar sólo deja llegar acá si no
+                    # existía. El respaldo conserva qué enlace alcanzó a publicarse si algo
+                    # posterior obliga a revertir el pedido.
+                    (resp / it["nombre"]).write_text(it["objetivo"] + "\n")
                     crear_enlace(dest, it["objetivo"])
                     hechos.append((it, False))
                     continue
