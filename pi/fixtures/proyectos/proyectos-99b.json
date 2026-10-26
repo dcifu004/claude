@@ -1,0 +1,343 @@
+{
+ "_nota": "Fuente de la pestaña Projects de 🏭 AI Ops (encargo 99). La mantiene Claude (Diego) al preparar encargos (skill encargar). 'abiertos' es un override: la columna normal sale del historial y de vivo/. Primera versión: el borrador de la Fase 0 del 98 con los arreglos que propuso la maqueta, aceptados el 25-10.",
+ "version": 1,
+ "columnas": [
+  "Idea",
+  "Ready",
+  "In progress",
+  "Review",
+  "Done"
+ ],
+ "tope_wip": {
+  "In progress": 2,
+  "Review": 3
+ },
+ "aging_dias": 7,
+ "proyectos": [
+  {
+   "id": "voz",
+   "nombre": "Asistente de voz",
+   "resultado": "Decir «Hola Jaime, pon un temporizador de 10 minutos» en la sala y que suene",
+   "docs": [
+    "13",
+    "15",
+    "24",
+    "25",
+    "34"
+   ],
+   "encargos": [
+    "06b",
+    "16",
+    "17",
+    "35",
+    "38",
+    "96",
+    "97"
+   ],
+   "abiertos": {
+    "96": "Review",
+    "97": "In progress"
+   },
+   "ideas": [
+    "escucha.service (micrófono)",
+    "parlante.service",
+    "G4 avisos de eventos",
+    "barge-in",
+    "vigilantes"
+   ],
+   "bloqueo": "El micrófono de la sala (escucha.service) no existe todavía"
+  },
+  {
+   "id": "bot",
+   "nombre": "Bot y comandos",
+   "resultado": "Jaime y Pilar resuelven la casa sin pasar por un modelo",
+   "docs": [
+    "10",
+    "19",
+    "34",
+    "35"
+   ],
+   "encargos": [
+    "41",
+    "61",
+    "65",
+    "66",
+    "68",
+    "69",
+    "70",
+    "73",
+    "74",
+    "76",
+    "77",
+    "78b",
+    "92",
+    "93",
+    "9092n",
+    "07",
+    "39b",
+    "90",
+    "80b",
+    "75",
+    "78a"
+   ],
+   "abiertos": {
+    "9092n": "Review",
+    "92b": "Review"
+   }
+  },
+  {
+   "id": "cuentas",
+   "nombre": "Cuentas y cuota",
+   "resultado": "Saber quién tiene margen y que cada consulta use la cuenta correcta",
+   "docs": [
+    "20"
+   ],
+   "encargos": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "06a",
+    "08",
+    "12",
+    "13",
+    "15",
+    "19",
+    "48",
+    "49",
+    "50",
+    "83"
+   ],
+   "abiertos": {
+    "83": "Ready"
+   }
+  },
+  {
+   "id": "encargos",
+   "nombre": "Encargos y cola",
+   "resultado": "Encargar sin retrabajo y sin tener que vigilar",
+   "docs": [
+    "27",
+    "28"
+   ],
+   "encargos": [
+    "21",
+    "23a",
+    "23d",
+    "23h",
+    "24",
+    "27c",
+    "32",
+    "33",
+    "45",
+    "46",
+    "47a",
+    "47b",
+    "48b",
+    "51",
+    "54",
+    "55",
+    "56",
+    "58",
+    "63",
+    "71",
+    "79",
+    "81",
+    "87"
+   ],
+   "abiertos": {
+    "87b": "Review"
+   }
+  },
+  {
+   "id": "consola",
+   "nombre": "Consola de Cockpit",
+   "resultado": "Operar todo el nodo desde una sola herramienta",
+   "docs": [
+    "21",
+    "26",
+    "29",
+    "30"
+   ],
+   "encargos": [
+    "18",
+    "22",
+    "23b",
+    "23c",
+    "23e",
+    "23f",
+    "23g",
+    "25",
+    "26",
+    "28",
+    "29",
+    "84",
+    "85",
+    "86",
+    "95",
+    "98",
+    "20",
+    "31",
+    "34"
+   ],
+   "abiertos": {
+    "95": "In progress",
+    "98": "Done",
+    "99": "Ready"
+   },
+   "ideas": [
+    "Memoria Fase 2b",
+    "Approvals (HITL)",
+    "Scorecard"
+   ]
+  },
+  {
+   "id": "seguridad",
+   "nombre": "Seguridad y acceso",
+   "resultado": "Nada sale ni escala sin permiso",
+   "docs": [
+    "16",
+    "23"
+   ],
+   "encargos": [
+    "06c",
+    "11",
+    "22b",
+    "22c",
+    "27",
+    "27b",
+    "36",
+    "36b",
+    "80a",
+    "82",
+    "94"
+   ],
+   "abiertos": {
+    "36b": "In progress",
+    "94": "Review"
+   },
+   "bloqueo": "36b pausada desde el 23-10 (sin cuota de Claude (Diego))"
+  },
+  {
+   "id": "finanzas",
+   "nombre": "Finanzas del hogar",
+   "resultado": "Anotar gastos con una foto o una frase, siempre con ✅",
+   "docs": [
+    "31"
+   ],
+   "encargos": [
+    "42",
+    "64",
+    "67"
+   ],
+   "abiertos": {}
+  },
+  {
+   "id": "luces",
+   "nombre": "Luces del nodo",
+   "resultado": "Ver el estado del nodo en los ventiladores sin abrir nada",
+   "docs": [
+    "18",
+    "33"
+   ],
+   "encargos": [
+    "43",
+    "57a",
+    "57b"
+   ],
+   "abiertos": {}
+  },
+  {
+   "id": "huerta",
+   "nombre": "Huerta y plantas",
+   "resultado": "Saber qué regar y cuándo, con sensores",
+   "docs": [
+    "32"
+   ],
+   "encargos": [
+    "37",
+    "39a",
+    "72"
+   ],
+   "abiertos": {},
+   "ideas": [
+    "Estado del monitor de plantas en el bot",
+    "Módulo de sensores (caja al muro)"
+   ]
+  },
+  {
+   "id": "musica",
+   "nombre": "Música (Spotify)",
+   "resultado": "Que cada perfil ponga su Spotify en el parlante",
+   "docs": [
+    "36",
+    "37",
+    "38"
+   ],
+   "encargos": [
+    "88"
+   ],
+   "abiertos": {
+    "88": "Review"
+   },
+   "bloqueo": "Falta la app de Spotify de Diego"
+  },
+  {
+   "id": "sismos",
+   "nombre": "Temblores",
+   "resultado": "Aviso de sismos sentidos en la casa",
+   "docs": [],
+   "encargos": [
+    "91"
+   ],
+   "abiertos": {
+    "91b": "Review"
+   }
+  },
+  {
+   "id": "otros",
+   "nombre": "Sueltos",
+   "resultado": "Encargos sin proyecto: revisar si se asignan o se cierran",
+   "docs": [],
+   "encargos": [
+    "09",
+    "52",
+    "53",
+    "59",
+    "62"
+   ],
+   "abiertos": {
+    "62": "Idea"
+   },
+   "bloqueo": "62 (torrents) pausado indefinidamente"
+  }
+ ],
+ "archivos_compartidos": {
+  "_nota": "Para la vista Conflicts. Lista conocida a mano; la maqueta puede completarla leyendo los diffs que haya en el repo.",
+  "botv3/botv3.py": [
+   "88b",
+   "9092n",
+   "92b",
+   "96",
+   "97"
+  ],
+  "pi/bots-info.py": [
+   "9092n",
+   "92b",
+   "96"
+  ],
+  "encargos/cola-run.py": [
+   "87b",
+   "83"
+  ],
+  "pi/estado.py": [
+   "94"
+  ],
+  "pi/cockpit-encargos/": [
+   "95",
+   "98"
+  ]
+ }
+}

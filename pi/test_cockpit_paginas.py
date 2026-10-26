@@ -19,6 +19,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -2786,14 +2787,14 @@ class RepartoYModelosTests(unittest.TestCase):
         html = leer(PAGINAS["encargos"] / "index.html")
         self.assertIn(("config", "Policies"), pestanas_encargos(html))
         self.assertIn('<section data-panel="config" hidden></section>', html)
-        self.assertEqual(re.findall(r"<button[^>]*data-p=\"(\w+)\"", html), ["flujo", "ahora", "tiempo", "historial", "bitacora", "avisos", "config"])
-        self.assertIn('<script src="../comun/comun.js"></script><script src="glosario.js"></script><script src="red.js"></script><script src="encargos.js"></script>', html)
-        self.assertIn("({ flujo, ahora, tiempo, historial: hist, bitacora, avisos, config })[panel]();", self.js)
+        self.assertEqual(re.findall(r"<button[^>]*data-p=\"(\w+)\"", html), ["flujo", "ahora", "projects", "tiempo", "historial", "bitacora", "avisos", "config"])     # projects: encargo 99
+        self.assertIn('<script src="../comun/comun.js"></script><script src="glosario.js"></script><script src="red.js"></script><script src="modelo.js"></script><script src="proyectos.js"></script><script src="encargos.js"></script>', html)
+        self.assertIn("({ flujo, ahora, projects, tiempo, historial: hist, bitacora, avisos, config })[panel]();", self.js)
         # Lee y simula con cola-run.py del vault; los argumentos son fijos y lo editado va por stdin.
         self.assertIn("const COLA_RUN = `${DIR}/cola-run.py`, EJEMPLO = `${DIR}/ejemplo-reparto.toml`;", self.js)
         self.assertIn('cockpit.spawn(["python3", COLA_RUN, "--panel"], { err: "message" })', self.js)
         self.assertIn('cockpit.spawn(["python3", COLA_RUN, EJEMPLO, "--simular", "--con-cambios"], { err: "message" }).input(clave)', self.js)
-        self.assertEqual(len(re.findall(r"cockpit\.spawn\(", self.js)), 8)      # tmux, find, los dos de arriba, el de 🔔 Avisos (23b), la matriz de carga (24 y 46b), el de los botones de cola (46c) y el del despacho (50a)
+        self.assertEqual(len(re.findall(r"cockpit\.spawn\(", self.js)), 10)     # tmux, find, los dos de arriba, el de 🔔 Avisos (23b), la matriz de carga (24 y 46b), el de los botones de cola (46c), el del despacho (50a) y los dos `find` del índice de Projects (99)
         self.assertTrue((ENCARGOS_DIR / "ejemplo-reparto.toml").is_file())
         # La página no escribe modelos.toml ni ningún otro archivo: sólo lee.
         self.assertEqual(re.findall(r"cockpit\.file\([^)]*\)\.(\w+)", self.js), ["read"])
@@ -3243,7 +3244,7 @@ class AvisosTests(unittest.TestCase):
         pestanas = pestanas_encargos(html)
         self.assertIn([("bitacora", "Logs"), ("avisos", "Alerts "), ("config", "Policies")], [pestanas[i:i + 3] for i in range(len(pestanas))])
         self.assertIn('<section data-panel="avisos" hidden></section>', html)
-        self.assertIn("({ flujo, ahora, tiempo, historial: hist, bitacora, avisos, config })[panel]();", self.js)
+        self.assertIn("({ flujo, ahora, projects, tiempo, historial: hist, bitacora, avisos, config })[panel]();", self.js)     # projects: encargo 99
         # Lee con un comando fijo, sin argumentos de la página; no propone, no usa sudo, no escribe.
         self.assertIn("const REGISTRO_AVISOS = `${DIR}/registro_avisos.py`;", self.js)
         self.assertEqual(re.findall(r"cockpit\.\w+\([^)]*\)", self.bloque), ['cockpit.spawn(["python3", REGISTRO_AVISOS, "--panel"], { err: "message" })'])
@@ -5875,9 +5876,10 @@ class ConsolaEncargosTests(unittest.TestCase):
         self.assertNotIn("clearInterval", self.codigo)
 
     # ---------------- Encargo 95: tooltip de las colas ----------------
-    # Fixtures reales de encargos-nube/95-fixtures/ (manifiestos e historial de las colas 84, 88, 91n, 93n y 9092n). Esa
-    # carpeta no trae vivo/: los dos vivo de abajo están armados acá con la forma del real fixtures/vivo-cola85-85b.json.
-    FIX95 = PI.parent / "encargos-nube" / "95-fixtures"
+    # Fixtures reales de pi/fixtures/encargos-95/ (manifiestos e historial de las colas 84, 88, 91n, 93n y 9092n; 99b: antes
+    # estaban fuera de pi/ y en el vault no existen). Esa carpeta no trae vivo/: los dos vivo de abajo están armados acá con la
+    # forma del real fixtures/vivo-cola85-85b.json.
+    FIX95 = PI / "fixtures" / "encargos-95"
     VIVO_91N = {"nombre": "cola91n", "estado": "detenida", "etapas": ["91n"], "etapa": "91n", "fase": "rev1", "cuenta": "Codex",
                 "escrito": "2026-10-25T17:06:40-03:00"}
     VIVO_88 = {"nombre": "cola88", "estado": "terminada", "etapas": ["88a", "88c", "88b"], "etapa": "88b", "fase": "rev2",
@@ -6494,7 +6496,10 @@ class ProyectosTests(unittest.TestCase):
         carpeta = PAGINAS["encargos"]
         cls.html, cls.js, cls.css = leer(carpeta / "index.html"), leer(carpeta / "encargos.js"), leer(carpeta / "encargos.css")
         cls.modelo, cls.vista = leer(carpeta / "modelo.js"), leer(carpeta / "proyectos.js")
-        cls.proyectos = json.loads(leer(PI.parent / "encargos" / "proyectos.json"))
+        # 99b: las cifras se fijan con copias (proyectos.json cambia con cada encargo y su «abiertos» mueve el throughput; el
+        # historial crece con cada fase). Los archivos vivos se leen sólo para lo que no cambia (ver test_99_c2_*).
+        cls.proyectos = json.loads(leer(FIX_PROYECTOS / "proyectos-99b.json"))
+        cls.proyectos_vivo = json.loads(leer(PI.parent / "encargos" / "proyectos.json"))
         cls.indice = json.loads(leer(FIX_PROYECTOS / "indice-98.json"))
         cls.h98 = historial_99(FIX_PROYECTOS / "historial-98.jsonl")
         cls.node = shutil.which("node")
@@ -6586,20 +6591,26 @@ class ProyectosTests(unittest.TestCase):
         self.assertAlmostEqual(tarjetas["84a"]["cycle"], 30.733, places=2)          # 11:57:29 → 12:24:19 + 3,9 min
         self.assertEqual(round(tarjetas["19"]["cycle"], 1), 7.8)
         self.assertEqual(round(tarjetas["84a"]["cycle"], 1), 30.7)
-        # Con el historial de la rama (encargos/historial.jsonl, una copia más corta: 387 de las 397 fases), lo mismo
-        # salvo la última semana, que todavía no tiene las 10 fases del final.
-        rama = historial_99(PI.parent / "encargos" / "historial.jsonl")
-        t2, s2 = modelo_99(self.proyectos, rama, self.indice, [])
-        self.assertEqual(rama, self.h98[:len(rama)])
-        self.assertEqual(list(s2.values())[:3], [7, 22, 19])
-        self.assertEqual((round(t2["19"]["cycle"], 1), round(t2["84a"]["cycle"], 1)), (7.8, 30.7))
+
+    def test_99_c2_el_historial_vivo_sigue_al_fixture(self):
+        # El historial vivo (encargos/historial.jsonl) sólo se agrega al final: crece con cada fase (399 filas en la Pi el
+        # 25-10, 387 en la copia de la nube). Se compara sólo lo que no cambia con eso: las filas que comparte con el fixture
+        # son las mismas, el espejo arma sin caerse con el proyectos.json vivo y el 19 y el 84a siguen en 7,8 y 30,7 min.
+        vivo = historial_99(PI.parent / "encargos" / "historial.jsonl")
+        n = min(len(vivo), len(self.h98))
+        self.assertGreater(n, 300)
+        self.assertEqual(vivo[:n], self.h98[:n])
+        tarjetas, semanas = modelo_99(self.proyectos_vivo, vivo, self.indice, [])
+        self.assertEqual((round(tarjetas["19"]["cycle"], 1), round(tarjetas["84a"]["cycle"], 1)), (7.8, 30.7))
+        self.assertEqual(list(semanas)[:3], ["2026-09-28", "2026-10-05", "2026-10-12"])
 
     @unittest.skipUnless(shutil.which("node"), "sin node (en la Pi no hay motor de JS)")
     def test_99_c2_el_modelo_de_la_pagina_da_lo_mismo_que_el_espejo(self):
-        for historial in (self.h98, historial_99(PI.parent / "encargos" / "historial.jsonl")):
+        # Con los fixtures y con los archivos vivos: que el JS y el espejo coincidan no depende del largo del historial.
+        for proyectos, historial in ((self.proyectos, self.h98), (self.proyectos_vivo, historial_99(PI.parent / "encargos" / "historial.jsonl"))):
             ahora = max(datetime.fromisoformat(f["inicio"]).timestamp() + (f["min"] or 0) * 60 for f in historial) * 1000
-            r = self.node_modelo({"proyectos": self.proyectos, "historial": historial, "indice": self.indice, "vivos": [], "ahora": ahora})
-            tarjetas, semanas = modelo_99(self.proyectos, historial, self.indice, [])
+            r = self.node_modelo({"proyectos": proyectos, "historial": historial, "indice": self.indice, "vivos": [], "ahora": ahora})
+            tarjetas, semanas = modelo_99(proyectos, historial, self.indice, [])
             self.assertEqual(dict(zip(r["semanas"], r["porSemana"])), semanas)
             self.assertEqual({k: (v["proyecto"], v["columna"]) for k, v in r["tarjetas"].items()}, {k: (v["proyecto"], v["columna"]) for k, v in tarjetas.items()})
             for k in ("19", "84a"):
@@ -6633,6 +6644,20 @@ class ProyectosTests(unittest.TestCase):
         indice = ["--indice", str(FIX_PROYECTOS / "indice-98.json")]
         bien = subprocess.run([sys.executable, str(check), *indice], capture_output=True, text=True, timeout=60)
         self.assertEqual(bien.returncode, 0, bien.stdout)
+        # 99b: con el índice real de la Pi del 25-10 (`find -printf "%T@ %f\n"`, sólo los NN-slug.md), ningún encargo queda
+        # sin proyecto (antes faltaba el 36, el túnel).
+        pi = subprocess.run([sys.executable, str(check), "--indice", str(FIX_PROYECTOS / "indice-pi-25-10.txt")], capture_output=True, text=True, timeout=60)
+        self.assertEqual(pi.returncode, 0, pi.stdout)
+        self.assertIn("índice de 137 encargos", pi.stdout)
+        sin36 = copy.deepcopy(self.proyectos_vivo)
+        for p in sin36["proyectos"]:
+            p["encargos"] = [e for e in p.get("encargos", []) if e != "36"]
+        with tempfile.TemporaryDirectory() as tmp:
+            ruta = Path(tmp) / "proyectos.json"
+            ruta.write_text(json.dumps(sin36, ensure_ascii=False), encoding="utf-8")
+            r = subprocess.run([sys.executable, str(check), str(ruta), "--indice", str(FIX_PROYECTOS / "indice-pi-25-10.txt")], capture_output=True, text=True, timeout=60)
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertIn("encargos del índice sin proyecto: 36 ", r.stdout)
         for nombre, error in (("id-repetido", "está en dos proyectos"), ("columna-inventada", "que no es una columna"), ("json-invalido", "JSON inválido")):
             with self.subTest(nombre):
                 r = subprocess.run([sys.executable, str(check), str(FIX_PROYECTOS / f"{nombre}.json"), *indice], capture_output=True, text=True, timeout=60)

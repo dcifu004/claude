@@ -22,14 +22,29 @@ RE_MD = re.compile(r"^([0-9]{2}[a-z0-9]{0,8})-([A-Za-z0-9._-]{1,120})\.md$")
 MAX_BYTES = 1024 * 1024
 
 
-def indice_de_carpeta(carpeta):
-    """Los NN-slug.md de la carpeta (sin RESULTADO ni PLAN): los mismos que lista la pestaña con `find`."""
+def ids_de_nombres(nombres):
+    """Los NN-slug.md (sin RESULTADO ni PLAN): los mismos que lista la pestaña con `find`."""
     ids = []
-    for p in sorted(carpeta.glob("[0-9]*-*.md")):
-        m = RE_MD.match(p.name)
+    for nombre in sorted(nombres):
+        m = RE_MD.match(nombre)
         if m and not re.fullmatch(r"[A-Z]+", m[2]):
             ids.append(m[1])
     return list(dict.fromkeys(ids))
+
+
+def indice_de_carpeta(carpeta):
+    return ids_de_nombres(p.name for p in carpeta.glob("[0-9]*-*.md"))
+
+
+def indice_de_archivo(ruta):
+    """--indice: un JSON ([{id, …}] o [id, …]) o la salida de `find DIR -maxdepth 1 -name "[0-9]*-*.md" -printf "%T@ %f\\n"`
+    (una línea «mtime nombre» por archivo, como la lee la pestaña)."""
+    texto = pathlib.Path(ruta).read_text(encoding="utf-8")
+    try:
+        crudo = json.loads(texto)
+    except json.JSONDecodeError:
+        return ids_de_nombres(l.split(" ", 1)[1].strip() for l in texto.splitlines() if " " in l.strip())
+    return [x["id"] if isinstance(x, dict) else x for x in crudo]
 
 
 def revisar(texto, indice):
@@ -122,7 +137,7 @@ def revisar(texto, indice):
 def main(argv=None):
     a = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     a.add_argument("archivo", nargs="?", default=str(AQUI / "proyectos.json"))
-    a.add_argument("--indice", help="JSON con la lista del índice ([{id, …}] o [id, …]); por omisión, los NN-*.md de la carpeta del archivo")
+    a.add_argument("--indice", help="el índice: JSON ([{id, …}] o [id, …]) o la salida de find -printf \"%%T@ %%f\\n\"; por omisión, los NN-*.md de la carpeta del archivo")
     o = a.parse_args(argv)
     ruta = pathlib.Path(o.archivo)
     try:
@@ -131,8 +146,7 @@ def main(argv=None):
         print(f"ERROR: no se pudo leer {ruta}: {e.strerror}")
         return 1
     if o.indice:
-        crudo = json.loads(pathlib.Path(o.indice).read_text(encoding="utf-8"))
-        indice = [x["id"] if isinstance(x, dict) else x for x in crudo]
+        indice = indice_de_archivo(o.indice)
     else:
         indice = indice_de_carpeta(ruta.parent)
     errores, avisos = revisar(texto, indice)
