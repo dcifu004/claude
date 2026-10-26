@@ -684,6 +684,34 @@ def elegir_orden(cadena: list[str], todas: list[str], con_sesion: set[str],
             "detalle": detalle, "sin_sesion": bool(base) and not candidatas}
 
 
+def libre_de(detalle: dict[str, Any] | None) -> float | None:
+    """«¿Quién tiene margen?» (encargo 13): lo libre de la ventana MÁS APRETADA, 5 h o semanal, de un `detalle` de
+    elegir_orden. None sin dato. La usan el bot (ruta técnica, 96) y `bots-info` (margen_de): una sola cuenta."""
+    d = detalle or {}
+    libres = [round(100 - max(0.0, min(100.0, float(x))), 1) for x in (d.get("5h"), d.get("semanal"))
+              if isinstance(x, (int, float)) and not isinstance(x, bool)]
+    return min(libres) if libres else None
+
+
+def orden_por_margen(cuentas: list[str], detalle: dict[str, Any], base: list[str] | None = None,
+                     fija: str | None = None) -> list[str]:
+    """El orden de «¿Quién tiene margen?»: primero las que no pasan el umbral, por más libre (la ventana más
+    apretada); después las sin dato; al final, de respaldo, las sobre el umbral. El empate lo decide `base` (la
+    cadena del perfil). `fija` (96, modo fijo) va primero si no está sobre el umbral."""
+    base = list(base or cuentas)
+    pos = {c: (base.index(c) if c in base else len(base) + i) for i, c in enumerate(cuentas)}
+
+    def clave(c: str) -> tuple:
+        d = detalle.get(c) or {}
+        libre = libre_de(d)
+        return (bool(d.get("sobre")), libre is None, -(libre or 0.0), pos[c])
+    orden = sorted(cuentas, key=clave)
+    if fija in orden and not (detalle.get(fija) or {}).get("sobre"):
+        orden.remove(fija)
+        orden.insert(0, fija)
+    return orden
+
+
 def aviso_todas_sobre(cuenta: str, nombre: str, detalle: dict[str, Any]) -> str:
     """«⚠️ todas sobre el umbral, contestó Codex (85 %)», con el % semanal."""
     d = detalle.get(cuenta) or {}

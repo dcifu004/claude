@@ -54,7 +54,7 @@ pruebas lo cubren— pero la unidad que lo consume todavía es la vieja.
 | Dueño en BotFather | **Camila** — puede regenerar el token o borrar el bot |
 | `chat_id` = `user_id` | `8935354372` |
 | Token | `/opt/nodo/datos/secretos/botv3-pilar.env`, `640 root:captura` |
-| Cuenta de Claude | `camila@example.com`, **con plan pagado** (confirmado 13-09-2026) |
+| Cuenta de Claude | `<correo-camila>`, **con plan pagado** (confirmado 13-09-2026) |
 
 ## 1. El usuario Unix
 
@@ -123,7 +123,7 @@ sudo -u botpilar CLAUDE_CONFIG_DIR=/opt/nodo/datos/botv3-pilar/claude-config \
   /opt/botv3/bin/claude
 ```
 
-Iniciar sesión con **`camila@example.com`**, no con la cuenta de Diego. Si se
+Iniciar sesión con **`<correo-camila>`**, no con la cuenta de Diego. Si se
 autentica con la equivocada, las preguntas de Camila le comen la cuota a Diego y el
 error no se ve por ningún lado.
 
@@ -201,7 +201,7 @@ systemctl show botv3@pilar -p User -p ReadWritePaths -p InaccessiblePaths
 
 ## Credencial por ruta — decidido el 13-09-2026
 
-La ruta **`web` de Jaime** usa la cuenta de Camila (`camila@example.com`) con su
+La ruta **`web` de Jaime** usa la cuenta de Camila (`<correo-camila>`) con su
 propio `CLAUDE_CONFIG_DIR` en `/opt/nodo/datos/botv3/claude-config-web`, declarado en
 `jaime.toml` como `claude_config_web`.
 

@@ -1,0 +1,24 @@
+# Receptor Spotify con el reproductor web oficial (diseño 39, encargo 100). Unidad de USUARIO de
+# dcifu004, instalada en /etc/systemd/user/spotify-web@.service (root:root 0644).
+#
+# Ocupa el puerto del receptor go-librespot del perfil (Jaime 3678, Pilar 3679): por eso
+# Conflicts= con spotify@%i. Sin PrivateNetwork (necesita red), ni RestrictNamespaces, ni
+# ProtectHome=yes: el sandbox de Chromium usa espacios de nombres de usuario. Si LUKS está
+# cerrado, ConditionPathIsDirectory evita un Restart=on-failure en bucle.
+[Unit]
+Description=Spotify con el reproductor web (%i)
+Conflicts=spotify@%i.service
+After=pipewire-pulse.service
+Wants=pipewire-pulse.service
+ConditionPathIsDirectory=/opt/nodo/datos/spotify/%i
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/spotify-web --perfil %i
+Restart=on-failure
+RestartSec=10
+MemoryMax=1800M
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

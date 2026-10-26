@@ -56,7 +56,7 @@ drive = ["personal"]
 # tiene respaldo: si la cuota se agota, la pregunta tecnica falla con error hasta que
 # se reponga (reformularla hacia "mis archivos" la manda a `claude`). Y Codex sigue
 # SIN Drive, a proposito: ver el comentario de invoke_agent en botv3.py.
-# `google` (24-09-2026): agenda y correo de diego@example.com por google-puente.
+# `google` (24-09-2026): agenda y correo de <correo-diego> por google-puente.
 # Consultar es directo; crear evento o borrador pide confirmar con boton. Enviar no
 # existe. Quitarla de aca apaga la ruta sin tocar el puente.
 rutas = ["claude", "web", "gpt", "sql", "ha", "google", "codex", "boleta"]
@@ -87,7 +87,7 @@ spotify = { api = "http://127.0.0.1:3678", otros = ["http://127.0.0.1:3679"] }
 # `web_codex = true` y `claude_config_web`, que decian lo mismo en dos llaves:
 #  - `web` por Codex primero: fecho 3 de 3 titulares contra 2 de 3 de Claude, y
 #    gasta ChatGPT Plus y no la cuota de Claude. Respaldo, Claude de Camila
-#    (camila@example.com), para no gastar la de Diego en busquedas.
+#    (<correo-camila>), para no gastar la de Diego en busquedas.
 #  - `claude` y `codex` LEEN LOS VAULTS, vault_trabajo incluido. Poner aca la
 #    cuenta de Camila es posible desde el 29-09-2026 (decision de Diego), pero el
 #    contenido de CyD quedaria en el historial de otra persona: `aplicar-propuesta`

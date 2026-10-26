@@ -104,6 +104,12 @@ try:
 except ImportError:  # pragma: no cover - despliegue parcial
     spotify_mod = None
 
+# /bt (encargo 101b). El módulo sólo habla con el socket de bt-control; si falta, /bt lo dice.
+try:
+    import bluetooth as bluetooth_mod
+except ImportError:  # pragma: no cover - despliegue parcial
+    bluetooth_mod = None
+
 # Imagen de /uso (encargo 90): «¿Quién tiene margen?» de 💳 Cuentas. Si falta, /uso manda
 # el texto de uso-agentes, como antes.
 try:
@@ -998,10 +1004,165 @@ def orden_de_cuentas(ruta: str, forzada: str | None = None,
     con_sesion = {cid for cid, (_, motor, carpeta) in por_id.items()
                   if sesion_en(ruta, motor, carpeta)}
     limites, umbrales = _limites_y_umbrales()
+    if ruta == RUTA_TECNICA and hasattr(recetas, "orden_por_margen"):
+        return _orden_tecnica(cadena, por_id, con_sesion, limites, umbrales, receta)
     eleccion = recetas.elegir_orden(
         [c for c, _, _ in cadena], list(por_id), con_sesion, limites,
         umbrales, receta, datetime.now(timezone.utc))
     return [por_id[c] for c in eleccion["orden"]], eleccion
+
+
+# --- Cuenta de la ruta técnica (encargo 96) ---------------------------------------
+# La ruta `codex` (la «técnica») elige su cuenta con el criterio de «¿Quién tiene margen?» de 💳 Cuentas: gana la
+# con más libre en su ventana más apretada (recetas.orden_por_margen, la misma función que usa bots-info). Vale
+# entre por el selector «pregunta técnica», por /tecnica o por el clasificador. Elegibles: la cadena del perfil y,
+# con receta automática, cuentas_del_automatico (Jaime llega así a las 3; Pilar se queda con sus 2).
+# Modo fijo: la cuenta de /cuenta_tecnica o la cadena de una sola cuenta sin receta automática (💳 Cuentas → Fija);
+# va primero y, si está sobre el umbral o falla, cae a la siguiente y se avisa. La cuenta forzada 06b no pasa por acá.
+# Entre Telegram y 💳 Cuentas gana el último cambio: el estado de Telegram guarda la huella del perfil con que se
+# tocó el botón, y si al arrancar el perfil es otro (una propuesta aplicada reinicia el bot), se descarta.
+RUTA_TECNICA = "codex"
+CUENTA_TECNICA = STATE_DIR / "cuenta-tecnica.json"
+MAX_CUENTA_TECNICA = 4096
+_TECNICA_RARO: set[str] = set()
+
+
+def huella_tecnica() -> str:
+    """sha256 corto de la receta y la cadena de la ruta técnica del perfil cargado."""
+    crudo = PERFIL_CFG.get("cuentas")
+    cadena = crudo.get(RUTA_TECNICA) if isinstance(crudo, dict) else None
+    dato = json.dumps({"receta": RECETAS.get(RUTA_TECNICA), "cadena": cadena}, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(dato.encode("utf-8")).hexdigest()[:16]
+
+
+def _tecnica_rara(motivo: str) -> None:
+    """Lo raro de cuenta-tecnica.json se dice UNA vez por motivo (en el log) y se ignora."""
+    if motivo not in _TECNICA_RARO:
+        _TECNICA_RARO.add(motivo)
+        LOG.warning("cuenta-tecnica.json %s; se ignora y rige el perfil", motivo)
+
+
+def leer_cuenta_tecnica(con_huella: bool = True) -> dict[str, Any] | None:
+    """El estado de /cuenta_tecnica, o None. Sin seguir enlaces, regular, propio, acotado y con forma conocida.
+    `con_huella`: sólo si el perfil es el mismo que cuando se tocó el botón."""
+    try:
+        fd = os.open(CUENTA_TECNICA, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except FileNotFoundError:
+        return None
+    except OSError:
+        _tecnica_rara("no se puede abrir sin seguir enlaces")
+        return None
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_uid != os.geteuid() or st.st_size > MAX_CUENTA_TECNICA:
+            _tecnica_rara("no es un archivo regular propio y chico")
+            return None
+        with os.fdopen(fd, "rb", closefd=False) as fh:
+            dato = json.loads(fh.read(MAX_CUENTA_TECNICA + 1).decode("utf-8"))
+    except (OSError, ValueError, UnicodeDecodeError):
+        _tecnica_rara("está roto")
+        return None
+    finally:
+        os.close(fd)
+    if not (isinstance(dato, dict) and dato.get("modo") in ("auto", "fija") and isinstance(dato.get("perfil_visto"), str)
+            and (dato["modo"] == "auto" or dato.get("cuenta") in CUENTAS_CONOCIDAS)):
+        _tecnica_rara("no tiene la forma esperada")
+        return None
+    if con_huella and dato["perfil_visto"] != huella_tecnica():
+        return None
+    return dato
+
+
+def guardar_cuenta_tecnica(modo: str, cuenta: str | None) -> None:
+    """Escritura atómica: flock, un .tmp único por proceso, fsync y os.replace; 0600."""
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    dato = {"modo": modo, "cuenta": cuenta, "ts": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "desde": "telegram", "perfil_visto": huella_tecnica()}
+    candado = os.open(CUENTA_TECNICA.with_name(".cuenta-tecnica.lock"), os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    try:
+        fcntl.flock(candado, fcntl.LOCK_EX)
+        tmp = CUENTA_TECNICA.with_name(f".cuenta-tecnica.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp")
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        try:
+            os.write(fd, json.dumps(dato, ensure_ascii=False).encode("utf-8"))
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        try:
+            os.replace(tmp, CUENTA_TECNICA)
+        except OSError:
+            tmp.unlink(missing_ok=True)
+            raise
+    finally:
+        os.close(candado)
+
+
+def revisar_cuenta_tecnica_al_arrancar() -> None:
+    """Gana el último cambio: si el perfil cambió desde que se tocó el botón (💳 Cuentas aplicó una propuesta, que
+    reinicia el bot), el estado de Telegram queda sin efecto. Se borra, así el aviso sale una sola vez."""
+    dato = leer_cuenta_tecnica(con_huella=False)
+    if dato is None or dato["perfil_visto"] == huella_tecnica():
+        return
+    try:
+        CUENTA_TECNICA.unlink()
+    except OSError as exc:
+        LOG.warning("no pude descartar cuenta-tecnica.json: %s", type(exc).__name__)
+        return
+    LOG.info("cuenta técnica: el perfil cambió después del botón de Telegram; rige el perfil")
+    send_text(CHAT_ID, "La cuenta técnica la cambiaste desde 💳 Cuentas; dejé sin efecto la de Telegram.")
+
+
+def elegibles_tecnica() -> list[str]:
+    """La cadena del perfil para la técnica y, con receta automática, las pagadas que el muro permite."""
+    ids = [c for c, _, _ in CUENTAS_POR_RUTA.get(RUTA_TECNICA, []) if cuenta_permitida(RUTA_TECNICA, c)[0]]
+    receta = RECETAS.get(RUTA_TECNICA) or {}
+    if receta.get("automatico") and recetas is not None:
+        ids += [c for c in (recetas.cuentas_del_automatico(RUTA_TECNICA) if MUROS else CUENTAS_CONOCIDAS)
+                if c in CUENTAS_CONOCIDAS and c not in ids and cuenta_permitida(RUTA_TECNICA, c)[0]]
+    return ids
+
+
+def modo_tecnica(elegibles: list[str]) -> tuple[str, str | None, str]:
+    """(modo, cuenta fija o None, origen): Telegram si su estado sigue vigente; si no, lo que diga el perfil."""
+    dato = leer_cuenta_tecnica()
+    if dato and dato["modo"] == "fija" and dato.get("cuenta") in elegibles:
+        return "fija", dato["cuenta"], "telegram"
+    if dato and dato["modo"] == "auto":
+        return "auto", None, "telegram"
+    cadena = [c for c, _, _ in CUENTAS_POR_RUTA.get(RUTA_TECNICA, [])]
+    if not (RECETAS.get(RUTA_TECNICA) or {}).get("automatico") and len(cadena) == 1:
+        return "fija", cadena[0], "perfil"
+    return "auto", None, "perfil"
+
+
+def _orden_tecnica(cadena: list[tuple[str, str, Path]], por_id: dict[str, tuple[str, str, Path]], con_sesion: set[str],
+                   limites: dict[str, Any], umbrales: dict[str, Any], receta: dict[str, Any] | None
+                   ) -> tuple[list[tuple[str, str, Path]], dict[str, Any]]:
+    base = [c for c, _, _ in cadena] + [c for c in por_id if c not in {x for x, _, _ in cadena}]
+    # elegir_orden mide (sesión, % y umbral) de TODAS las elegibles; el orden lo pone orden_por_margen.
+    eleccion = recetas.elegir_orden(base, list(por_id), con_sesion, limites, umbrales,
+                                    {**(receta or {}), "automatico": True}, datetime.now(timezone.utc))
+    modo, fija, origen = modo_tecnica(list(por_id))
+    orden = recetas.orden_por_margen(eleccion["orden"], eleccion["detalle"], base, fija)
+    # La primera «ideal»: la fija, o la de más margen sin mirar el umbral. Si contesta otra, se avisa por qué.
+    sin_umbral = {c: {**d, "sobre": False} for c, d in eleccion["detalle"].items()}
+    ideal = fija if modo == "fija" else next(iter(recetas.orden_por_margen(list(eleccion["detalle"]), sin_umbral, base)), None)
+    eleccion = {**eleccion, "orden": orden, "tecnica": {"modo": modo, "origen": origen, "ideal": ideal}}
+    return [por_id[c] for c in orden], eleccion
+
+
+def aviso_tecnica(eleccion: dict[str, Any], contesto: str) -> str | None:
+    """«🔁 …» si en la técnica contestó otra cuenta que la primera elegida."""
+    t = eleccion.get("tecnica") or {}
+    ideal = t.get("ideal")
+    if not ideal or ideal == contesto or eleccion.get("todas_sobre"):
+        return None
+    d = (eleccion.get("detalle") or {}).get(ideal)
+    motivo = "no tiene sesión en este bot" if d is None else "sobre el umbral" if d.get("sobre") else "falló"
+    quien, otra = CUENTAS_NOMBRE.get(ideal, ideal), CUENTAS_NOMBRE.get(contesto, contesto)
+    if t.get("modo") == "fija":
+        return f"🔁 {quien} {'está ' if motivo == 'sobre el umbral' else ''}{motivo}; contestó {otra}"
+    return f"🔁 Contestó {otra}: {quien} {'estaba ' if motivo == 'sobre el umbral' else ''}{motivo}"
 
 PIPER_BIN = os.environ.get("BOTV3_PIPER_BIN", "/usr/local/bin/piper")
 # La voz es parte del perfil: dos identidades no pueden sonar igual cuando llegue
@@ -1800,6 +1961,10 @@ Para elegir quién contesta una sola pregunta, dilo al principio: «pregúntale 
 Claude (Cami) …», «que conteste Codex …» o «con Claude (Diego) …». Si esa cuenta
 no tiene sesión en este bot, contesta la de siempre y te dice por qué.
 
+Para elegir la ruta, empieza (hablando o escrito) con «pregunta técnica: …», «pregunta
+rápida: …» o «busca en internet …». La técnica la contesta la cuenta con más margen
+(/cuenta_tecnica para fijar una); también vale «pregunta técnica con Codex: …».
+
 Di o escribe «guardar en memoria ...» para enseñarle algo de la casa o una
 preferencia tuya. Nada se guarda al decirlo: llega acá con botones y se escribe
 sólo cuando tú tocas uno.
@@ -1841,6 +2006,7 @@ piden confirmación: se pueden deshacer durante una hora.
 /menu — todo con botones
 /temporizadores — ver los activos (también /timer 10 min tallarines)
 /ordenes — las que se repiten: pausar, reanudar, borrar o renovar
+/bt — Bluetooth de la Pi: qué está conectado y qué suena (emparejar y olvidar piden ✅)
 {_AYUDA_BUSCAR}{_AYUDA_GOOGLE}/cami, /codex, /diego <pregunta> — que la conteste esa cuenta
 /olvidar — cortar el hilo y arrancar de cero
 /estado — diagnóstico precalculado del nodo (o «¿cómo está la Pi?»)
@@ -1888,6 +2054,9 @@ ACTIONS = f"""Alcance de {NOMBRE}:
 • Busca en la web cuando la pregunta depende de datos que cambian. Esa ruta NO
   tiene acceso a archivos: lo que se lee de un vault nunca sale a un buscador.
 • Puede mostrar un comando para copiar manualmente a Termux.
+• Con /bt ve y maneja el Bluetooth de la Pi a través del servicio bt-control, sin
+  tocar el Bluetooth directo: conectar y desconectar van al toque; hacer visible
+  la Pi para emparejar y olvidar un equipo, sólo con tu ✅.
 • Guarda memoria de hogar: agrega una línea a sus archivos de memoria, y sólo
   después de que tú confirmes con un botón desde esta cuenta.
 
@@ -2056,7 +2225,7 @@ def _url_buscar(valor: Any) -> tuple[str, str] | None:
     return bruto, _texto_buscar(dominio, 120)
 
 
-def registrar_busqueda(resultados: int, fallo: bool) -> None:
+def registrar_busqueda(resultados: int, fallo: bool, selector: str | None = None, canal: str | None = None) -> None:
     """Anexa una medición sin guardar la consulta ni depender del contador diario.
 
     El mismo archivo lo lee 78a. Cada línea siempre representa una consulta:
@@ -2077,6 +2246,8 @@ def registrar_busqueda(resultados: int, fallo: bool) -> None:
             dato = {"fecha": datetime.now(ZoneInfo("America/Santiago")).date().isoformat(),
                     "perfil": PERFIL, "busquedas": 1,
                     "resultados": max(0, int(resultados)), "fallo": bool(fallo)}
+            if selector:            # 96: «busca en internet …», dicho o escrito. Nunca la consulta.
+                dato["selector"], dato["canal"] = selector, canal
             os.write(fd, (json.dumps(dato, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8"))
             os.fsync(fd)
         finally:
@@ -2088,7 +2259,7 @@ def registrar_busqueda(resultados: int, fallo: bool) -> None:
         LOG.warning("no pude registrar uso de /buscar: %s", type(exc).__name__)
 
 
-def buscar_searxng(consulta: str) -> str:
+def buscar_searxng(consulta: str, selector: str | None = None, canal: str | None = None) -> str:
     """Consulta el SearXNG local y prepara, como máximo, cinco líneas seguras."""
     try:
         respuesta = SES_SEARXNG.get(SEARXNG_URL, params={"q": consulta, "format": "json"},
@@ -2100,7 +2271,7 @@ def buscar_searxng(consulta: str) -> str:
             raise ValueError("respuesta SearXNG inválida")
     except (requests.RequestException, OSError, ValueError, TypeError, AttributeError) as exc:
         LOG.warning("/buscar no disponible: %s", type(exc).__name__)
-        registrar_busqueda(0, True)
+        registrar_busqueda(0, True, selector, canal)
         return "🔎 El buscador está apagado ahora"
 
     lineas = []
@@ -2119,7 +2290,7 @@ def buscar_searxng(consulta: str) -> str:
             fecha = fecha[:10]
         detalle = f" · {fecha}" if fecha else ""
         lineas.append(f"{titulo} — {dominio}{detalle} · {enlace}")
-    registrar_busqueda(len(lineas), False)
+    registrar_busqueda(len(lineas), False, selector, canal)
     return "🔎 No encontré resultados." if not lineas else "\n".join(lineas)
 
 
@@ -2340,6 +2511,8 @@ def _correr_cadena(ruta: str, motores: dict[str, Any]) -> dict[str, Any]:
         if eleccion.get("todas_sobre"):
             nombre = CUENTAS_NOMBRE.get(cuenta, cuenta)
             resultado["aviso_cuentas"] = recetas.aviso_todas_sobre(cuenta, nombre, eleccion["detalle"])
+        elif not es_forzada and (aviso := aviso_tecnica(eleccion, cuenta)):
+            resultado["aviso_cuentas"] = aviso
         if es_forzada:
             resultado["aviso_forzada"] = f"🎯 Contestó {CUENTAS_NOMBRE.get(cuenta, cuenta)}, como pediste."
         elif eleccion.get("aviso_forzada"):
@@ -2438,6 +2611,12 @@ def anotar_uso_cuenta(ruta: str, cuenta: str, motor: str, ok: bool, segundos: fl
              "ok": ok, "s": round(segundos, 1), "tokens": getattr(_CONSUMO, "tokens", None)}
     if forzada:
         linea["forzada"] = True
+    # 96: por dónde llegó la pregunta, sólo si vino por un selector («pregunta técnica: …»). Nunca el texto.
+    if getattr(_PEDIDO, "selector", None):
+        linea["selector"] = _PEDIDO.selector
+    # 97: process_query deja `canal` sólo con selector o si la pregunta vino de la sala.
+    if getattr(_PEDIDO, "canal", None):
+        linea["canal"] = _PEDIDO.canal
     try:
         with _LIBRO_LOCK, open(USO_CUENTAS, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(linea, ensure_ascii=False) + "\n")
@@ -3441,8 +3620,9 @@ def intencion_gasto(texto: str) -> str | None:
 def atender_gasto_dicho(chat_id: int, linea: str, en_voz: bool) -> tuple[str, str | None]:
     """El gasto sin comando: la propuesta ✍️ y, si vino de voz, sólo GASTO_DICHO hablado."""
     texto_chat, frase = atender_gasto_texto(chat_id, linea)
-    if en_voz and frase and (audio := sintetizar(frase)):
-        send_voice(chat_id, audio)
+    # 97: el chat ya lo mandó atender_gasto_texto (con su ✅); acá sólo la voz. Por la sala, sin
+    # propuesta (sin frase) se dice «Te lo mando al chat.»: el monto nunca se dice (ruta boleta).
+    _hablar(origen_de(en_voz), chat_id, frase, ruta="boleta")
     return texto_chat, frase
 
 
@@ -3926,9 +4106,9 @@ def atender_agenda(chat_id: int, intencion: dict[str, Any], en_voz: bool) -> tup
         if PERFIL_CFG.get("voz_habla_agenda", False) is not True:
             frase = VOZ_AL_CHAT
     audit("google_local", intencion["accion"], "voz" if en_voz else "telegram")
-    send_text(chat_id, texto)
-    if en_voz and frase and (audio := sintetizar(frase)):
-        send_voice(chat_id, audio)
+    # 97: la frase ya viene recortada a lo que se puede decir (hora y título, cuántos correos) o es
+    # VOZ_AL_CHAT; por eso va sin `ruta`: es la excepción explícita a RUTAS_GOBERNADAS, también en la sala.
+    responder(origen_de(en_voz), chat_id, texto, frase)
     return texto, frase
 
 
@@ -4603,9 +4783,7 @@ def respuesta_clima(intencion: dict[str, str], datos: dict[str, Any], hoy: date,
 def atender_hora(chat_id: int, tipo: str, en_voz: bool) -> tuple[str, str]:
     texto = respuesta_hora(tipo, ahora_santiago())
     audit("hora_local", tipo, "voz" if en_voz else "telegram")
-    send_text(chat_id, texto)
-    if en_voz and (audio := sintetizar(texto)):
-        send_voice(chat_id, audio)
+    responder(origen_de(en_voz), chat_id, texto, texto)
     return texto, texto
 
 
@@ -4626,9 +4804,7 @@ def atender_clima(chat_id: int, intencion: dict[str, str], en_voz: bool) -> tupl
         texto = frase = CLIMA_FALLA
     audit("clima_local", f"{intencion['cuando']}/{intencion['que']}" + (f" {comuna['comuna']}" if comuna else ""),
           "voz" if en_voz else "telegram")
-    send_text(chat_id, texto)
-    if en_voz and (audio := sintetizar(frase)):
-        send_voice(chat_id, audio)
+    responder(origen_de(en_voz), chat_id, texto, frase)
     return texto, frase
 
 
@@ -4913,10 +5089,16 @@ def auto_query(prompt: str) -> dict[str, Any]:
 
 def process_query(adapter: str, prompt: str, en_voz: bool = False,
                   whisper_s: float = 0.0, adjunto: dict[str, Any] | None = None,
-                  cuenta: str | None = None) -> None:
+                  cuenta: str | None = None, selector: str | None = None,
+                  origen: str | None = None) -> None:
     inicio = time.monotonic()
+    # 97: el origen lo captura submit_query en el hilo que atendió el mensaje.
+    origen = origen if origen in ORIGENES else ("voz_telegram" if en_voz else "telegram")
     _ETAPAS.d = {"whisper": whisper_s}
     _PEDIDO.cuenta = cuenta
+    _PEDIDO.selector = selector
+    # 96: el canal, sólo con selector; 97: lo que vino de la sala lo lleva siempre.
+    _PEDIDO.canal = "sala" if origen == "sala" else (("voz" if en_voz else "texto") if selector else None)
     _PEDIDO.cuenta_preferida = None
     try:
         if adapter == "auto":
@@ -4963,25 +5145,12 @@ def process_query(adapter: str, prompt: str, en_voz: bool = False,
         # El texto va SIEMPRE, aunque haya audio: las respuestas traen rutas,
         # fuentes y URLs que escuchadas no sirven de nada. La voz es para el
         # momento en que no podés mirar la pantalla; el texto queda para después.
-        if result.get("reply_markup"):
-            # Las respuestas de cuentas pueden ser largas. Se parten igual que
-            # send_text, conservan las URLs sin preview y sólo el último trozo
-            # lleva botones: Telegram no permite adjuntarlos a un mensaje ya partido.
-            partes = split_text(texto)
-            for i, parte in enumerate(partes):
-                datos = {"chat_id": CHAT_ID, "text": parte,
-                         "disable_web_page_preview": True}
-                if i == len(partes) - 1:
-                    datos["reply_markup"] = result["reply_markup"]
-                telegram("sendMessage", datos)
-        else:
-            send_text(CHAT_ID, texto)
+        # (97: lo reparte responder(); las largas se parten y los botones van al final.)
+        t_tts = time.monotonic()
+        responder(origen, CHAT_ID, texto, (frase_fija or result["message"]) if hablar else None,
+                  botones=result.get("reply_markup"), ruta=result["route"])
         if hablar:
-            t_tts = time.monotonic()
-            audio = sintetizar(frase_fija or result["message"])
             _etapa("tts", time.monotonic() - t_tts)
-            if audio:
-                send_voice(CHAT_ID, audio)
         e = _ETAPAS.d
         LOG.info("etapas ruta=%s whisper=%.2f router=%.2f agente=%.2f tts=%.2f",
                  result["route"], e.get("whisper", 0.0), e.get("router", 0.0),
@@ -4990,23 +5159,29 @@ def process_query(adapter: str, prompt: str, en_voz: bool = False,
     except Exception as exc:
         LOG.exception("Consulta fallida adapter=%s", adapter)
         send_text(CHAT_ID, f"❌ No pude completar la consulta: {redact(exc)}")
+        _hablar(origen, CHAT_ID, None)      # la sala no queda muda: «Te lo mando al chat.»
         audit("query_failed", adapter, "failed")
     finally:
         _ETAPAS.d = None
         _PEDIDO.cuenta = None
         _PEDIDO.cuenta_preferida = None
+        _PEDIDO.selector = _PEDIDO.canal = None
         QUEUE_SLOTS.release()
 
 
 def submit_query(adapter: str, prompt: str, en_voz: bool = False,
                  whisper_s: float = 0.0, adjunto: dict[str, Any] | None = None,
-                 cuenta: str | None = None) -> None:
+                 cuenta: str | None = None, selector: str | None = None) -> None:
     if not QUEUE_SLOTS.acquire(blocking=False):
-        send_text(CHAT_ID, "Hay demasiadas consultas en espera. Intenta nuevamente en un momento.")
+        lleno = "Hay demasiadas consultas en espera. Intenta nuevamente en un momento."
+        send_text(CHAT_ID, lleno)
+        if origen_de(en_voz) == "sala":     # quien habló también lo oye; la nota de voz sigue como antes
+            _hablar("sala", CHAT_ID, lleno)
         return
     con = f" con {CUENTAS_NOMBRE.get(cuenta, cuenta)}" if cuenta else ""
     send_text(CHAT_ID, f"⏳ Consultando {adapter}{con} en modo de sólo lectura…")
-    WORKERS.submit(process_query, adapter, prompt, en_voz, whisper_s, adjunto, cuenta)
+    WORKERS.submit(process_query, adapter, prompt, en_voz, whisper_s, adjunto, cuenta, selector,
+                   origen_de(en_voz))
 
 
 def safe_command(argv: list[str], timeout: int = 45) -> str:
@@ -5212,6 +5387,152 @@ def send_voice(chat_id: int, audio: bytes) -> None:
         ).raise_for_status()
     except Exception as exc:
         LOG.warning("no se pudo enviar la nota de voz: %s", redact(exc))
+
+
+# --- Una sola salida con canal (encargo 97, M2) ---------------------------------------
+# Toda intención que contesta texto y frase pasa por `responder(origen, …)`, que reparte:
+#   telegram      → el texto (y los botones);
+#   voz_telegram  → el texto y, si hay frase que se pueda decir, la nota de voz;
+#   sala          → la frase como JSON en VOZ_PARLANTE_DIR, que lee `parlante.service` (nota 25 §2).
+# El origen NO viaja por las firmas: una nota de voz de Telegram y la sala comparten el camino de
+# `en_voz=True`, y lo que las separa es `_SALIDA.sala`, que pone `atender_dicho`. `submit_query` lo
+# captura y se lo pasa a `process_query`, que corre en otro hilo.
+#
+# Qué no se dice nunca en la sala: una ruta de RUTAS_GOBERNADAS (sin la excepción VOZ_HABLA_VAULT,
+# que es para la nota de voz privada), salvo las frases fijas sin datos; tampoco una frase de más de
+# MAX_SALA_CHARS. En esos casos la sala dice VOZ_AL_CHAT y el texto va a Telegram. El texto va además
+# al chat si trae botones o si la frase no lo dice entero (la agenda, el detalle del nodo).
+VOZ_PARLANTE_DIR = Path(os.environ.get("VOZ_PARLANTE_DIR", "/opt/nodo/datos/voz/parlante"))
+MAX_SALA_CHARS = 600          # el mismo corte que aplica parlante (102b)
+PRIORIDADES_SALA = ("baja", "normal", "alta")
+ORIGENES = ("telegram", "voz_telegram", "sala")
+# Se pueden decir aunque la ruta sea gobernada: no traen ningún dato de la respuesta.
+FRASES_SIN_DATOS = {VOZ_AL_CHAT, EVENTO_DICHO, GASTO_DICHO}
+_SALIDA = threading.local()
+_SALA_LOCK = threading.Lock()
+_SALA = {"avisada": False, "ultima": None}      # la falla ya dicha; la última frase (para «repite»)
+
+
+def origen_de(en_voz: bool) -> str:
+    if not en_voz:
+        return "telegram"
+    return "sala" if getattr(_SALIDA, "sala", False) else "voz_telegram"
+
+
+def _frase_decible(origen: str, frase: str | None, ruta: str | None) -> str | None:
+    """La frase si se puede decir por este origen (en la sala, en una línea); None si no."""
+    if not frase:
+        return None
+    if origen == "sala":
+        frase = " ".join(str(frase).split())
+    if ruta in RUTAS_GOBERNADAS and frase not in FRASES_SIN_DATOS \
+            and (origen == "sala" or not VOZ_HABLA_VAULT):
+        return None
+    tope = MAX_SALA_CHARS if origen == "sala" else MAX_TTS_CHARS
+    return frase if len(frase) <= tope else None
+
+
+def escribir_sala(frase: str, prioridad: str = "normal") -> bool:
+    """Deja la frase para `parlante`. Atómico: `.tmp` único en la misma carpeta (O_EXCL, sin seguir
+    enlaces), fsync, 0640 y os.replace a un nombre que ordena por hora. Nunca levanta."""
+    ahora = datetime.now().astimezone()
+    ident = uuid.uuid4().hex[:12]
+    perfil = re.sub(r"[^a-z0-9_-]", "", PERFIL.lower())[:24] or "bot"
+    datos = {"perfil": PERFIL, "texto": " ".join(str(frase).split())[:MAX_SALA_CHARS],
+             "voz": Path(PIPER_VOZ).stem, "prioridad": prioridad if prioridad in PRIORIDADES_SALA else "normal",
+             "ts": ahora.isoformat(timespec="milliseconds"), "id": ident, "tipo": "respuesta"}
+    carpeta = VOZ_PARLANTE_DIR
+    tmp = carpeta / f".{perfil}-{os.getpid()}-{ident}.tmp"
+    try:
+        if not stat.S_ISDIR(os.lstat(carpeta).st_mode):
+            raise NotADirectoryError(f"{carpeta} no es una carpeta")
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o640)
+        try:
+            os.fchmod(fd, 0o640)
+            # os.write puede escribir menos (señal, cuota, disco lleno): se sigue hasta el final y un
+            # 0 es una falla, para que nunca se publique un JSON a medias que parlante no pueda leer.
+            resto = memoryview((json.dumps(datos, ensure_ascii=False) + "\n").encode("utf-8"))
+            while resto:
+                escritos = os.write(fd, resto)
+                if escritos <= 0:
+                    raise OSError("escritura corta en la sala")
+                resto = resto[escritos:]
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        os.replace(tmp, carpeta / f"{ahora:%Y%m%d-%H%M%S-%f}-{perfil}-{ident}.json")
+    except OSError as exc:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp)
+        with _SALA_LOCK:
+            primera, _SALA["avisada"] = not _SALA["avisada"], True
+        if primera:
+            LOG.warning("sala: no pude escribir en %s (%s); contesto por Telegram y no vuelvo a avisar "
+                        "hasta que vuelva a andar", carpeta, type(exc).__name__)
+            send_text(CHAT_ID, "🔇 No pude hablar por la sala; te contesto por acá.")
+        return False
+    with _SALA_LOCK:
+        _SALA["avisada"] = False
+        _SALA["ultima"] = (datos["texto"], datos["prioridad"])
+    return True
+
+
+def _hablar(origen: str, chat_id: int, frase: str | None, ruta: str | None = None,
+            prioridad: str = "normal") -> bool:
+    """La mitad de voz de `responder`. True si la frase se dijo tal cual. En la sala, una frase
+    que no se puede decir se cambia por VOZ_AL_CHAT (y devuelve False). `frase == ""` es un
+    silencio a propósito: no se dice nada, ni siquiera VOZ_AL_CHAT."""
+    if origen not in ("voz_telegram", "sala") or frase == "":
+        return False
+    decible = _frase_decible(origen, frase, ruta)
+    if origen == "sala":
+        if decible is None:
+            escribir_sala(VOZ_AL_CHAT, prioridad)
+            return False
+        return escribir_sala(decible, prioridad)
+    if decible is not None and (audio := sintetizar(decible)):
+        send_voice(chat_id, audio)
+    return decible is not None
+
+
+def _cubre(texto: str, frase: str) -> bool:
+    """Si la frase dice el texto entero (salvo el emoji o el signo de adelante)."""
+    def norma(x: str) -> str:
+        return " ".join(re.sub(r"^[^\w¿¡«]+", "", str(x)).split())
+    return norma(texto) == norma(frase)
+
+
+def _al_chat(chat_id: int, texto: str, botones: dict[str, Any] | None) -> None:
+    if not botones:
+        send_text(chat_id, texto)
+        return
+    # Se parte igual que send_text, sin preview, y sólo el último trozo lleva los botones:
+    # Telegram no permite adjuntarlos a un mensaje ya partido.
+    partes = split_text(texto)
+    for i, parte in enumerate(partes):
+        datos = {"chat_id": chat_id, "text": parte, "disable_web_page_preview": True}
+        if i == len(partes) - 1:
+            datos["reply_markup"] = botones
+        telegram("sendMessage", datos)
+
+
+def responder(origen: str, chat_id: int, texto_chat: str, frase: str | None = None,
+              botones: dict[str, Any] | None = None, ruta: str | None = None,
+              prioridad: str = "normal") -> None:
+    """Reparte una respuesta por su canal (ver arriba). En `telegram` y `voz_telegram` el texto va
+    siempre, como antes; en `sala`, sólo si la sala no lo dijo entero o si trae botones."""
+    if origen != "sala":
+        _al_chat(chat_id, texto_chat, botones)
+        _hablar(origen, chat_id, frase, ruta, prioridad)
+        return
+    dicha = _hablar(origen, chat_id, frase, ruta, prioridad)
+    if texto_chat and (not dicha or botones or not _cubre(texto_chat, frase or "")):
+        _al_chat(chat_id, texto_chat, botones)
+
+
+def _en_sala(origen: str, frase: str) -> str | None:
+    """Una frase que sólo la sala dice: por Telegram (texto o nota de voz) sigue sin audio, como antes."""
+    return frase if origen == "sala" else None
 
 
 def _leer_recortado(path: Path, limite: int) -> str:
@@ -5481,6 +5802,64 @@ def cuenta_pedida(texto: str, permite_comando: bool) -> tuple[str | None, str]:
     return extraer_cuenta(texto)
 
 
+# --- Selectores dichos (encargo 96) ---------------------------------------------
+# «pregunta técnica: …», «pregunta rápida: …» y «busca en internet …», al inicio del mensaje, por voz o escritos:
+# quien dice el selector eligió la ruta, así que va ANTES de las intenciones locales (nota 25, «Frase con selector»).
+# Lista cerrada y anclada al inicio, sobre el texto en plano (mismo largo que el original: se corta el de verdad).
+_TRAS_SELECTOR = r"(?![a-z0-9])[\s,:;.!?\"'»”-]*"        # sin «¿»: el que abre la pregunta se queda con ella
+SELECTORES_RE = (
+    ("tecnica", re.compile(rf"{_ANTES_DE_LA_FRASE}(?:una\s+)?pregunta\s+tecnica{_TRAS_SELECTOR}")),
+    ("rapida", re.compile(rf"{_ANTES_DE_LA_FRASE}(?:una\s+)?pregunta\s+rapida{_TRAS_SELECTOR}")),
+    ("buscar", re.compile(rf"{_ANTES_DE_LA_FRASE}busca(?:me)?\s+en\s+(?:internet|la\s+web){_TRAS_SELECTOR}")),
+)
+SELECTOR_RUTA = {"tecnica": "codex", "rapida": "gpt"}
+SELECTOR_NOMBRE = {"tecnica": "técnica", "rapida": "rápida"}
+MAX_SELECTOR = 4000
+
+
+def selector_dicho(texto: str) -> tuple[str | None, str]:
+    """(selector, resto) si el mensaje EMPIEZA con un selector; si no, (None, texto) intacto."""
+    if not isinstance(texto, str):
+        return None, texto
+    plano = _plano(texto)
+    for nombre, regex in SELECTORES_RE:
+        m = regex.match(plano)
+        if m:
+            return nombre, texto[m.end():].strip()
+    return None, texto
+
+
+def atender_selector(chat_id: int, texto: str, en_voz: bool, whisper_s: float = 0.0) -> bool:
+    """El selector manda: la ruta queda elegida. La cuenta dicha en el resto sigue la regla 06b (sola, sin
+    respaldo). Sin pregunta, se pide; sin la ruta en el perfil, se dice lo mismo que el comando."""
+    selector, resto = selector_dicho(texto)
+    if not selector:
+        return False
+    resto = resto[:MAX_SELECTOR]
+    origen = origen_de(en_voz)
+    canal = {"sala": "sala", "voz_telegram": "voz"}.get(origen, "texto")
+    if selector == "buscar":
+        if resto:
+            # Los enlaces no se dicen: en la sala, «Te lo mando al chat.».
+            responder(origen, chat_id, buscar_searxng(resto, selector, canal), None, ruta="web")
+        else:
+            responder(origen, chat_id, "¿Qué quieres que busque?", _en_sala(origen, "¿Qué quieres que busque?"))
+        return True
+    ruta = SELECTOR_RUTA[selector]
+    if ruta not in ALLOWED_AUTO_ROUTES:
+        aviso = f"La ruta {SELECTOR_NOMBRE[selector]} no corresponde a este bot."
+        responder(origen, chat_id, aviso, _en_sala(origen, aviso))
+        return True
+    cuenta, pregunta = cuenta_pedida(resto, False)
+    if not pregunta.strip():
+        aviso = (f"¿Qué le pregunto a {CUENTAS_NOMBRE.get(cuenta, cuenta)}?" if cuenta
+                 else f"¿Cuál es la pregunta {SELECTOR_NOMBRE[selector]}?")
+        responder(origen, chat_id, aviso, _en_sala(origen, aviso))
+        return True
+    submit_query(ruta, pregunta.strip(), en_voz=en_voz, whisper_s=whisper_s, cuenta=cuenta, selector=selector)
+    return True
+
+
 def intencion_compras(texto: str) -> tuple[str, str] | None:
     """Devuelve (accion, argumento) si la frase es sobre la lista, o None.
 
@@ -5744,27 +6123,35 @@ def intencion_nodo(texto: str) -> str | None:
 def atender_nodo(chat_id: int, intencion: str, origen: str, en_voz: bool) -> None:
     """Contesta una intención del nodo con el mismo texto que /estado o /uso."""
     programa = {"estado": "/usr/local/bin/estado", "uso": "/usr/local/bin/uso-agentes"}[intencion]
+    salida = origen_de(en_voz)
     if intencion == "uso":
         # Encargo 90: la misma imagen que /uso, con el mismo respaldo a texto.
         audit("nodo_uso", origen, "error" if enviar_uso(chat_id) == "error" else "ok")
+        _hablar(salida, chat_id, _en_sala(salida, VOZ_AL_CHAT))      # 97: la imagen no se dice
         return
     try:
-        send_text(chat_id, texto_estado() if intencion == "estado"
-                  else safe_command([programa, "--telegram"]))
+        texto = (texto_estado() if intencion == "estado"
+                 else safe_command([programa, "--telegram"]))
     except Exception as exc:
-        send_text(chat_id, f"No pude obtener el {intencion}: {redact(exc)}")
+        responder(salida, chat_id, f"No pude obtener el {intencion}: {redact(exc)}")
         audit(f"nodo_{intencion}", origen, "error")
         return
     audit(f"nodo_{intencion}", origen)
+    if salida != "sala":
+        # El detalle sale antes de pedir la versión breve, como siempre: no espera a `--breve`.
+        responder(salida, chat_id, texto)
+    breve = None
     if en_voz and intencion == "estado":
         # Por voz se dice la versión corta: las 40 líneas del reporte leídas en voz
         # alta no las escucha nadie. El detalle queda escrito en el chat.
         try:
-            audio = sintetizar(safe_command([programa, "--breve"]))
+            breve = safe_command([programa, "--breve"])
         except Exception:
-            audio = None
-        if audio:
-            send_voice(chat_id, audio)
+            breve = None
+    if salida == "sala":
+        responder(salida, chat_id, texto, breve)
+    else:
+        _hablar(salida, chat_id, breve)
 
 
 # --- Mensajes de las IA a Diego (10-10-2026) --------------------------------------
@@ -6477,9 +6864,7 @@ def compras_agregar(chat_id: int, texto: str, origen: str, en_voz: bool) -> None
         # la pantalla, y sin respuesta por el parlante no sabe si quedó anotado.
         dicho = (f"Anoté {', '.join(agregados)}." if 0 < len(agregados) <= compras_mod.MAX_ITEMS_EN_VOZ
                  else (f"Anoté {len(agregados)} cosas, te las dejé escritas." if agregados else "Eso ya estaba en la lista."))
-        audio = sintetizar(dicho)
-        if audio:
-            send_voice(chat_id, audio)
+        _hablar(origen_de(en_voz), chat_id, dicho)
 
 
 def compras_revisar(chat_id: int, en_voz: bool) -> None:
@@ -6511,9 +6896,7 @@ def compras_revisar(chat_id: int, en_voz: bool) -> None:
         aviso = f"Son {len(items)} cosas, mejor te la mando escrita."
     else:
         aviso = compras_mod.para_recitar(items)
-    audio = sintetizar(aviso)
-    if audio:
-        send_voice(chat_id, audio)
+    _hablar(origen_de(en_voz), chat_id, aviso)
 
 
 def compras_quitar(chat_id: int, patron: str, en_voz: bool = False) -> None:
@@ -6541,8 +6924,7 @@ def compras_quitar(chat_id: int, patron: str, en_voz: bool = False) -> None:
             aviso = "No encontré esos productos en la lista."
         if not encontrados:
             send_text(chat_id, aviso)
-        if (audio := sintetizar(aviso)):
-            send_voice(chat_id, audio)
+        _hablar(origen_de(en_voz), chat_id, aviso)
     if not encontrados:
         if not en_voz:
             send_text(chat_id, f"No encontré «{patron}» en la lista.")
@@ -6722,21 +7104,22 @@ def atender_temporizador(chat_id: int, texto: str, origen: str, en_voz: bool) ->
         # temporizadores; si no, sigue su camino normal.
         if temporizadores_mod.interpretar(texto, sonando=False) is None:
             return False
-        send_text(chat_id, "❌ Los temporizadores no están disponibles ahora "
-                           f"(¿el volumen cifrado está cerrado?): {redact(exc)}")
+        aviso = ("❌ Los temporizadores no están disponibles ahora "
+                 f"(¿el volumen cifrado está cerrado?): {redact(exc)}")
+        # 97: en la sala no puede quedar en silencio: un temporizador que no se creó es una olla quemada.
+        responder(origen_de(en_voz), chat_id, aviso,
+                  _en_sala(origen_de(en_voz), "Los temporizadores no están disponibles ahora."))
         audit("temporizador", origen, "error")
         return True
     if respuesta is None:
         return False
     if not isinstance(respuesta, str):
+        # Las órdenes llevan su teclado (deshacer, ✅ guardar): el chat lo manda responder_orden.
         respuesta = responder_orden(chat_id, respuesta, texto, origen)
+        _hablar(origen_de(en_voz), chat_id, respuesta)
     else:
-        send_text(chat_id, f"⏲️ {respuesta}")
+        responder(origen_de(en_voz), chat_id, f"⏲️ {respuesta}", respuesta if en_voz else None)
     audit("temporizador", origen)
-    if en_voz:
-        audio = sintetizar(respuesta)
-        if audio:
-            send_voice(chat_id, audio)
     return True
 
 
@@ -6753,9 +7136,13 @@ def _spotify_artistas(item: dict[str, Any]) -> str:
 
 
 def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
-    """Atiende Spotify localmente; las órdenes multimedia no se dicen por voz."""
+    """Atiende Spotify localmente; las órdenes multimedia no se dicen por voz.
+
+    97: pasa por responder(). Lo que funcionó se calla también en la sala (frase "": suena la música o
+    se corta); un error sí se dice en la sala, y por Telegram sigue sin audio."""
     if spotify_mod is None:
         return False
+    salida = origen_de(en_voz)
     cfg = PERFIL_CFG.get("spotify")
     # Sólo el vocativo del perfil que atiende se elimina. Uno dirigido al otro
     # asistente queda intacto y debe continuar por su flujo normal.
@@ -6765,7 +7152,7 @@ def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
     inicial = spotify_mod.interpretar(limpio, sonando=False)
     if not cfg:
         if inicial:
-            send_text(chat_id, f"Spotify no está configurado para {NOMBRE}")
+            responder(salida, chat_id, f"Spotify no está configurado para {NOMBRE}", _en_sala(salida, f"Spotify no está configurado para {NOMBRE}."))
             return True
         return False
     # La gran mayoría de las frases no son música. No consultar receptores para
@@ -6781,7 +7168,7 @@ def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
         except spotify_mod.SpotifyError:
             if base == cfg["api"]:
                 if inicial:
-                    send_text(chat_id, "No pude usar Spotify ahora.")
+                    responder(salida, chat_id, "No pude usar Spotify ahora.", _en_sala(salida, "No pude usar Spotify ahora."))
                     return True
                 return False
             # 88d: el receptor del otro perfil sólo se consulta para saber si hay que
@@ -6800,21 +7187,21 @@ def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
             for base, estado_actual in estados.items():
                 if _spotify_suena(estado_actual):
                     spotify_mod.pausar(base)
-            send_text(chat_id, "⏸️ Spotify en pausa.")
+            responder(salida, chat_id, "⏸️ Spotify en pausa.", "")
             return True
         if propio is None:
-            send_text(chat_id, "Falta vincular tu Spotify: /spotify")
+            responder(salida, chat_id, "Falta vincular tu Spotify: /spotify")
             return True
         if intencion["accion"] == "sigue":
             spotify_mod.reanudar(cfg["api"])
-            send_text(chat_id, f"▶️ Spotify de {PERSONA} sigue.")
+            responder(salida, chat_id, f"▶️ Spotify de {PERSONA} sigue.", "")
             return True
         elegido = spotify_mod.elegir(
             spotify_mod.buscar(intencion, requests.Session()),
             intencion.get("titulo", ""), intencion.get("artista", ""),
         )
         if not elegido or not elegido.get("uri"):
-            send_text(chat_id, "No encontré esa música en Spotify.")
+            responder(salida, chat_id, "No encontré esa música en Spotify.", _en_sala(salida, "No encontré esa música en Spotify."))
             return True
         # El otro receptor se pausa ANTES del play propio, siempre en ese orden.
         for base in cfg["otros"]:
@@ -6823,11 +7210,11 @@ def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
         spotify_mod.reproducir(cfg["api"], str(elegido["uri"]))
         titulo = str(elegido.get("name", intencion.get("artista", "Spotify")))
         artistas = _spotify_artistas(elegido)
-        send_text(chat_id, f"▶️ {titulo}" + (f" — {artistas}" if artistas else "") +
-                  f" · Spotify de {PERSONA}")
+        responder(salida, chat_id, f"▶️ {titulo}" + (f" — {artistas}" if artistas else "") +
+                  f" · Spotify de {PERSONA}", "")
         return True
     except spotify_mod.SpotifyError:
-        send_text(chat_id, "No pude usar Spotify ahora.")
+        responder(salida, chat_id, "No pude usar Spotify ahora.", _en_sala(salida, "No pude usar Spotify ahora."))
         return True
 
 
@@ -7268,10 +7655,11 @@ def atender_comuna(chat_id: int, pedido: dict[str, str], dicho: str, en_voz: boo
             audit("clima_comuna_opciones", str(len(filas)))
         else:
             texto, con_botones = COMUNA_NO_CONOZCO, False
-    if not con_botones:
-        send_text(chat_id, texto)
-    if en_voz and (audio := sintetizar(texto)):
-        send_voice(chat_id, audio)
+    # 97: con botones, la pregunta ya quedó en el chat y la voz sólo la repite.
+    if con_botones:
+        _hablar(origen_de(en_voz), chat_id, texto)
+    else:
+        responder(origen_de(en_voz), chat_id, texto, texto)
 
 
 def atender_ubicacion(chat_id: int, ubicacion: dict[str, Any]) -> bool:
@@ -7508,32 +7896,24 @@ def atender_compras(chat_id: int, accion: str, argumento: str,
             respuesta = "✅ Marcado: " + ", ".join(i["texto"] for i in r["marcados"])
             if r["no_encontrados"]:
                 respuesta += "\nNo encontré: " + ", ".join(r["no_encontrados"])
-            send_text(chat_id, respuesta)
-            if en_voz and (audio := sintetizar(respuesta)):
-                send_voice(chat_id, audio)
+            responder(origen_de(en_voz), chat_id, respuesta, respuesta)
         elif accion == "faltantes":
             items = compras_mod.faltantes()
             respuesta = ("No faltan compras." if not items else
                          (f"Falta una cosa: {items[0]['texto']}." if len(items) == 1 else
                           compras_mod.para_recitar(items).replace("En la lista hay", "Faltan")))
-            send_text(chat_id, respuesta)
             hablado = (f"Son {len(items)} cosas, mejor te la mando escrita."
                       if en_voz and len(items) > compras_mod.MAX_ITEMS_EN_VOZ else respuesta)
-            if en_voz and (audio := sintetizar(hablado)):
-                send_voice(chat_id, audio)
+            responder(origen_de(en_voz), chat_id, respuesta, hablado)
         elif accion == "cuantas":
             n = len(compras_mod.leer())
             respuesta = f"Hay {n} {'cosa' if n == 1 else 'cosas'} en la lista."
-            send_text(chat_id, respuesta)
-            if en_voz and (audio := sintetizar(respuesta)):
-                send_voice(chat_id, audio)
+            responder(origen_de(en_voz), chat_id, respuesta, respuesta)
         elif accion == "esta":
             encontrados = compras_mod.buscar(argumento)
             respuesta = (f"Sí, la anotó {encontrados[0]['quien']}." if len(encontrados) == 1
                          else ("Hay más de una coincidencia en la lista." if encontrados else "No está en la lista."))
-            send_text(chat_id, respuesta)
-            if en_voz and (audio := sintetizar(respuesta)):
-                send_voice(chat_id, audio)
+            responder(origen_de(en_voz), chat_id, respuesta, respuesta)
         elif accion == "deshacer" and origen == "voz":
             # 67 (M5): dictado no se ejecuta. Deshacer un «agrega» saca cosas de la
             # lista, así que pide el mismo ↩️ del menú de /compras, tocado en el chat.
@@ -7541,14 +7921,11 @@ def atender_compras(chat_id: int, accion: str, argumento: str,
                                      "reply_markup": {"inline_keyboard": [[
                                          {"text": "↩️ Deshacer", "callback_data": "cmp:m:undo"},
                                          BOTON_MENU_COMPRAS]]}})
-            if en_voz and (audio := sintetizar(COMPRAS_DESHACER_DICHO)):
-                send_voice(chat_id, audio)
+            _hablar(origen_de(en_voz), chat_id, COMPRAS_DESHACER_DICHO)
         elif accion == "deshacer":
             restaurados = compras_mod.deshacer(PERFIL)
             respuesta = "↩️ Deshecho: " + ", ".join(restaurados) if restaurados else "No hay una acción reciente de compras que deshacer."
-            send_text(chat_id, respuesta)
-            if en_voz and (audio := sintetizar(respuesta)):
-                send_voice(chat_id, audio)
+            responder(origen_de(en_voz), chat_id, respuesta, respuesta)
         elif accion == "enviar":
             compras_enviar(chat_id)
         elif accion == "enviar_a":
@@ -7947,6 +8324,282 @@ def callback_remoto(query_id: str, accion: str) -> None:
                                       "text": "Pedido de abrir enviado" if accion == "abrir" else "Pedido de cierre enviado"})
 
 
+# --- Bluetooth (encargo 101b) --------------------------------------------------------
+# /bt habla sólo con bt-control por su socket (bluetooth.py): el bot no toca el Bluetooth.
+# Los nombres los manda un equipo ajeno, así que todo va sin parse_mode. Los botones
+# contestan al tiro y lo que espera al socket corre en un hilo: el bot atiende de a una
+# actualización y no puede quedar sordo si bt-control tarda. Cada bot vigila sólo las
+# ventanas que abrió (o reusó) desde su chat, y avisa sólo en ese chat.
+BT_CADA = 2.0           # cada cuánto el hilo pregunta por la ventana
+BT_MARGEN = 30          # cuánto más allá de `quedan` sigue preguntando si bt-control no contesta
+BT_MAX_EQUIPOS = 8
+BT_NO_RESPONDE = "El Bluetooth no responde"
+BT_VIGILADAS: set[str] = set()
+BT_LOCK = threading.Lock()
+
+
+def _bt_frase(exc: BaseException) -> str:
+    """Un error de bluetooth.py dicho para el chat. Nunca trae la ruta ni la excepción."""
+    codigo = getattr(exc, "codigo", "")
+    LOG.warning("bt: %s", codigo if isinstance(codigo, str) and codigo.isidentifier() else "error")
+    if codigo == "mac":
+        return "Ese equipo ya no está emparejado. Toca 📋 Estado."
+    if codigo in {"bluez", "sin_bluez"}:
+        return "El Bluetooth de la Pi no hizo lo que le pedí."
+    if codigo == "ocupado":
+        return "El Bluetooth está ocupado. Prueba en un momento."
+    return f"{BT_NO_RESPONDE}."
+
+
+def _bt_minutos(segundos: int) -> str:
+    return f"{segundos // 60}:{segundos % 60:02d}"
+
+
+def _bt_teclado_estado() -> dict[str, Any]:
+    return {"inline_keyboard": [[{"text": "📋 Estado", "callback_data": "bt:est"},
+                                 {"text": "➕ Emparejar", "callback_data": "bt:emp"}]]}
+
+
+def _vista_bt(datos: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    """El mensaje de /bt y sus botones: uno por equipo para conectar o desconectar y otro
+    para olvidarlo. Todo se lee al tocar, nunca de cuando se dibujó."""
+    lineas = ["🔵 Bluetooth de la Pi"]
+    if not datos["bluez"]:
+        lineas.append("⚠️ El Bluetooth de la Pi no está disponible ahora.")
+    equipos = datos["dispositivos"]
+    if equipos:
+        lineas += [f"{'🟢' if d['conectado'] else '⚪'} {d['nombre']} — "
+                   f"{'conectado' if d['conectado'] else 'desconectado'}" for d in equipos]
+    else:
+        lineas.append("No hay equipos emparejados.")
+    sonando = datos["sonando"]
+    if sonando is None:
+        lineas.append("🔈 No pude ver qué suena.")
+    elif not sonando:
+        lineas.append("🔈 No suena nada por Bluetooth.")
+    for s in sonando or []:
+        lineas.append(f"🎵 Suena {s['nombre']}" + (f" en {s['codec']}" if s["codec"] else "") +
+                      (f" → {s['salida']}" if s["salida"] else ""))
+    if datos["ventana"]["abierta"]:
+        lineas.append(f"🔓 Visible como «Pi»: quedan {_bt_minutos(datos['ventana']['quedan'])}.")
+    teclado = _bt_teclado_estado()
+    for d in equipos[:BT_MAX_EQUIPOS]:
+        corto = d["nombre"][:20]
+        accion, verbo = ("des", "Desconectar") if d["conectado"] else ("con", "Conectar")
+        teclado["inline_keyboard"].append([
+            {"text": f"🔌 {verbo} {corto}", "callback_data": f"bt:{accion}:{d['mac']}"},
+            {"text": f"🗑️ Olvidar {corto}", "callback_data": f"bt:olv:{d['mac']}"}])
+    return "\n".join(lineas), teclado
+
+
+def comando_bt(chat_id: int) -> None:
+    if bluetooth_mod is None:
+        send_text(chat_id, "El Bluetooth no está desplegado en este bot.")
+        return
+    try:
+        texto, teclado = _vista_bt(bluetooth_mod.estado())
+    except bluetooth_mod.BluetoothError as exc:
+        texto, teclado = f"🔵 {_bt_frase(exc)}", _bt_teclado_estado()
+    telegram("sendMessage", {"chat_id": chat_id, "text": texto, "reply_markup": teclado})
+
+
+def _bt_mandar(metodo: str, datos: dict[str, Any]) -> None:
+    """Telegram desde un hilo: un envío fallido no corta la vigilancia de la ventana."""
+    try:
+        telegram(metodo, datos)
+    except Exception as exc:
+        if "message is not modified" not in _descripcion_telegram(exc).lower():
+            LOG.warning("bt: Telegram rechazó %s (%s)", metodo, type(exc).__name__)
+
+
+def _bt_editar(chat_id: int, mid: Any, texto: str, teclado: dict[str, Any] | None = None) -> None:
+    datos: dict[str, Any] = {"chat_id": chat_id, "message_id": mid, "text": texto}
+    if teclado is not None:
+        datos["reply_markup"] = teclado
+    _bt_mandar("editMessageText", datos)
+
+
+def _bt_hilo(funcion: Callable[..., None], *args: Any) -> None:
+    def correr() -> None:
+        try:
+            funcion(*args)
+        except Exception as exc:
+            LOG.warning("bt: el hilo falló (%s)", type(exc).__name__)
+    threading.Thread(target=correr, name="botv3-bt", daemon=True).start()
+
+
+def _bt_refrescar(chat_id: int, mid: Any) -> None:
+    try:
+        texto, teclado = _vista_bt(bluetooth_mod.estado())
+    except bluetooth_mod.BluetoothError as exc:
+        texto, teclado = f"🔵 {_bt_frase(exc)}", _bt_teclado_estado()
+    _bt_editar(chat_id, mid, texto, teclado)
+
+
+def _bt_conectar(chat_id: int, mid: Any, accion: str, mac: str) -> None:
+    funcion = bluetooth_mod.conectar if accion == "con" else bluetooth_mod.desconectar
+    try:
+        r = funcion(mac)
+    except bluetooth_mod.BluetoothError as exc:
+        send_text(chat_id, f"🔵 {_bt_frase(exc)}")
+        return
+    if r["en_curso"]:
+        send_text(chat_id, "⏳ El Bluetooth sigue en eso. Toca 📋 Estado en un rato.")
+    _bt_refrescar(chat_id, mid)
+
+
+def _bt_no_era(chat_id: int, mid: Any, texto: str, mac: str) -> None:
+    try:
+        bluetooth_mod.olvidar(mac)
+    except bluetooth_mod.BluetoothError as exc:
+        send_text(chat_id, f"🔵 No pude sacarlo: {_bt_frase(exc)}" + (
+            " Puede que igual se haya olvidado: míralo con /bt." if exc.codigo == "tiempo" else ""))
+        return
+    _bt_editar(chat_id, mid, f"{texto}\n🗑️ Lo saqué: ya no está emparejado con la Pi.")
+
+
+def _bt_olvidar(chat_id: int, mid: Any, mac: str, nombre: str) -> None:
+    try:
+        bluetooth_mod.olvidar(mac)
+    except bluetooth_mod.BluetoothError as exc:
+        _bt_editar(chat_id, mid, f"❌ No olvidé {nombre}: {_bt_frase(exc)}" + (
+            " Puede que igual se haya olvidado: míralo con /bt." if exc.codigo == "tiempo" else ""))
+        return
+    _bt_editar(chat_id, mid, f"🗑️ Olvidé {nombre}. Para volver a usarlo, emparéjalo con /bt → ➕.")
+
+
+def _bt_abrir(chat_id: int, mid: Any) -> None:
+    try:
+        v = bluetooth_mod.abrir(bluetooth_mod.VENTANA_S)
+    except bluetooth_mod.BluetoothError as exc:
+        _bt_editar(chat_id, mid, f"❌ No hice visible la Pi: {_bt_frase(exc)}")
+        return
+    if v["ya_abierta"]:
+        texto = f"🔓 La Pi ya estaba visible como «Pi»: quedan {_bt_minutos(v['quedan'])}."
+    else:
+        texto = (f"🔓 La Pi está visible como «Pi» por {_bt_minutos(v['quedan'])} min.\n"
+                 "En el teléfono: Bluetooth → «Pi», y acepta el código.")
+    _bt_editar(chat_id, mid, texto + "\nTe aviso aquí quién se empareje.")
+    with BT_LOCK:
+        if v["id"] in BT_VIGILADAS:
+            return
+        BT_VIGILADAS.add(v["id"])
+    try:
+        _bt_vigilar(chat_id, v["id"], v["quedan"])
+    finally:
+        with BT_LOCK:
+            BT_VIGILADAS.discard(v["id"])
+
+
+def _bt_vigilar(chat_id: int, ident: str, quedan: int) -> None:
+    """Pregunta por la ventana cada BT_CADA s hasta que se cierre. Un mensaje por
+    `emparejado` y uno al cerrar; `codigo` y `descartado` no se avisan."""
+    desde, limite = 0, time.monotonic() + quedan + BT_MARGEN
+    while True:
+        try:
+            r = bluetooth_mod.ventana(ident, desde)
+        except bluetooth_mod.BluetoothError as exc:
+            if exc.codigo != "id" and time.monotonic() < limite:
+                time.sleep(BT_CADA)
+                continue
+            # La ventana ya no existe o bt-control no contestó hasta pasado el plazo: BlueZ
+            # cierra sola la visibilidad al vencer (PairableTimeout y DiscoverableTimeout).
+            _bt_mandar("sendMessage", {"chat_id": chat_id, "text":
+                       "🔒 La Pi dejó de ser visible. El Bluetooth no respondió hasta el final: "
+                       "mira con /bt si alguien se emparejó."})
+            return
+        limite = time.monotonic() + r["quedan"] + BT_MARGEN
+        cerrada = False
+        for e in r["eventos"]:
+            desde = max(desde, e["n"])
+            if e["tipo"] == "emparejado":
+                codigo = f"código {e['codigo']}" if e["codigo"] else "sin código"
+                _bt_mandar("sendMessage", {
+                    "chat_id": chat_id, "text": f"✅ Se emparejó «{e['nombre']}» ({codigo})",
+                    "reply_markup": {"inline_keyboard": [[
+                        {"text": "🗑️ No era este", "callback_data": f"bt:nee:{e['mac']}"}]]}})
+            elif e["tipo"] == "cerrada":
+                cerrada = True
+        if cerrada or not r["abierta"]:
+            _bt_mandar("sendMessage", {"chat_id": chat_id, "text": "🔒 La Pi dejó de ser visible"})
+            return
+        time.sleep(BT_CADA)
+
+
+def _bt_nombre_del_boton(message: dict[str, Any], data: str) -> str:
+    """El nombre corto del equipo, del mismo botón tocado (lo dibujó este bot)."""
+    for fila in (message.get("reply_markup") or {}).get("inline_keyboard") or []:
+        for b in fila if isinstance(fila, list) else []:
+            if isinstance(b, dict) and b.get("callback_data") == data:
+                return str(b.get("text", "")).removeprefix("🗑️ Olvidar ").strip()[:20]
+    return ""
+
+
+def callback_bt(chat_id: int, query_id: str, message: dict[str, Any], data: str) -> None:
+    """Los botones `bt:<acción>[:<arg>]`. El arg es una MAC (con sus `:`) o el id de una propuesta."""
+    accion, _, arg = data[3:].partition(":")
+
+    def toque(texto: str = "") -> None:
+        try:
+            telegram("answerCallbackQuery", {"callback_query_id": query_id, **({"text": texto} if texto else {})})
+        except requests.RequestException as exc:
+            LOG.info("callback de bt vencido: %s", redact(_descripcion_telegram(exc)))
+
+    if bluetooth_mod is None:
+        toque("El Bluetooth no está desplegado en este bot")
+        return
+    mid = message.get("message_id")
+    mac = arg if bluetooth_mod.RE_MAC.fullmatch(arg) else ""
+    if accion == "est" and not arg:
+        toque()
+        _bt_hilo(_bt_refrescar, chat_id, mid)
+    elif accion == "emp" and not arg:
+        # Hacer visible la Pi es abrirla a cualquiera que esté cerca: pide ✅ aparte.
+        pid = _nueva_propuesta({"tipo": "bt_abrir"})
+        toque()
+        telegram("sendMessage", {"chat_id": chat_id, "text":
+                 "➕ ¿Hago visible la Pi por 3 minutos?\nCualquiera que esté cerca podrá emparejarse "
+                 "en ese rato. Te aviso aquí quién fue, con un botón para sacarlo.",
+                 "reply_markup": {"inline_keyboard": [[{"text": "✅ Hacer visible", "callback_data": f"bt:si:{pid}"},
+                                                       {"text": "✖️ No", "callback_data": f"bt:no:{pid}"}]]}})
+    elif accion in {"con", "des"} and mac:
+        toque("Conectando…" if accion == "con" else "Desconectando…")
+        _bt_hilo(_bt_conectar, chat_id, mid, accion, mac)
+    elif accion == "nee" and mac:
+        toque("Lo saco…")
+        _bt_hilo(_bt_no_era, chat_id, mid, str(message.get("text", "")), mac)
+    elif accion == "olv" and mac:
+        corto = _bt_nombre_del_boton(message, data)
+        nombre = (f"«{corto}» (…{mac[-5:]})" if corto else f"el equipo …{mac[-5:]}")
+        pid = _nueva_propuesta({"tipo": "bt_olvidar", "mac": mac, "nombre": nombre})
+        toque()
+        telegram("sendMessage", {"chat_id": chat_id, "text":
+                 f"🗑️ ¿Olvido {nombre}?\nSe desconecta, y para volver a usarlo hay que emparejarlo otra vez.",
+                 "reply_markup": {"inline_keyboard": [[{"text": "✅ Olvidar", "callback_data": f"bt:si:{pid}"},
+                                                       {"text": "✖️ No", "callback_data": f"bt:no:{pid}"}]]}})
+    elif accion in {"si", "no"} and arg:
+        # pop bajo candado y sólo si es de /bt: un botón tocado dos veces actúa una.
+        with PROPUESTAS_LOCK:
+            propuesta = PROPUESTAS.get(arg)
+            if propuesta is None or propuesta.get("tipo") not in {"bt_abrir", "bt_olvidar"}:
+                propuesta = None
+            else:
+                PROPUESTAS.pop(arg, None)
+        if propuesta is None:
+            toque("Eso ya venció o se usó")
+        elif accion == "no":
+            toque("No hice nada")
+            _bt_editar(chat_id, mid, "✖️ No hice nada.")
+        elif propuesta["tipo"] == "bt_abrir":
+            toque("Haciendo visible la Pi…")
+            _bt_hilo(_bt_abrir, chat_id, mid)
+        else:
+            toque("Olvidando…")
+            _bt_hilo(_bt_olvidar, chat_id, mid, propuesta["mac"], propuesta["nombre"])
+    else:
+        toque("Botón antiguo o no disponible")
+
+
 NO_CORRESPONDE = "No corresponde a este bot"
 # (área, botón, ruta que exige o None, qué hace). Es la única lista: el botón de
 # clima del encargo 69 es una línea más acá. Las funciones se buscan por nombre al
@@ -7961,6 +8614,7 @@ AREAS_MENU: tuple[tuple[str, str, str | None, Callable[[int], None]], ...] = (
     ("buscar", "🔎 Buscar", None, lambda c: comando_buscar(c, "")),
     # Sin ruta: lo exige `clima` en el perfil (ver areas_del_perfil).
     ("clima", "🌦️ Clima", None, lambda c: comando_clima(c)),
+    ("bluetooth", "🔵 Bluetooth", None, lambda c: comando_bt(c)),
     ("estado", "🩺 Estado", None, lambda c: comando_estado(c)),
     ("uso", "💳 Uso", None, lambda c: comando_uso(c)),
     ("remoto", "📱 Remote Control", None, lambda c: comando_remoto(c)),
@@ -7990,6 +8644,45 @@ def callback_menu(chat_id: int, query_id: str, area: str) -> None:
     abrir(chat_id)
 
 
+def _teclado_tecnica(elegibles: list[str]) -> dict[str, Any]:
+    return {"inline_keyboard": [[{"text": "🤖 Automático", "callback_data": "ct:auto"}]] +
+            [[{"text": CUENTAS_NOMBRE.get(c, c), "callback_data": f"ct:{c}"}] for c in elegibles]}
+
+
+def comando_cuenta_tecnica(chat_id: int) -> None:
+    """/cuenta_tecnica (96): el modo vigente de la ruta técnica y un botón por cuenta elegible de ESTE perfil."""
+    if RUTA_TECNICA not in ALLOWED_AUTO_ROUTES:
+        send_text(chat_id, "La ruta técnica no corresponde a este bot.")
+        return
+    elegibles = elegibles_tecnica()
+    modo, fija, origen = modo_tecnica(elegibles)
+    vigente = "automática: la que tenga más margen" if modo == "auto" else f"fija: {CUENTAS_NOMBRE.get(fija, fija)}"
+    desde = "desde Telegram" if origen == "telegram" else "según 💳 Cuentas (el perfil)"
+    telegram("sendMessage", {"chat_id": chat_id, "reply_markup": _teclado_tecnica(elegibles), "text":
+             f"🛠️ Cuenta de la ruta técnica: {vigente}, {desde}.\n"
+             f"Puede contestar: {', '.join(CUENTAS_NOMBRE.get(c, c) for c in elegibles) or 'ninguna'}.\n"
+             "Si la elegida está sobre el umbral o falla, contesta la siguiente y te digo cuál."})
+
+
+def callback_cuenta_tecnica(chat_id: int, query_id: str, eleccion: str) -> None:
+    elegibles = elegibles_tecnica()
+    if RUTA_TECNICA not in ALLOWED_AUTO_ROUTES:
+        respuesta = "La ruta técnica no corresponde a este bot."
+    elif eleccion != "auto" and eleccion not in elegibles:
+        nombre = CUENTAS_NOMBRE.get(eleccion, "esa cuenta")
+        respuesta = f"{nombre} no puede contestar la ruta técnica en este bot."
+    else:
+        try:
+            guardar_cuenta_tecnica("auto" if eleccion == "auto" else "fija", None if eleccion == "auto" else eleccion)
+            respuesta = ("🤖 Ruta técnica en automático: contesta la que tenga más margen." if eleccion == "auto"
+                         else f"🛠️ La ruta técnica parte por {CUENTAS_NOMBRE.get(eleccion, eleccion)}.")
+        except OSError as exc:
+            LOG.warning("no pude guardar cuenta-tecnica.json: %s", type(exc).__name__)
+            respuesta = "❌ No pude guardar la cuenta técnica."
+    telegram("answerCallbackQuery", {"callback_query_id": query_id, "text": respuesta[:190]})
+    send_text(chat_id, respuesta)
+
+
 def handle_callback(query: dict[str, Any]) -> None:
     data = str(query.get("data", ""))
     message = query.get("message") or {}
@@ -8012,6 +8705,13 @@ def handle_callback(query: dict[str, Any]) -> None:
         return
     if data.startswith("ggm:"):
         callback_google_menu(chat_id, query_id, data[4:])
+        return
+    if data.startswith("ct:"):
+        callback_cuenta_tecnica(chat_id, query_id, data[3:])
+        return
+    if data.startswith("bt:"):
+        # Antes del split: la MAC de un botón trae sus propios «:».
+        callback_bt(chat_id, query_id, message, data)
         return
     partes = data.split(":")
     if len(partes) != 3 or partes[0] not in {"mem", "cmp", "ggl", "cal", "ord", "mlv", "bol", "clm", "cmn"}:
@@ -8169,64 +8869,7 @@ def handle_message(message: dict[str, Any]) -> None:
         # equivoca con nombres propios y hay que poder ver de qué texto partió la
         # respuesta sin tener que volver a escuchar el audio.
         send_text(chat_id, f"🎤 Entendí: {dicho}")
-        # «Jaime, pregúntale a Codex…» (06b): es una consulta, así que no pasa por
-        # memoria ni por compras. La frase se quita antes de clasificar.
-        cuenta, pregunta = extraer_cuenta(dicho)
-        if cuenta:
-            if not pregunta:
-                send_text(chat_id, f"¿Qué le pregunto a {CUENTAS_NOMBRE.get(cuenta, cuenta)}?")
-                return
-            submit_query("auto", pregunta, en_voz=True,
-                         whisper_s=time.monotonic() - t_whisper, cuenta=cuenta)
-            return
-        guardar = GUARDAR_RE.match(dicho)
-        if guardar:
-            # No rompe la regla de al lado: dictar "guardar en memoria" NO
-            # ejecuta nada, sólo deja una propuesta que hay que confirmar con
-            # un botón desde esta cuenta. La voz propone, el chat decide.
-            proponer_memoria(chat_id, guardar.group(1), "voz")
-            return
-        if atender_temporizador(chat_id, dicho, "voz", en_voz=True):
-            return
-        if atender_spotify(chat_id, dicho, en_voz=True):
-            return
-        # 69: hora y clima sin modelo, después de temporizadores («mañana a las 7» es
-        # de ellos) y antes de gasto, agenda, nodo y compras.
-        if atender_hora_o_clima(chat_id, dicho, en_voz=True):
-            return
-        # 67: antes que nodo y compras, y sólo con la ruta boleta en el perfil; sin
-        # ella la frase sigue a n8n como hasta ahora y no se habla de gastos.
-        gasto = intencion_gasto(dicho) if _gastos_activos() else None
-        if gasto:
-            atender_gasto_dicho(chat_id, gasto, en_voz=True)
-            return
-        # 68: agenda y correo sin modelo, sólo con la ruta google; antes que nodo y compras.
-        if atender_frase_google(chat_id, dicho, en_voz=True, whisper_s=time.monotonic() - t_whisper):
-            return
-        nodo = intencion_nodo(dicho)
-        if nodo:
-            atender_nodo(chat_id, nodo, "voz", en_voz=True)
-            return
-        compra = intencion_compras(dicho)
-        if compra:
-            # La lista de compras SÍ se puede tocar hablando, y no contradice la
-            # regla de al lado: no se ejecuta ningún comando ni se escribe en un
-            # vault, se edita un archivo de la casa. Lo destructivo —sacar cosas—
-            # igual pide un botón desde este chat.
-            #
-            # DECISIÓN DE DIEGO, 20-09-2026: cuando llegue el micrófono de sala
-            # entra por acá igual, sin confirmación para agregar. El wake word no
-            # autentica —una visita puede decir "Jaime, agrega cerveza"— y se
-            # acepta: el daño máximo es un ítem de más en una lista de compras,
-            # se ve al leerla y se borra en un toque. NO extender este criterio a
-            # `guardar_memoria`, que sí es permanente y por eso sigue pidiendo
-            # botón aunque venga de una cuenta autorizada.
-            atender_compras(chat_id, compra[0], compra[1], "voz", en_voz=True)
-            return
-        # Una transcripción NUNCA se ejecuta como comando, aunque empiece con "/":
-        # entra como consulta normal. Un comando se escribe, no se dicta.
-        submit_query("auto", dicho, en_voz=True,
-                     whisper_s=time.monotonic() - t_whisper)
+        atender_transcrito(chat_id, dicho, t_whisper)
         return
     text = message.get("text")
     if not isinstance(text, str):
@@ -8252,6 +8895,9 @@ def handle_message(message: dict[str, Any]) -> None:
     if str(respuesta_a.get("text", "")).startswith("🛒 Una cosa por línea"):
         atender_compras(chat_id, "agregar", text, "telegram", en_voz=False)
         return
+    # 96: el selector escrito, igual que dicho; un /comando nunca es un selector.
+    if not text.lstrip().startswith("/") and atender_selector(chat_id, text, False):
+        return
     cuenta, pregunta = cuenta_pedida(text, True)
     if cuenta:
         if not pregunta:
@@ -8263,6 +8909,8 @@ def handle_message(message: dict[str, Any]) -> None:
         guardar = GUARDAR_RE.match(text)
         if guardar:
             proponer_memoria(chat_id, guardar.group(1), "telegram")
+            return
+        if atender_capacidades(chat_id, text, en_voz=False):
             return
         if atender_temporizador(chat_id, text, "telegram", en_voz=False):
             return
@@ -8312,6 +8960,10 @@ def handle_message(message: dict[str, Any]) -> None:
         comando_temporizadores(chat_id, command, argument)
     elif command == "/spotify":
         comando_spotify(chat_id)
+    elif command == "/bt":
+        comando_bt(chat_id)
+    elif command == "/cuenta_tecnica":
+        comando_cuenta_tecnica(chat_id)
     elif command in {"/ordenes", "/recurrentes"}:
         comando_ordenes(chat_id, argument)
     elif command == "/estado":
@@ -8351,6 +9003,196 @@ def handle_message(message: dict[str, Any]) -> None:
         send_text(chat_id, "Comando no reconocido. Usa /ayuda.")
 
 
+def atender_transcrito(chat_id: int, dicho: str, t_whisper: float) -> None:
+    """Lo dicho, ya transcrito: el camino de una nota de voz de Telegram y (97) el de la sala, que
+    llega por `atender_dicho` con `_SALIDA.sala` puesto. `origen` de las intenciones sigue siendo
+    «voz»: la sala tampoco autentica, así que lo que escribe sigue pidiendo ✅ en el chat."""
+    # 96: «pregunta técnica: …» elige la ruta, antes de la cuenta 06b y de toda intención local.
+    if atender_selector(chat_id, dicho, True, time.monotonic() - t_whisper):
+        return
+    # «Jaime, pregúntale a Codex…» (06b): es una consulta, así que no pasa por
+    # memoria ni por compras. La frase se quita antes de clasificar.
+    cuenta, pregunta = extraer_cuenta(dicho)
+    if cuenta:
+        if not pregunta:
+            aviso = f"¿Qué le pregunto a {CUENTAS_NOMBRE.get(cuenta, cuenta)}?"
+            responder(origen_de(True), chat_id, aviso, _en_sala(origen_de(True), aviso))
+            return
+        submit_query("auto", pregunta, en_voz=True,
+                     whisper_s=time.monotonic() - t_whisper, cuenta=cuenta)
+        return
+    guardar = GUARDAR_RE.match(dicho)
+    if guardar:
+        # No rompe la regla de al lado: dictar "guardar en memoria" NO
+        # ejecuta nada, sólo deja una propuesta que hay que confirmar con
+        # un botón desde esta cuenta. La voz propone, el chat decide.
+        proponer_memoria(chat_id, guardar.group(1), "voz")
+        return
+    # 97 (M4): «qué puedes hacer», entera; antes de las intenciones que podrían tomar «qué haces».
+    if atender_capacidades(chat_id, dicho, en_voz=True):
+        return
+    if atender_temporizador(chat_id, dicho, "voz", en_voz=True):
+        return
+    if atender_spotify(chat_id, dicho, en_voz=True):
+        return
+    # 69: hora y clima sin modelo, después de temporizadores («mañana a las 7» es
+    # de ellos) y antes de gasto, agenda, nodo y compras.
+    if atender_hora_o_clima(chat_id, dicho, en_voz=True):
+        return
+    # 67: antes que nodo y compras, y sólo con la ruta boleta en el perfil; sin
+    # ella la frase sigue a n8n como hasta ahora y no se habla de gastos.
+    gasto = intencion_gasto(dicho) if _gastos_activos() else None
+    if gasto:
+        atender_gasto_dicho(chat_id, gasto, en_voz=True)
+        return
+    # 68: agenda y correo sin modelo, sólo con la ruta google; antes que nodo y compras.
+    if atender_frase_google(chat_id, dicho, en_voz=True, whisper_s=time.monotonic() - t_whisper):
+        return
+    nodo = intencion_nodo(dicho)
+    if nodo:
+        atender_nodo(chat_id, nodo, "voz", en_voz=True)
+        return
+    compra = intencion_compras(dicho)
+    if compra:
+        # La lista de compras SÍ se puede tocar hablando, y no contradice la
+        # regla de al lado: no se ejecuta ningún comando ni se escribe en un
+        # vault, se edita un archivo de la casa. Lo destructivo —sacar cosas—
+        # igual pide un botón desde este chat.
+        #
+        # DECISIÓN DE DIEGO, 20-09-2026: cuando llegue el micrófono de sala
+        # entra por acá igual, sin confirmación para agregar. El wake word no
+        # autentica —una visita puede decir "Jaime, agrega cerveza"— y se
+        # acepta: el daño máximo es un ítem de más en una lista de compras,
+        # se ve al leerla y se borra en un toque. NO extender este criterio a
+        # `guardar_memoria`, que sí es permanente y por eso sigue pidiendo
+        # botón aunque venga de una cuenta autorizada.
+        atender_compras(chat_id, compra[0], compra[1], "voz", en_voz=True)
+        return
+    # Una transcripción NUNCA se ejecuta como comando, aunque empiece con "/":
+    # entra como consulta normal. Un comando se escribe, no se dicta.
+    submit_query("auto", dicho, en_voz=True,
+                 whisper_s=time.monotonic() - t_whisper)
+
+
+# --- «Qué puedes hacer» (encargo 97, M4) -----------------------------------------------
+# Frases enteras y ancladas: «ayuda con la lista» sigue su camino. El texto lo aprobó Diego el
+# 25-10-2026 y no se reescribe: cada línea sale sólo si este bot la puede cumplir.
+_CAPACIDADES_RE = re.compile(
+    rf"{_ANTES_DE_LA_FRASE}(?:que\s+puedes\s+hacer|que\s+sabes\s+hacer|para\s+que\s+sirves|que\s+haces|ayuda)"
+    rf"(?:[\s,]+(?:{_nombres_vocativo}))?{_CIERRA}$")
+
+
+def intencion_capacidades(texto: str) -> bool:
+    return isinstance(texto, str) and len(texto) <= 120 and bool(_CAPACIDADES_RE.match(_plano(texto)))
+
+
+def texto_capacidades() -> tuple[str, str]:
+    """(texto_chat, frase_hablada), con lo que este perfil tiene activo."""
+    temporiz = temporizadores_mod is not None
+    compras = compras_mod is not None
+    gastos = _gastos_activos()
+    agenda = _google_activo()
+    clima = CLIMA is not None
+    lineas = ["Esto puedo hacer, escrito o por voz:", ""]
+    if temporiz:
+        lineas += ["⏰ Temporizadores y alarmas — «temporizador de 10 minutos para los tallarines»",
+                   "🔁 Órdenes que se repiten — «despiértame de lunes a viernes a las 6:30»"]
+    if compras:
+        lineas.append("🛒 Compras — «falta leche», «qué hay en la lista»")
+    if gastos:
+        lineas.append("💳 Gastos — «anota un gasto de 15 lucas en la feria» (se confirma acá)")
+    if agenda:
+        lineas.append("📅 Agenda y correo — «qué tengo mañana», «tengo correos nuevos»")
+    lineas.append("🌦️ Clima y hora — «va a llover hoy», «qué hora es»" if clima else "🕐 Hora — «qué hora es»")
+    if spotify_mod is not None and PERFIL_CFG.get("spotify"):
+        lineas.append("🎵 Spotify — «pon música»")
+    lineas.append("🩺 El nodo — «cómo está la Pi»")
+    selectores = [linea for ruta, linea in (
+        ("codex", "🧠 «pregunta técnica: …» — la cuenta con más margen"),
+        (None, "🔎 «busca en internet: …» — hasta 5 enlaces"),     # el buscador lo tienen todos (96)
+        ("gpt", "⚡ «pregunta rápida: …» — respuesta corta")) if ruta is None or ruta in ALLOWED_AUTO_ROUTES]
+    if selectores:
+        lineas += ["", "Para elegir quién contesta, empieza con:", *selectores]
+    lineas += ["", "Todo con botones: /menu · Detalle: /ayuda"]
+    # Hablado: «Puedo» + las primeras activas, en este orden, y «y contestar preguntas».
+    partes = []
+    if temporiz:
+        partes.append("poner temporizadores y alarmas")
+    if compras or gastos:
+        partes.append("anotar compras y gastos" if compras and gastos
+                      else ("anotar en la lista de compras" if compras else "anotar gastos"))
+    extras = (["el clima"] if clima else []) + (["tu agenda"] if agenda else [])
+    partes.append("decirte la hora" + ("" if not extras else f" y {extras[0]}" if len(extras) == 1
+                                        else f", {extras[0]} y {extras[1]}"))
+    frase = "Puedo " + ", ".join(partes[:3] + ["y contestar preguntas"]) + ". Te dejé la lista completa en el chat."
+    return "\n".join(lineas), frase
+
+
+def atender_capacidades(chat_id: int, texto: str, en_voz: bool) -> bool:
+    if not intencion_capacidades(texto):
+        return False
+    chat, frase = texto_capacidades()
+    responder(origen_de(en_voz), chat_id, chat, frase if en_voz else None)
+    return True
+
+
+# --- Entrada de la sala (encargo 97, M2) -----------------------------------------------
+# `atender_dicho` es lo que el lector de la cola de `escucha` (102c) llamará con el texto ya
+# transcrito; por ahora sólo lo usan las pruebas. Corre el mismo camino que una nota de voz de
+# Telegram, sin Whisper ni «🎤 Entendí», con el contador en canal «sala». Las frases de
+# SOLO_SALA van primero y sólo acá: por Telegram «cancela el de los tallarines» sigue siendo de
+# los temporizadores y «repite» a secas sigue al clasificador, como hoy.
+MAX_DICHO = 4000
+_CON_VOCATIVO = rf"(?:[\s,]+(?:{_nombres_vocativo}))?{_CIERRA}$"
+SOLO_SALA_RE = (
+    ("repite", re.compile(rf"{_ANTES_DE_LA_FRASE}repite(?:lo|me|melo)?(?:\s+eso)?(?:[\s,]+por\s+favor)?{_CON_VOCATIVO}")),
+    ("cancela", re.compile(rf"{_ANTES_DE_LA_FRASE}(?:cancela(?:lo)?|olvidalo|olvida\s+eso){_CON_VOCATIVO}")),
+    ("presente", re.compile(rf"{_ANTES_DE_LA_FRASE}estas\s+ahi{_CON_VOCATIVO}")),
+)
+SALA_NADA_QUE_REPETIR = "No tengo nada que repetir."
+
+
+def intencion_solo_sala(texto: str) -> str | None:
+    if not isinstance(texto, str) or len(texto) > 80:
+        return None
+    plano = _plano(texto)
+    return next((nombre for nombre, regex in SOLO_SALA_RE if regex.match(plano)), None)
+
+
+def atender_solo_sala(chat_id: int, texto: str) -> bool:
+    """«repite», «cancela»/«olvídalo» y «estás ahí»; sólo por la sala. Nada va al chat."""
+    if origen_de(True) != "sala":
+        return False
+    cual = intencion_solo_sala(texto)
+    if cual == "repite":
+        with _SALA_LOCK:
+            ultima = _SALA["ultima"]
+        frase, prioridad = ultima or (SALA_NADA_QUE_REPETIR, "normal")
+        responder("sala", chat_id, "", frase, prioridad=prioridad)
+    elif cual == "presente":
+        responder("sala", chat_id, "", "Sí.")
+    # «cancela»: corta sin responder.
+    return cual is not None
+
+
+def atender_dicho(texto: str, origen: str = "sala") -> None:
+    """Lo dicho en la sala, ya transcrito (sin Whisper)."""
+    if origen != "sala":
+        raise ValueError(f"origen no soportado: {origen!r}")
+    dicho = str(texto or "")[:MAX_DICHO].strip()
+    if not dicho:
+        return
+    previo = getattr(_SALIDA, "sala", False)
+    _SALIDA.sala = True
+    try:
+        with contando_uso({}, canal="sala"):
+            if atender_solo_sala(CHAT_ID, dicho):
+                return
+            atender_transcrito(CHAT_ID, dicho, time.monotonic())
+    finally:
+        _SALIDA.sala = previo
+
+
 def handle_update(update: dict[str, Any]) -> None:
     with contando_uso(update):      # encargo 92: el único punto de registro del contador
         message = update.get("message")
@@ -8385,11 +9227,11 @@ ALIAS_COMANDOS = {
     "/nuevo": "olvidar", "/compras": "compras", "/gastos": "gastos", "/buscar": "buscar",
     "/temporizadores": "temporizadores", "/timer": "temporizadores", "/alarmas": "temporizadores",
     "/ordenes": "ordenes", "/recurrentes": "ordenes", "/estado": "estado", "/uso": "uso", "/usos": "usos",
-    "/remoto": "remoto", "/spotify": "spotify", **{c: "mercadolibre" for c in COMANDOS_ML},
+    "/remoto": "remoto", "/spotify": "spotify", "/cuenta_tecnica": "cuenta_tecnica", "/bt": "bluetooth", **{c: "mercadolibre" for c in COMANDOS_ML},
 }
 PREFIJOS_BOTON = {"gas": "gastos", "remoto": "remoto", "ggm": "google", "mem": "memoria", "cmp": "compras",
                   "ggl": "google", "cal": "calificar", "ord": "ordenes", "mlv": "mercadolibre", "bol": "boleta",
-                  "clm": "clima", "cmn": "comuna"}
+                  "clm": "clima", "cmn": "comuna", "ct": "cuenta_tecnica", "bt": "bluetooth"}
 
 
 def funcion_de_update(update: dict[str, Any]) -> tuple[str, str | None]:
@@ -8416,18 +9258,23 @@ def funcion_de_update(update: dict[str, Any]) -> tuple[str, str | None]:
 
 
 @contextlib.contextmanager
-def contando_uso(update: dict[str, Any]):
-    """Abre el uso de esta actualización y, al salir, escribe su línea. Un no autorizado no se cuenta."""
-    origen = update.get("callback_query") or update.get("message") or {}
-    chat = (origen.get("message") or {}).get("chat", {}) if update.get("callback_query") else origen.get("chat", {})
-    try:
-        cuenta = authorized(int((chat or {}).get("id", 0)), int((origen.get("from") or {}).get("id", 0)))
-    except (TypeError, ValueError):
-        cuenta = False
+def contando_uso(update: dict[str, Any], canal: str | None = None):
+    """Abre el uso de esta actualización y, al salir, escribe su línea. Un no autorizado no se cuenta.
+    97: con `canal` («sala») no hay actualización de Telegram: se cuenta siempre (la sala no
+    autentica, nota 25) y la función la pone el primer manejador, como en una nota de voz."""
+    if canal is None:
+        origen = update.get("callback_query") or update.get("message") or {}
+        chat = (origen.get("message") or {}).get("chat", {}) if update.get("callback_query") else origen.get("chat", {})
+        try:
+            cuenta = authorized(int((chat or {}).get("id", 0)), int((origen.get("from") or {}).get("id", 0)))
+        except (TypeError, ValueError):
+            cuenta = False
+    else:
+        cuenta = True
     if REGISTRO_USOS is None or not cuenta or getattr(_USO, "actual", None) is not None:
         yield
         return
-    canal, funcion = funcion_de_update(update)
+    canal, funcion = funcion_de_update(update) if canal is None else (canal, None)
     _USO.actual = {"funcion": funcion, "error": False}
     try:
         yield
@@ -8475,6 +9322,9 @@ MARCAS = {
     "atender_nodo": (lambda chat_id, intencion, *_: intencion if intencion in ("estado", "uso") else "desconocido", False),
     "atender_compras": ("compras", False), "submit_query": (_ruta_de_consulta, False),
     "atender_spotify": ("spotify", True),
+    "atender_selector": (lambda chat_id, texto, *_: f"selector:{selector_dicho(texto)[0]}", True),
+    # 97: «qué puedes hacer» y las frases que sólo valen en la sala.
+    "atender_capacidades": ("capacidades", True), "atender_solo_sala": ("sala", True),
 }
 for _nombre, (_funcion, _condicional) in MARCAS.items():
     globals()[_nombre] = _marcador(globals()[_nombre], _funcion, _condicional)
@@ -8498,12 +9348,23 @@ send_text = _con_error(send_text, lambda chat_id, message, *a, **k: str(message)
 def catalogo_usos() -> set[str]:
     """Lo que ESTE bot tiene, para «sin usar nunca»: lo de todos, más lo que su perfil activa."""
     base = {"menu", "ayuda", "acciones", "olvidar", "compras", "temporizadores", "ordenes", "buscar",
-            "estado", "uso", "usos", "memoria", "hora", "calificar"}
+            "estado", "uso", "usos", "memoria", "hora", "calificar", "capacidades"}
+    # 97: «sala» no entra hasta que exista el micrófono (102c); si no, saldría siempre «sin usar nunca».
     base |= {a for a, _, _ in areas_del_perfil()}
     if CLIMA is not None:
         base.add("comuna")
     if not ml_falta():
         base.add("mercadolibre")
+    # 92b: lo mismo que los deja contestar (la ruta `boleta` del perfil; `comando_spotify`).
+    if "boleta" in ALLOWED_AUTO_ROUTES:
+        base.add("boleta")
+    if spotify_mod is not None and PERFIL_CFG.get("spotify"):
+        base.add("spotify")
+    # 96: los selectores dichos, cada uno con su ruta; «busca en internet» es el buscador, que todos tienen.
+    base.add("selector:buscar")
+    base |= {f"selector:{s}" for s, r in SELECTOR_RUTA.items() if r in ALLOWED_AUTO_ROUTES}
+    if RUTA_TECNICA in ALLOWED_AUTO_ROUTES:
+        base.add("cuenta_tecnica")
     return base | {f"consulta:{r}" for r in ALLOWED_AUTO_ROUTES | {"auto"}}
 
 
@@ -8712,6 +9573,7 @@ def main() -> int:
              ",".join(sorted(p for p in CLAVES if _clave(p))) or "ninguno",
              " → ".join(GENERAL_GRATIS))
     sincronizar_menu()
+    revisar_cuenta_tecnica_al_arrancar()        # 96: gana el último cambio entre 💳 Cuentas y Telegram
     if REGISTRO_USOS is not None:       # encargo 92: lo que este bot tiene, para «sin usar nunca»
         REGISTRO_USOS.publicar_catalogo(catalogo_usos())
     poll_forever()

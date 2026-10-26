@@ -34,7 +34,7 @@ LOG = logging.getLogger("botv3.usos")
 RETENCION_DIAS = 180
 DIAS_RESUMEN = 7
 BOTS = ("jaime", "pilar")
-CANALES = ("texto", "voz", "boton")
+CANALES = ("texto", "voz", "boton", "sala")      # 97: «sala», lo dicho al parlante
 RESULTADOS = ("ok", "error")
 RE_ARCHIVO = re.compile(r"usos-(\d{4})-(\d{2})\.jsonl")
 TOPE_LECTURA = 32 * 1024 * 1024
@@ -48,6 +48,12 @@ FUNCIONES = {
     "clima": "🌦️ clima", "hora": "🕐 hora", "comuna": "📍 comuna del clima", "estado": "🩺 estado",
     "uso": "💳 uso de cuotas", "usos": "📊 /usos", "remoto": "📱 Remote Control", "memoria": "🧠 memoria",
     "calificar": "⭐ calificar", "mercadolibre": "🛍️ Mercado Libre", "spotify": "🎵 Spotify",
+    "bluetooth": "🔵 Bluetooth",
+    # 96: los selectores dichos («pregunta técnica: …») y /cuenta_tecnica.
+    "selector:tecnica": "🛠️ pregunta técnica", "selector:rapida": "⚡ pregunta rápida",
+    "selector:buscar": "🔎 busca en internet", "cuenta_tecnica": "🛠️ /cuenta_tecnica",
+    # 97: «qué puedes hacer» y «repite», «cancela», «estás ahí» (sólo por la sala).
+    "capacidades": "❓ qué puedes hacer", "sala": "🔊 repite, cancela, estás ahí",
     "desconocido": "otro",
 }
 RE_CONSULTA = re.compile(r"consulta:[a-z_]{1,24}")
@@ -202,7 +208,7 @@ def resumen(carpetas: dict[str, Path | str | None], catalogo: dict[str, Iterable
         for x in recientes:
             f = por[x["funcion"]]
             f["total"] += 1
-            f[x["canal"]] += 1
+            f[x["canal"]] = f.get(x["canal"], 0) + 1     # «sala» sólo aparece si hubo
             f["error"] += x["resultado"] == "error"
         usadas = {x["funcion"] for x in todas}
         propio = catalogo.get(bot)
@@ -234,7 +240,7 @@ def texto_resumen(res: dict, nombres: dict[str, str] | None = None) -> str:
             continue
         lineas.append(f"{nombres.get(bot, bot)}: {b['total']} uso{'s' if b['total'] != 1 else ''}")
         for f, c in b["funciones"].items():
-            canales = ", ".join(f"{k} {c[k]}" for k in ("texto", "voz", "boton") if c[k])
+            canales = ", ".join(f"{k} {c[k]}" for k in ("texto", "voz", "boton", "sala") if c.get(k))
             lineas.append(f"• {nombre_funcion(f)}: {c['total']} ({canales.replace('boton', 'botón')})"
                           + (f" · {c['error']} con error" if c["error"] else ""))
         if b["nunca"]:

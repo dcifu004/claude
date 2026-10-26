@@ -56,6 +56,9 @@ os.environ["BOTV3_ML_DIR"] = str(Path(_USO_PRUEBAS.name) / "mercadolibre")
 # La lista compartida también es estado: ninguna prueba puede abrir ni bloquear
 # /opt/nodo/datos/casa, aunque sólo parezca una consulta.
 os.environ["BOTV3_CASA_DIR"] = str(Path(_USO_PRUEBAS.name) / "casa")
+# Encargo 97: la carpeta de la sala (la lee parlante) tampoco es la real.
+os.environ["VOZ_PARLANTE_DIR"] = str(Path(_USO_PRUEBAS.name) / "parlante")
+(Path(_USO_PRUEBAS.name) / "parlante").mkdir()
 
 # Encargo 69: ninguna prueba sale a Open-Meteo, tampoco desde una copia del módulo
 # cargada con otro perfil (cada una crea su SES_CLIMA). Se corta en `requests`, que
@@ -5311,8 +5314,9 @@ class GastosManualTests(unittest.TestCase):
                                run_name="__main__")
             return [c["command"] for c in enviados[0]["commands"]]
         # 66 (C6): menú corto; /estado, /uso y /acciones se llegan desde /menu.
-        self.assertEqual(menu(["web", "boleta"]), ["menu", "compras", "gastos", "temporizadores", "buscar", "ayuda"])
-        self.assertEqual(menu(["web"]), ["menu", "compras", "temporizadores", "buscar", "ayuda"])
+        # 101b: /bt en los dos perfiles.
+        self.assertEqual(menu(["web", "boleta"]), ["menu", "compras", "gastos", "temporizadores", "bt", "buscar", "ayuda"])
+        self.assertEqual(menu(["web"]), ["menu", "compras", "temporizadores", "bt", "buscar", "ayuda"])
 
 
 class GastoSinComandoTests(unittest.TestCase):
@@ -5618,9 +5622,9 @@ class MenuCentralYGoogleTests(unittest.TestCase):
             [("🛒 Compras", "menu:compras"), ("💳 Gastos", "menu:gastos")],
             [("📅 Google", "menu:google"), ("⏰ Temporizadores", "menu:temporizadores")],
             [("🔁 Órdenes", "menu:ordenes"), ("🔎 Buscar", "menu:buscar")],
-            [("🌦️ Clima", "menu:clima"), ("🩺 Estado", "menu:estado")],
-            [("💳 Uso", "menu:uso"), ("📱 Remote Control", "menu:remoto")],
-            [("❓ Ayuda", "menu:ayuda")]])
+            [("🌦️ Clima", "menu:clima"), ("🔵 Bluetooth", "menu:bluetooth")],
+            [("🩺 Estado", "menu:estado"), ("💳 Uso", "menu:uso")],
+            [("📱 Remote Control", "menu:remoto"), ("❓ Ayuda", "menu:ayuda")]])
         self.assertEqual(self.consultas, [])
 
     def test_c1_perfil_sin_boleta_ni_google_no_tiene_esos_botones(self):
@@ -5632,8 +5636,8 @@ class MenuCentralYGoogleTests(unittest.TestCase):
         self.assertEqual(self.botones(self.mandados()[0]), [
             [("🛒 Compras", "menu:compras"), ("⏰ Temporizadores", "menu:temporizadores")],
             [("🔁 Órdenes", "menu:ordenes"), ("🔎 Buscar", "menu:buscar")],
-            [("🩺 Estado", "menu:estado"), ("💳 Uso", "menu:uso")],
-            [("❓ Ayuda", "menu:ayuda")]])
+            [("🔵 Bluetooth", "menu:bluetooth"), ("🩺 Estado", "menu:estado")],
+            [("💳 Uso", "menu:uso"), ("❓ Ayuda", "menu:ayuda")]])
 
     def test_start_sin_nada_es_el_menu_y_con_algo_la_ayuda(self):
         self.escribir("/start")
@@ -5648,7 +5652,7 @@ class MenuCentralYGoogleTests(unittest.TestCase):
     def test_c2_cada_boton_da_lo_mismo_que_su_comando(self):
         pares = {"compras": "/compras", "gastos": "/gastos", "temporizadores": "/temporizadores",
                  "ordenes": "/ordenes", "estado": "/estado", "uso": "/uso", "ayuda": "/ayuda",
-                 "google": "/google", "remoto": "/remoto", "buscar": "/buscar"}
+                 "google": "/google", "remoto": "/remoto", "buscar": "/buscar", "bluetooth": "/bt"}
         # 🌦️ Clima (69) no tiene comando: su par es «clima hoy», en HoraYClimaTests (C7).
         self.assertEqual(set(pares) | {"clima"}, {a for a, _, _, _ in botv3.AREAS_MENU})
         for area, comando in pares.items():
@@ -5944,11 +5948,12 @@ class MenuCentralYGoogleTests(unittest.TestCase):
     def test_c6_menu_de_telegram_corto(self):
         from update_telegram_commands import comandos
         self.assertEqual([c["command"] for c in comandos(["boleta", "google"], "jaime")],
-                         ["menu", "compras", "gastos", "google", "temporizadores", "buscar", "remoto", "ayuda"])
+                         ["menu", "compras", "gastos", "google", "temporizadores", "bt", "buscar", "remoto", "ayuda"])
         self.assertEqual([c["command"] for c in comandos([], "pilar")],
-                         ["menu", "compras", "temporizadores", "buscar", "ayuda"])
+                         ["menu", "compras", "temporizadores", "bt", "buscar", "ayuda"])
+        # 96: /cuenta_tecnica sólo donde existe la ruta técnica (jaime la tiene; las dos de arriba, no).
         self.assertEqual([c["command"] for c in comandos(botv3.ALLOWED_AUTO_ROUTES, "jaime")],
-                         ["menu", "compras", "gastos", "google", "temporizadores", "buscar", "remoto", "ayuda"])
+                         ["menu", "compras", "gastos", "google", "temporizadores", "bt", "buscar", "cuenta_tecnica", "remoto", "ayuda"])
 
     def test_reply_de_evento_en_un_perfil_sin_google(self):
         modulo, limpiar = _perfil_temporal('nombre = "P"\nvaults = []\nrutas = ["web"]\n')
@@ -6056,6 +6061,31 @@ class AgendaCorreoLocalTests(unittest.TestCase):
                 self.dictar("qué tengo mañana")
                 self.assertEqual(self.hablado(), ["Te lo mando al chat."])
                 self.assertIn("Reunión con Pedro", self.mandados()[-1]["text"])
+
+    def test_97_c2_agenda_por_la_sala(self):
+        """Encargo 97, C2: por la sala se dice sólo cuántos, la hora y el título; el detalle va al chat. Con
+        `voz_habla_agenda` en false, sólo «Te lo mando al chat.». Nada de esto es una nota de voz de Telegram."""
+        carpeta = botv3.VOZ_PARLANTE_DIR
+        def dichos():
+            textos = [json.loads(f.read_text(encoding="utf-8"))["texto"] for f in sorted(carpeta.glob("*.json"))]
+            for f in carpeta.iterdir():
+                f.unlink()
+            return textos
+        dichos()
+        botv3.atender_dicho("¿Jaime, qué tengo mañana?")
+        self.assertEqual(dichos(), ["Mañana tienes 3. El primero, a las 10, Reunión con Pedro."])
+        self.assertIn("Oficina Apoquindo", self.mandados()[-1]["text"])
+        self.assertEqual(self.voz, [], "la sala no manda notas de voz a Telegram")
+        self.cfg["voz_habla_agenda"] = False
+        antes = len(self.mandados())
+        botv3.atender_dicho("qué tengo mañana")
+        self.assertEqual(dichos(), ["Te lo mando al chat."])
+        self.assertEqual(len(self.mandados()), antes + 1)
+        self.assertIn("Reunión con Pedro", self.mandados()[-1]["text"])
+        self.CORREOS = AgendaCorreoLocalTests.CORREOS * 2
+        self.cfg["voz_habla_agenda"] = True
+        botv3.atender_dicho("Jaime, ¿tengo correos nuevos?")
+        self.assertEqual(dichos(), ["Tienes 2 correos sin leer."])
 
     def test_c4_correo_sin_asunto(self):
         self.CORREOS = AgendaCorreoLocalTests.CORREOS * 4  # el puente simulado de la 66 lee self.CORREOS
