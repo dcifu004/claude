@@ -54,10 +54,16 @@ class FrasesTests(unittest.TestCase):
     # demostrativo o día no es un artista. Los artículos sí pueden serlo (Los Prisioneros, La Ley).
     NO_88D = ["toca sacar la basura de la cocina", "toca pagar la cuenta de la luz", "Jaime, toca pagar el arriendo de noviembre",
               "Toca regar las plantas de la terraza", "toca comprar leche de almendras", "toca a la puerta",
-              "reproduce la última nota de mi proyecto", "reproduce el audio de esta reunión", "reproduce lo de ayer de hoy"]
+              "reproduce la última nota de mi proyecto", "reproduce el audio de esta reunión", "reproduce lo de ayer de hoy",
+              # 88e (88dnr1, hallazgo 3): el posesivo o el tiempo después de un segundo «de»
+              "reproduce la nota de voz de mi mamá", "reproduce la canción de cuna de mi hija", "reproduce la grabación de anoche",
+              "reproduce el mensaje de voz de recién", "reproducir la clase de hoy de mi hijo"]
     SI_88D = [("toca Bad Guy en Spotify", "cancion"), ("tócame Bad Guy de Billie Eilish", "cancion"),
               ("reproduce Tren al sur de Los Prisioneros", "cancion"), ("reproduce Mentira de La Ley", "cancion"),
-              ("reproduce la última nota de mi banda en Spotify", "cancion")]
+              ("reproduce la última nota de mi banda en Spotify", "cancion"),
+              # 88e: las canciones que pasaban siguen pasando
+              ("reproduce Mi Gente de J Balvin", "cancion"), ("reproduce Hoy de Gloria Trevi", "cancion"),
+              ("reproduce la nota de voz de mi mamá en Spotify", "cancion")]
 
     def test_88d_frases_que_ya_no_roba(self):
         for texto in self.NO_88D:
@@ -257,6 +263,20 @@ class OtroReceptorYSigue88dTests(unittest.TestCase):
         r, enviados, llamadas = self.correr("sigue", {"http://127.0.0.1:3678": pausado, "http://127.0.0.1:3679": detenido})
         self.assertEqual((r, llamadas), (True, [("resume", "http://127.0.0.1:3678")]))
         self.assertIn("▶️ Spotify de Diego sigue.", enviados)
+
+    def test_88e_sigue_a_secas_con_el_propio_caido_es_conversacion(self):
+        """88dnr1, hallazgo 2: un receptor propio que no contesta no está en pausa. «sigue» a secas (y sus variantes)
+        devuelve False sin decir nada, igual que «pausa» a secas; una frase de música sigue diciendo el error."""
+        caido = spotify.SpotifyError("el receptor Spotify no está disponible")
+        detenido = RECEPTOR_FIXTURE["status_detenido"]
+        for texto in ("sigue", "Sigue.", "continúa", "reanuda", "Jaime, continúa", "Jaime, sigue"):
+            with self.subTest(texto=texto):
+                r, enviados, llamadas = self.correr(texto, {"http://127.0.0.1:3678": caido, "http://127.0.0.1:3679": detenido})
+                self.assertEqual((r, enviados, llamadas), (False, [], []))
+        r, enviados, llamadas = self.correr("pausa", {"http://127.0.0.1:3678": caido, "http://127.0.0.1:3679": detenido})
+        self.assertEqual((r, enviados, llamadas), (False, [], []))                  # el caso hermano, como antes
+        r, enviados, llamadas = self.correr("sigue con la música", {"http://127.0.0.1:3678": caido, "http://127.0.0.1:3679": detenido})
+        self.assertEqual((r, enviados, llamadas), (True, ["No pude usar Spotify ahora."], []))   # no es «a secas»: es música
 
 
 class ErroresYPerfilTests(unittest.TestCase):

@@ -7167,7 +7167,9 @@ def atender_spotify(chat_id: int, texto: str, en_voz: bool) -> bool:
             estados[base] = spotify_mod.estado(base)
         except spotify_mod.SpotifyError:
             if base == cfg["api"]:
-                if inicial:
+                # 88e: «sigue» a secas con el receptor propio caído no está en pausa: sigue como conversación,
+                # igual que «pausa» a secas (88dnr1, hallazgo 2).
+                if inicial and not inicial.get("sola"):
                     responder(salida, chat_id, "No pude usar Spotify ahora.", _en_sala(salida, "No pude usar Spotify ahora."))
                     return True
                 return False

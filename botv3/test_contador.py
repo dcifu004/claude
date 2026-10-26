@@ -14,6 +14,7 @@ import tempfile
 import types
 import unittest
 from datetime import datetime, timedelta, timezone
+from unittest import mock
 
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
@@ -62,6 +63,8 @@ socket.getaddrinfo = _sin_red("socket.getaddrinfo")
 urllib.request.urlopen = _sin_red("urllib.request.urlopen")
 
 SECRETO = "mi-clave-del-banco-4321"
+# 92c: /spotify consulta el receptor del perfil. La forma real de su /status (go-librespot v0.10.5, fixture de la 88b).
+RECEPTOR_DETENIDO = json.loads((AQUI / "fixtures" / "spotify-receptor-v0.10.5.json").read_text(encoding="utf-8"))["status_detenido"]
 OPEN_METEO = (AQUI / "fixtures" / "open-meteo-las-condes-2026-10-21.json").read_text(encoding="utf-8")
 
 
@@ -143,6 +146,15 @@ class Base(SinRed):
         for nombre in ("SES_TELEGRAM", "SES_GROQ", "SES_SEARXNG", "SES_CLIMA"):
             setattr(b, nombre, SesionSinRed(nombre))
         b.SES_PROVEEDOR = {pid: SesionSinRed(f"SES_PROVEEDOR[{pid}]") for pid in b.SES_PROVEEDOR}
+        # 92c (92bnr1, hallazgo 1): con spotify.py importable y el bloque `spotify` del perfil, /spotify llama al
+        # receptor (127.0.0.1:3678) por requests. Se simulan las dos lecturas que usa y se anotan; la guarda de red
+        # de SinRed sigue debajo, como última barrera.
+        self.receptor = []
+        if b.spotify_mod is not None:
+            for nombre, respuesta in (("estado", RECEPTOR_DETENIDO), ("codigo", None)):
+                parche = mock.patch.object(b.spotify_mod, nombre, side_effect=lambda base, n=nombre, r=respuesta: self.receptor.append((n, base)) or r)
+                parche.start()
+                self.addCleanup(parche.stop)
 
     def mensaje(self, texto=None, voz=False, extra=None):
         m = {"chat": {"id": 7}, "from": {"id": 7}}
@@ -184,6 +196,11 @@ class CadaUsoDejaUnaLinea(Base):
         self.assertIn("consulta:claude", funciones)
         self.assertEqual(funciones[comandos.index("/inventado")], "desconocido")
         self.assertTrue(all(x["canal"] == "texto" and x["bot"] == "jaime" for x in self.lineas()))
+        # 92c: /spotify pasó por el receptor simulado (y no por la red), con la forma real del perfil.
+        if b.spotify_mod is not None and b.PERFIL_CFG.get("spotify"):
+            self.assertIn("/spotify", comandos)
+            self.assertEqual(self.receptor, [("estado", b.PERFIL_CFG["spotify"]["api"])])
+            self.assertTrue(any(m == "sendMessage" and "vinculado, sin música" in str((d or {}).get("text", "")) for m, d in self.enviados))
 
     def test_los_comandos_publicados_estan_cubiertos(self):
         spec = importlib.util.spec_from_file_location("utc_contador", AQUI / "update_telegram_commands.py")

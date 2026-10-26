@@ -18,8 +18,12 @@ Restart=on-failure
 RestartSec=10
 PrivateUsers=yes
 ProtectSystem=strict
-# /home de dcifu004 queda vacío; el socket de PipeWire vive en $XDG_RUNTIME_DIR (/run/user/<uid>), que no se tapa.
+# ProtectHome=tmpfs tapa /home, /root Y /run/user (88dnr1, hallazgo 1: sin más, go-librespot se queda sin el
+# socket de PipeWire). Por eso se vuelve a exponer SÓLO la carpeta de pulse de $XDG_RUNTIME_DIR (%t), de sólo
+# lectura: conectar a un socket Unix funciona igual sobre un montaje de sólo lectura, y el resto de /run/user/<uid>
+# (bus, gnupg, openssh_agent, credentials) sigue tapado. Probado en la Pi con systemd-run --user (88dnr1).
 ProtectHome=tmpfs
+BindReadOnlyPaths=%t/pulse
 # Del volumen cifrado sólo queda la carpeta de ESTA instancia (config.yml, state.json y el lockfile).
 TemporaryFileSystem=/opt/nodo/datos
 BindPaths=/opt/nodo/datos/spotify/%i

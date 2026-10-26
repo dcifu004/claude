@@ -81,7 +81,9 @@ def interpretar(texto: str, sonando: bool) -> dict[str, str] | None:
     # 88d: «reproduce la última nota de mi proyecto»: un «artista» con posesivo,
     # demostrativo o día no es un artista, salvo que se haya dicho Spotify. Los
     # artículos no cuentan: «Los Prisioneros» y «La Ley» son artistas.
-    if m and not en_spotify and re.match(r"(?:mis?|tus?|sus?|nuestr[oa]s?|est[eao]s?|es[eao]s?|ayer|hoy|manana)\b", m.group(2)):
+    # 88e: en CUALQUIER « de <palabra> » de la frase, no sólo tras el primer «de»
+    # («la nota de voz de mi mamá»), y también «anoche» y «recién».
+    if m and not en_spotify and re.search(r"\bde\s+(?:mis?|tus?|sus?|nuestr[oa]s?|est[eao]s?|es[eao]s?|ayer|hoy|manana|anoche|recien)\b", frase):
         return None
     if m and m.group(1).strip() and m.group(2).strip():
         return {"accion": "cancion", "titulo": m.group(1).strip(), "artista": m.group(2).strip()}
